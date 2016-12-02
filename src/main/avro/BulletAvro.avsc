@@ -1,0 +1,53 @@
+{
+  "namespace": "com.yahoo.bullet.record",
+  "type": "record",
+  "name": "BulletAvro",
+  "fields": [
+    {
+      "name": "data",
+      "type": {
+        "type": "map",
+        "values": [
+          "null",
+          "boolean",
+          "string",
+          "long",
+          "double",
+          {
+            "type": "map",
+            "values": [
+              "null",
+              "boolean",
+              "string",
+              "long",
+              "double",
+              {
+                "type": "map",
+                "values": [
+                  "null",
+                  "boolean",
+                  "string",
+                  "long",
+                  "double"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "map",
+              "values": [
+                "null",
+                "boolean",
+                "string",
+                "long",
+                "double"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
