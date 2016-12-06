@@ -87,7 +87,7 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
      * contents (but not the same state) by using the {@link #BulletRecord(byte[])} constructor.
      *
      * @return the byte[] representation of the data in the record.
-     * @throws IOException
+     * @throws IOException if the record cannot be serialized into a byte[].
      */
     public byte[] getAsByteArray() throws IOException {
         if (isDeserialized) {
