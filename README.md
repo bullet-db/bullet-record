@@ -1,4 +1,7 @@
 # bullet-record
+
+[![Build Status](https://travis-ci.org/yahoo/bullet-record.svg?branch=master)](https://travis-ci.org/yahoo/bullet-record) 
+
 This is a wrapper for the Record object that interfaces with the Bullet
 query engine. Users wishing their data to be queryable by Bullet insert
 their data into a BulletRecord.
