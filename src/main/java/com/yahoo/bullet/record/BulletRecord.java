@@ -251,7 +251,7 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
      * @param object The value to insert.
      * @return this object for chaining.
      */
-    public BulletRecord setBoolean(String field, boolean object) {
+    public BulletRecord setBoolean(String field, Boolean object) {
         return set(field, object);
     }
 
