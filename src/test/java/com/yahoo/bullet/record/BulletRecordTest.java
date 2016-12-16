@@ -75,10 +75,11 @@ public class BulletRecordTest {
 
     @Test
     public void testSetBoolean() {
-        record.setBoolean("foo", false).setBoolean("bar", true);
+        record.setBoolean("foo", false).setBoolean("bar", true).setBoolean("baz", null);
 
         Assert.assertTrue((Boolean) record.get("bar"));
         Assert.assertFalse((Boolean) record.get("foo"));
+        Assert.assertNull(record.get("baz"));
         Assert.assertNull(record.get("dne"));
     }
 
@@ -93,19 +94,21 @@ public class BulletRecordTest {
 
     @Test
     public void testSetLong() {
-        record.setLong("foo", 0L).setLong("bar", -1231231231231231231L);
+        record.setLong("foo", 0L).setLong("bar", -1231231231231231231L).setLong("baz", null);
 
         Assert.assertEquals(record.get("foo"), 0L);
         Assert.assertEquals(record.get("bar"), -1231231231231231231L);
+        Assert.assertNull(record.get("baz"));
         Assert.assertNull(record.get("dne"));
     }
 
     @Test
     public void testSetDouble() {
-        record.setDouble("foo", 42.1).setDouble("bar", -1.13);
+        record.setDouble("foo", 42.1).setDouble("bar", -1.13).setDouble("baz", null);
 
         Assert.assertEquals(record.get("foo"), 42.1);
         Assert.assertEquals(record.get("bar"), -1.13);
+        Assert.assertNull(record.get("baz"));
         Assert.assertNull(record.get("dne"));
     }
 
