@@ -9,4 +9,32 @@ their data into a BulletRecord.
 
 The BulletRecord is serializable and serializes itself using Avro.
 
+
+## Installation
+
+The artifacts is available through JCenter if you need to depend on it in code directly, so you will need to add the repository.
+
+```xml
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>central</id>
+            <name>bintray</name>
+            <url>http://jcenter.bintray.com</url>
+        </repository>
+    </repositories>
+```
+
+```xml
+    <dependency>
+      <groupId>com.yahoo.bullet</groupId>
+      <artifactId>bullet-record</artifactId>
+      <version>${bullet.version}</version>
+    </dependency>
+```
+
+If you just need the jar artifact, you can download it directly from [JCenter](http://jcenter.bintray.com/com/yahoo/bullet/bullet-record/).
+
 Code licensed under the Apache 2 license. See LICENSE file for terms.
