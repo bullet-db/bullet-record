@@ -24,8 +24,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,9 +33,8 @@ import java.util.Objects;
 /**
  * This wraps the data that should be sent to Bullet. It is a {@link Serializable} object.
  * It also implements {@link Iterable} and can be used in for-each loops. The various
- * set methods can be used to insert fields into the record. It maintains the insertion order.
- * Field names are to be provided as Strings and must be unique, otherwise the duplicate takes
- * precedence over the first.
+ * set methods can be used to insert fields into the record. Field names are to be provided as Strings and must be
+ * unique, otherwise the duplicate takes precedence over the first.
  *
  * When inserting into the Record, methods are explicitly provided for each type supported (listed
  * below). When reading from the Record, which may not be something needed by users of this very
@@ -62,7 +61,8 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
 
     private boolean isDeserialized = true;
     private byte[] serializedData;
-    private Map<String, Object> data = new LinkedHashMap<>();
+    private Map<String, Object> data = new HashMap<>();
+    private static final SpecificDatumWriter<BulletAvro> WRITER = new SpecificDatumWriter<>(BulletAvro.class);
 
     /**
      * Constructor that takes in the raw serialized byte[] that represents the data in the BulletRecord. The user is
@@ -75,6 +75,19 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
     public BulletRecord(byte[] data) {
         serializedData = data;
         isDeserialized = false;
+    }
+
+    /**
+     * Constructor that lets you set an arbitrary {@link Map} of field names to values as the data for the BulletRecord.
+     * No checks are performed so this method is <strong>unsafe</strong> to use if you are not absolutely sure the
+     * data can be placed into a BulletRecord. This is meant as a convenience method to copy the same data into
+     * multiple BulletRecords.
+     *
+     * @param data The mapping of field names to their typed values that constitutes the data for this BulletRecord.
+     */
+    public BulletRecord(Map<String, Object> data) {
+        this.data = data;
+        isDeserialized = true;
     }
 
     /**
@@ -124,11 +137,10 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
         data = (data == null) ? Collections.emptyMap() : data;
         BulletAvro record = new BulletAvro(data);
         ByteArrayOutputStream stream = new ByteArrayOutputStream(256 * 1024);
-        SpecificDatumWriter<BulletAvro> writer = new SpecificDatumWriter<>(BulletAvro.class);
         EncoderFactory encoderFactory = new EncoderFactory();
         Encoder encoder = encoderFactory.directBinaryEncoder(stream, null);
         stream.reset();
-        writer.write(record, encoder);
+        WRITER.write(record, encoder);
         encoder.flush();
         return stream.toByteArray();
     }
@@ -477,7 +489,7 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
      */
     BulletRecord setMap(String field, Map.Entry<String, Object>... entries) {
         Objects.requireNonNull(entries);
-        Map<String, Object> newMap = new LinkedHashMap<>(entries.length);
+        Map<String, Object> newMap = new HashMap<>(entries.length);
         for (Map.Entry<String, Object> entry : entries) {
             newMap.put(entry.getKey(), entry.getValue());
         }

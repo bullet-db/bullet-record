@@ -261,11 +261,9 @@ public class BulletRecordTest {
 
         newRecord.set("newB", record, "b", "b.1");
         Assert.assertEquals(newRecord.get("newB"), "bar");
-        Assert.assertEquals(newRecord.toString(), "{newA:foo, newB:bar}");
 
         newRecord.set("newC", record, "c", 0);
         Assert.assertEquals(newRecord.get("newC"), singletonMap("c.1", false));
-        Assert.assertEquals(newRecord.toString(), "{newA:foo, newB:bar, newC:{c.1=false}}");
 
         // The Map isn't copied
         ((Map<String, Boolean>) record.get("c", 0)).put("c.1", true);
@@ -345,10 +343,8 @@ public class BulletRecordTest {
     @Test
     public void testToString() {
         Assert.assertEquals(record.toString(), "{}");
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-              .setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
-              .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
-        Assert.assertEquals(record.toString(), "{1:bar, 2:42, 3:false, 4:{4.1=false, 4.2=true, 4.3=null}, 5:[{5.1=foo}]}");
+        record.setString("1", "bar");
+        Assert.assertEquals(record.toString(), "{1:bar}");
     }
 
     @Test
@@ -641,4 +637,22 @@ public class BulletRecordTest {
         Assert.assertEquals(record.getAsByteArray(), rawByteArray);
     }
 
+    @Test
+    public void testCopyRecordWithMap() {
+        Map<String, Object> contents = new HashMap<>();
+        Map<String, Long> innerMap = new HashMap<>();
+        contents.put("1", "foo");
+        contents.put("2", false);
+        contents.put("3", 1L);
+        contents.put("4", innerMap);
+        innerMap.put("4.1", 1L);
+        innerMap.put("4.2", 3L);
+
+        record.setString("1", "foo");
+        record.setBoolean("2", false);
+        record.setMap("4", Pair.of("4.1", 1L), Pair.of("4.2", 3L));
+        record.setLong("3", 1L);
+
+        Assert.assertEquals(new BulletRecord(contents), record);
+    }
 }
