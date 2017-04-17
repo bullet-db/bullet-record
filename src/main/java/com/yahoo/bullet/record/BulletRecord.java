@@ -133,6 +133,12 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
         }
     }
 
+    private void forceFailIfCannotRead() {
+        if (!forceReadData()) {
+            throw new RuntimeException("Cannot read from record. Unable to proceed.");
+        }
+    }
+
     private byte[] serialize(Map<String, Object> data) throws IOException {
         data = (data == null) ? Collections.emptyMap() : data;
         BulletAvro record = new BulletAvro(data);
@@ -252,6 +258,65 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
         @SuppressWarnings("unchecked")
         List<Object> casted = (List<Object>) value;
         return casted.get(index);
+    }
+
+    /**
+     * Returns true iff the given top-level field exists in the record.
+     *
+     * @param field The field to check if it exists.
+     * @return A boolean denoting whether there was a mapping for the field.
+     */
+    public boolean hasField(String field) {
+        forceFailIfCannotRead();
+        return data.containsKey(field);
+    }
+
+    /**
+     * Returns the number of fields in the record.
+     *
+     * @return An int representing the number of fields stored.
+     */
+    public int fieldCount() {
+        forceFailIfCannotRead();
+        return data.size();
+    }
+
+    /**
+     * Removes and returns a top-level field from the record.
+     *
+     * @param field The field to remove from the record.
+     * @return The removed object or null.
+     */
+    public Object getAndRemove(String field) {
+        // Use hasField to deserialize if necessary
+        return hasField(field) ? data.remove(field) : null;
+    }
+
+    /**
+     * Removes a top-level field from the record.
+     *
+     * @param field The field to remove from the record.
+     * @return This object for chaining.
+     */
+    public BulletRecord remove(String field) {
+        if (hasField(field)) {
+            data.remove(field);
+        }
+        return this;
+    }
+
+    /**
+     * Renames a top-level field in the record.
+     *
+     * @param field The non-null original field name.
+     * @param newName The non-null new name.
+     * @return This object for chaining.
+     */
+    public BulletRecord rename(String field, String newName) {
+        if (hasField(field)) {
+            set(newName, getAndRemove(field));
+        }
+        return this;
     }
 
     // ******************************************** SETTERS ********************************************

@@ -619,6 +619,22 @@ public class BulletRecordTest {
     }
 
     @Test
+    public void testBackingByteArrayIfDeserialized() throws IOException {
+        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
+        byte[] rawDataBytes = record.getAsByteArray();
+
+        BulletRecord record = new BulletRecord(rawDataBytes);
+
+        Assert.assertEquals(record.getAsByteArray(), rawDataBytes);
+
+        Assert.assertEquals(record.get("1"), "bar");
+        Assert.assertEquals(record.get("2"), 42L);
+        Assert.assertEquals(record.get("3"), false);
+        Assert.assertEquals(record.get("4"), 0.34);
+        Assert.assertEquals(record.fieldCount(), 4);
+    }
+
+    @Test
     public void testSameByteArrayPostSerialization() throws IOException {
         record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
         byte[] originalByteArray = record.getAsByteArray();
@@ -654,5 +670,90 @@ public class BulletRecordTest {
         record.setLong("3", 1L);
 
         Assert.assertEquals(new BulletRecord(contents), record);
+    }
+
+    @Test
+    public void testRenaming() {
+        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
+              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+              .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
+
+        record.rename("1", "new1").rename("3", "new3").rename("7.4.1", "new2");
+
+        BulletRecord expected = new BulletRecord().setString("new1", "bar").setLong("2", 42L).setBoolean("new3", false)
+                                                  .setDouble("4", 0.34)
+                                                  .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+                                                  .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
+
+        Assert.assertTrue(expected.equals(record));
+    }
+
+    @Test
+    public void testFieldCount() throws IOException {
+        Assert.assertEquals(record.fieldCount(), 0);
+
+        record.setString("foo", "bar");
+        Assert.assertEquals(record.fieldCount(), 1);
+
+        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true));
+        Assert.assertEquals(record.fieldCount(), 2);
+
+        record.remove("2");
+        record.remove("7");
+        Assert.assertEquals(record.fieldCount(), 1);
+
+        BulletRecord another = new BulletRecord(record.getAsByteArray());
+        Assert.assertEquals(another.fieldCount(), 1);
+    }
+
+    @Test
+    public void testRemoving() {
+        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
+              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+              .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
+
+        record.remove("1").remove("3").remove("7.4.1").remove("9");
+
+        BulletRecord expected = new BulletRecord().setLong("2", 42L).setDouble("4", 0.34)
+                                                  .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true));
+        Assert.assertTrue(expected.equals(record));
+    }
+
+    @Test
+    public void testRemovingField() {
+        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
+              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+              .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
+
+        Object data;
+        data = record.getAndRemove("1");
+        Assert.assertTrue(data instanceof String);
+        Assert.assertEquals(data, "bar");
+
+        data = record.getAndRemove("3");
+        Assert.assertTrue(data instanceof Boolean);
+        Assert.assertEquals(data, false);
+
+        data = record.getAndRemove("7.7.2");
+        Assert.assertNull(data);
+    }
+
+    @Test
+    public void testFieldPresence() {
+        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
+              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true));
+
+        Assert.assertTrue(record.hasField("1"));
+        Assert.assertTrue(record.hasField("7"));
+        Assert.assertFalse(record.hasField("7.4.1"));
+        Assert.assertFalse(record.hasField("foo"));
+    }
+
+    @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Cannot read from record.*")
+    public void testFailingWhenCannotRead() {
+        record = new BulletRecord();
+        record.setSerializedData("foo".getBytes());
+        record.setDeserialized(false);
+        record.hasField("foo");
     }
 }

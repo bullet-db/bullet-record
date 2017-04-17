@@ -105,6 +105,7 @@
                 <artifactId>maven-clover2-plugin</artifactId>
                 <version>4.0.5</version>
                 <configuration>
+                    <licenseLocation>${user.home}/clover.license</licenseLocation>
                     <excludes>
                         <exclude>**/BulletAvro.java</exclude>
                     </excludes>
