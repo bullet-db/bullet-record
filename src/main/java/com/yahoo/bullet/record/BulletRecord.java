@@ -142,10 +142,9 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
     private byte[] serialize(Map<String, Object> data) throws IOException {
         data = (data == null) ? Collections.emptyMap() : data;
         BulletAvro record = new BulletAvro(data);
-        ByteArrayOutputStream stream = new ByteArrayOutputStream(256 * 1024);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(2048);
         EncoderFactory encoderFactory = new EncoderFactory();
-        Encoder encoder = encoderFactory.directBinaryEncoder(stream, null);
-        stream.reset();
+        Encoder encoder = encoderFactory.binaryEncoder(stream, null);
         WRITER.write(record, encoder);
         encoder.flush();
         return stream.toByteArray();
