@@ -4,13 +4,13 @@
 
     <groupId>com.yahoo.bullet</groupId>
     <artifactId>bullet-record</artifactId>
-    <version>0.1.2-SNAPSHOT</version>
+    <version>0.1.2</version>
     <packaging>jar</packaging>
     <name>bullet-record</name>
 
     <scm>
         <developerConnection>scm:git:ssh://git@github.com/yahoo/bullet-record.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>bullet-record-0.1.2</tag>
     </scm>
 
     <distributionManagement>
