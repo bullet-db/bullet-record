@@ -11,6 +11,7 @@
           "null",
           "boolean",
           "string",
+          "int",
           "long",
           "double",
           {
@@ -19,6 +20,7 @@
               "null",
               "boolean",
               "string",
+              "int",
               "long",
               "double",
               {
@@ -27,6 +29,7 @@
                   "null",
                   "boolean",
                   "string",
+                  "int",
                   "long",
                   "double"
                 ]
@@ -41,6 +44,7 @@
                 "null",
                 "boolean",
                 "string",
+                "int",
                 "long",
                 "double"
               ]

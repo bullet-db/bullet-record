@@ -48,7 +48,7 @@ import java.util.Objects;
  *
  * The record currently supports these fields:
  * <pre>
- * Primitives: Boolean, Long, Double, String
+ * Primitives: Boolean, Integer, Long, Double, String
  * Complex: {@code Map <String, "Primitives">, Map<String, Map<String, "Primitives">>, List<Map<String, "Primitives">},
  *           where "Primitives" refers to the afore-mentioned Primitives.
  * </pre>
@@ -343,6 +343,17 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
     }
 
     /**
+     * Insert an int field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return this object for chaining.
+     */
+    public BulletRecord setInt(String field, Integer object) {
+        return set(field, object);
+    }
+
+    /**
      * Insert a long field.
      *
      * @param field The non-null name of the field.
@@ -383,6 +394,17 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
      * @return this object for chaining.
      */
     public BulletRecord setStringMap(String field, Map<String, String> object) {
+        return set(field, object);
+    }
+
+    /**
+     * Insert a Map of String to Integer field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return this object for chaining.
+     */
+    public BulletRecord setIntMap(String field, Map<String, Integer> object) {
         return set(field, object);
     }
 
@@ -431,6 +453,17 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
     }
 
     /**
+     * Insert a Map of String to Map of String to Integer field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return this object for chaining.
+     */
+    public BulletRecord setMapOfIntMap(String field, Map<String, Map<String, Integer>> object) {
+        return set(field, object);
+    }
+
+    /**
      * Insert a Map of String to Map of String to Long field.
      *
      * @param field The non-null name of the field.
@@ -471,6 +504,17 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
      * @return this object for chaining.
      */
     public BulletRecord setListOfStringMap(String field, List<Map<String, String>> object) {
+        return set(field, object);
+    }
+
+    /**
+     * Insert a List of Map of String to Integer field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return this object for chaining.
+     */
+    public BulletRecord setListOfIntMap(String field, List<Map<String, Integer>> object) {
         return set(field, object);
     }
 
