@@ -15,7 +15,6 @@
           "long",
           "float",
           "double",
-          "bytes",
           {
             "type": "map",
             "values": [
@@ -26,7 +25,6 @@
               "long",
               "float",
               "double",
-              "bytes",
               {
                 "type": "map",
                 "values": [
@@ -36,8 +34,7 @@
                   "int",
                   "long",
                   "float",
-                  "double",
-                  "bytes"
+                  "double"
                 ]
               }
             ]
@@ -53,8 +50,7 @@
                 "int",
                 "long",
                 "float",
-                "double",
-                "bytes"
+                "double"
               ]
             }
           }
