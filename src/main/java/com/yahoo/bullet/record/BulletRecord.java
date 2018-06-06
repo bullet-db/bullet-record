@@ -48,7 +48,7 @@ import java.util.Objects;
  *
  * The record currently supports these fields:
  * <pre>
- * Primitives: Boolean, Integer, Long, Double, String
+ * Primitives: Boolean, Integer, Long, Float, Double, String, byte[]
  * Complex: {@code Map <String, "Primitives">, Map<String, Map<String, "Primitives">>, List<Map<String, "Primitives">},
  *           where "Primitives" refers to the afore-mentioned Primitives.
  * </pre>
@@ -349,7 +349,7 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
      * @param object The value to insert.
      * @return this object for chaining.
      */
-    public BulletRecord setInt(String field, Integer object) {
+    public BulletRecord setInteger(String field, Integer object) {
         return set(field, object);
     }
 
@@ -365,6 +365,17 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
     }
 
     /**
+     * Insert a float field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return this object for chaining.
+     */
+    public BulletRecord setFloat(String field, Float object) {
+        return set(field, object);
+    }
+
+    /**
      * Insert a double field.
      *
      * @param field The non-null name of the field.
@@ -372,6 +383,17 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
      * @return this object for chaining.
      */
     public BulletRecord setDouble(String field, Double object) {
+        return set(field, object);
+    }
+
+    /**
+     * Insert a byte[] field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return this object for chaining.
+     */
+    public BulletRecord setByteArray(String field, byte[] object) {
         return set(field, object);
     }
 
@@ -404,7 +426,7 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
      * @param object The value to insert.
      * @return this object for chaining.
      */
-    public BulletRecord setIntMap(String field, Map<String, Integer> object) {
+    public BulletRecord setIntegerMap(String field, Map<String, Integer> object) {
         return set(field, object);
     }
 
@@ -420,6 +442,17 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
     }
 
     /**
+     * Insert a Map of String to Float field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return this object for chaining.
+     */
+    public BulletRecord setFloatMap(String field, Map<String, Float> object) {
+        return set(field, object);
+    }
+
+    /**
      * Insert a Map of String to Double field.
      *
      * @param field The non-null name of the field.
@@ -427,6 +460,17 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
      * @return this object for chaining.
      */
     public BulletRecord setDoubleMap(String field, Map<String, Double> object) {
+        return set(field, object);
+    }
+
+    /**
+     * Insert a Map of String to byte[] field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return this object for chaining.
+     */
+    public BulletRecord setByteArrayMap(String field, Map<String, byte[]> object) {
         return set(field, object);
     }
 
@@ -459,7 +503,7 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
      * @param object The value to insert.
      * @return this object for chaining.
      */
-    public BulletRecord setMapOfIntMap(String field, Map<String, Map<String, Integer>> object) {
+    public BulletRecord setMapOfIntegerMap(String field, Map<String, Map<String, Integer>> object) {
         return set(field, object);
     }
 
@@ -475,6 +519,17 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
     }
 
     /**
+     * Insert a Map of String to Map of String to Float field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return this object for chaining.
+     */
+    public BulletRecord setMapOfFloatMap(String field, Map<String, Map<String, Float>> object) {
+        return set(field, object);
+    }
+
+    /**
      * Insert a Map of String to Map of String to Double field.
      *
      * @param field The non-null name of the field.
@@ -482,6 +537,17 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
      * @return this object for chaining.
      */
     public BulletRecord setMapOfDoubleMap(String field, Map<String, Map<String, Double>> object) {
+        return set(field, object);
+    }
+
+    /**
+     * Insert a Map of String to Map of String to byte[] field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return this object for chaining.
+     */
+    public BulletRecord setMapOfByteArrayMap(String field, Map<String, Map<String, byte[]>> object) {
         return set(field, object);
     }
 
@@ -514,7 +580,7 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
      * @param object The value to insert.
      * @return this object for chaining.
      */
-    public BulletRecord setListOfIntMap(String field, List<Map<String, Integer>> object) {
+    public BulletRecord setListOfIntegerMap(String field, List<Map<String, Integer>> object) {
         return set(field, object);
     }
 
@@ -530,6 +596,17 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
     }
 
     /**
+     * Insert a List of Map of String to Float field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return this object for chaining.
+     */
+    public BulletRecord setListOfFloatMap(String field, List<Map<String, Float>> object) {
+        return set(field, object);
+    }
+
+    /**
      * Insert a List of Map of String to Double field.
      *
      * @param field The non-null name of the field.
@@ -537,6 +614,17 @@ public class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serial
      * @return this object for chaining.
      */
     public BulletRecord setListOfDoubleMap(String field, List<Map<String, Double>> object) {
+        return set(field, object);
+    }
+
+    /**
+     * Insert a List of Map of String to byte[] field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return this object for chaining.
+     */
+    public BulletRecord setListOfByteArrayMap(String field, List<Map<String, byte[]>> object) {
         return set(field, object);
     }
 
