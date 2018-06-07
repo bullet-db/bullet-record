@@ -36,10 +36,10 @@ import java.util.Objects;
 public class BulletAvroRecord implements BulletRecord {
     public static final long serialVersionUID = 926415013785021742L;
 
-    private boolean isDeserialized = true;
-    private byte[] serializedData;
-    private Map<String, Object> data = new HashMap<>();
-    private static final SpecificDatumWriter<BulletAvro> WRITER = new SpecificDatumWriter<>(BulletAvro.class);
+    protected boolean isDeserialized = true;
+    protected byte[] serializedData;
+    protected Map<String, Object> data = new HashMap<>();
+    protected static final SpecificDatumWriter<BulletAvro> WRITER = new SpecificDatumWriter<>(BulletAvro.class);
 
     /**
      * Constructor that takes in the raw serialized byte[] that represents the data in the BulletAvroRecord. The user is
