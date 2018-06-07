@@ -320,9 +320,9 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testIterator() {
-        record.setString("1", "bar").setLong("2", 42L)
+        record.setMap("4", Pair.of("4.1", false))
+              .setString("1", "bar").setLong("2", 42L)
               .setBoolean("3", false)
-              .setMap("4", Pair.of("4.1", false))
               .setListOfDoubleMap("5", singletonList(singletonMap("5.1", 3.1)));
         Map<String, Object> expectedMap = new HashMap<>();
         expectedMap.put("1", "bar");
@@ -369,18 +369,18 @@ public class AvroBulletRecordTest {
     @Test
     public void testEqualsDifferentRecord() {
         record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false);
-        AvroBulletRecord another = new AvroBulletRecord().setString("1", "bar");
+        AvroBulletRecord another = (AvroBulletRecord) new AvroBulletRecord().setString("1", "bar");
         Assert.assertFalse(record.equals(another));
     }
 
     @Test
     public void testEqualsAndHashcodeByteArrays() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-              .setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+        record.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
         AvroBulletRecord another = new AvroBulletRecord();
-        another.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-               .setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+        another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
 
         record.setSerializedData(getRecordBytes(record));
@@ -394,12 +394,12 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testEqualsAndHashcodeSameRecord() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-              .setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+        record.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
         AvroBulletRecord another = new AvroBulletRecord();
-        another.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-               .setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+        another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
 
         Assert.assertTrue(record.equals(another));
@@ -407,9 +407,9 @@ public class AvroBulletRecordTest {
 
         // Change order and it should still pass
         another = new AvroBulletRecord();
-        another.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")))
-               .setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null));
+        another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
+               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
         Assert.assertTrue(record.equals(another));
         Assert.assertEquals(record.hashCode(), another.hashCode());
 
@@ -479,9 +479,9 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testSerializationDeserialization() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true), Pair.of("7.3", null))
+        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true), Pair.of("7.3", null))
               .setMap("8", Pair.of("8.1", "foo"), Pair.of("8.2", "bar"), Pair.of("8.3", "baz"))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)))
               .setListOfBooleanMap("10", singletonList(singletonMap("10.1", true)));
 
@@ -556,9 +556,9 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testSerializationDeserializationWithDataInput() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true), Pair.of("7.3", null))
+        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true), Pair.of("7.3", null))
               .setMap("8", Pair.of("8.1", "foo"), Pair.of("8.2", "bar"), Pair.of("8.3", "baz"))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)))
               .setListOfBooleanMap("10", singletonList(singletonMap("10.1", true)));
 
@@ -674,15 +674,15 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testRenaming() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         record.rename("1", "new1").rename("3", "new3").rename("7.4.1", "new2");
 
-        AvroBulletRecord expected = new AvroBulletRecord().setString("new1", "bar").setLong("2", 42L).setBoolean("new3", false)
+        BulletRecord expected = new AvroBulletRecord().setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+                                                  .setString("new1", "bar").setLong("2", 42L).setBoolean("new3", false)
                                                   .setDouble("4", 0.34)
-                                                  .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
                                                   .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         Assert.assertTrue(expected.equals(record));
@@ -708,21 +708,21 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testRemoving() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         record.remove("1").remove("3").remove("7.4.1").remove("9");
 
-        AvroBulletRecord expected = new AvroBulletRecord().setLong("2", 42L).setDouble("4", 0.34)
-                                                  .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true));
+        BulletRecord expected = new AvroBulletRecord().setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+                                                          .setLong("2", 42L).setDouble("4", 0.34);
         Assert.assertTrue(expected.equals(record));
     }
 
     @Test
     public void testRemovingField() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         Object data;
@@ -740,8 +740,8 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testFieldPresence() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true));
+        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
 
         Assert.assertTrue(record.hasField("1"));
         Assert.assertTrue(record.hasField("7"));
