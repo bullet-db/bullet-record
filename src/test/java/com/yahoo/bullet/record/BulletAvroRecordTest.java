@@ -93,11 +93,30 @@ public class BulletAvroRecordTest {
     }
 
     @Test
+    public void testSetInteger() {
+        record.setInteger("foo", 88).setInteger("bar", 51);
+
+        Assert.assertEquals(record.get("foo"), 88);
+        Assert.assertEquals(record.get("bar"), 51);
+        Assert.assertNull(record.get("dne"));
+    }
+
+    @Test
     public void testSetLong() {
         record.setLong("foo", 0L).setLong("bar", -1231231231231231231L).setLong("baz", null);
 
         Assert.assertEquals(record.get("foo"), 0L);
         Assert.assertEquals(record.get("bar"), -1231231231231231231L);
+        Assert.assertNull(record.get("baz"));
+        Assert.assertNull(record.get("dne"));
+    }
+
+    @Test
+    public void testSetFloat() {
+        record.setFloat("foo", 42.1f).setFloat("bar", -1.13f).setFloat("baz", null);
+
+        Assert.assertEquals(record.get("foo"), 42.1f);
+        Assert.assertEquals(record.get("bar"), -1.13f);
         Assert.assertNull(record.get("baz"));
         Assert.assertNull(record.get("dne"));
     }
@@ -114,34 +133,50 @@ public class BulletAvroRecordTest {
 
     @Test
     public void testSetMaps() {
-        Map<String, Long> dataA = new HashMap<>();
-        dataA.put("bar", 1L);
-        dataA.put("baz", 2L);
-        record.setLongMap("fooA", dataA);
+        Map<String, Integer> dataA = new HashMap<>();
+        dataA.put("bar", 1);
+        dataA.put("baz", 2);
+        record.setIntegerMap("fooA", dataA);
+        Assert.assertTrue(record.get("fooA") instanceof Map);
+        Assert.assertEquals(record.get("fooA", "bar"), 1);
+        Assert.assertEquals(record.get("fooA", "baz"), 2);
+
+        Map<String, Long> dataB = new HashMap<>();
+        dataB.put("bar", 1L);
+        dataB.put("baz", 2L);
+        record.setLongMap("fooA", dataB);
         Assert.assertTrue(record.get("fooA") instanceof Map);
         Assert.assertEquals(record.get("fooA", "bar"), 1L);
         Assert.assertEquals(record.get("fooA", "baz"), 2L);
 
-        Map<String, Double> dataB = new HashMap<>();
-        dataB.put("bar", 1.1);
-        dataB.put("baz", 2.2);
-        record.setDoubleMap("fooB", dataB);
+        Map<String, Float> dataC = new HashMap<>();
+        dataC.put("bar", 1.1f);
+        dataC.put("baz", 2.2f);
+        record.setFloatMap("fooA", dataC);
+        Assert.assertTrue(record.get("fooA") instanceof Map);
+        Assert.assertEquals(record.get("fooA", "bar"), 1.1f);
+        Assert.assertEquals(record.get("fooA", "baz"), 2.2f);
+
+        Map<String, Double> dataD = new HashMap<>();
+        dataD.put("bar", 1.1);
+        dataD.put("baz", 2.2);
+        record.setDoubleMap("fooB", dataD);
         Assert.assertTrue(record.get("fooB") instanceof Map);
         Assert.assertEquals(record.get("fooB", "bar"), 1.1);
         Assert.assertEquals(record.get("fooB", "baz"), 2.2);
 
-        Map<String, Boolean> dataC = new HashMap<>();
-        dataC.put("bar", false);
-        dataC.put("baz", true);
-        record.setBooleanMap("fooC", dataC);
+        Map<String, Boolean> dataE = new HashMap<>();
+        dataE.put("bar", false);
+        dataE.put("baz", true);
+        record.setBooleanMap("fooC", dataE);
         Assert.assertTrue(record.get("fooC") instanceof Map);
         Assert.assertEquals(record.get("fooC", "bar"), false);
         Assert.assertEquals(record.get("fooC", "baz"), true);
 
-        Map<String, String> dataD = new HashMap<>();
-        dataD.put("bar", "foo");
-        dataD.put("baz", "norf");
-        record.setStringMap("fooD", dataD);
+        Map<String, String> dataF = new HashMap<>();
+        dataF.put("bar", "foo");
+        dataF.put("baz", "norf");
+        record.setStringMap("fooD", dataF);
         Assert.assertTrue(record.get("fooD") instanceof Map);
         Assert.assertEquals(record.get("fooD", "bar"), "foo");
         Assert.assertEquals(record.get("fooD", "baz"), "norf");
@@ -153,45 +188,65 @@ public class BulletAvroRecordTest {
 
     @Test
     public void testSetMapOfMaps() {
-        Map<String, Map<String, Long>> dataA = new HashMap<>();
-        dataA.put("bar", singletonMap("a", 1L));
-        dataA.put("baz", singletonMap("b", 2L));
-        record.setMapOfLongMap("fooA", dataA);
+        Map<String, Map<String, Integer>> dataA = new HashMap<>();
+        dataA.put("bar", singletonMap("a", 1));
+        dataA.put("baz", singletonMap("b", 2));
+        record.setMapOfIntegerMap("fooA", dataA);
         Assert.assertTrue(record.get("fooA") instanceof Map);
         Assert.assertTrue(record.get("fooA", "bar") instanceof Map);
         Assert.assertTrue(record.get("fooA", "baz") instanceof Map);
-        Assert.assertEquals(record.get("fooA", "bar"), singletonMap("a", 1L));
-        Assert.assertEquals(record.get("fooA", "baz"), singletonMap("b", 2L));
+        Assert.assertEquals(record.get("fooA", "bar"), singletonMap("a", 1));
+        Assert.assertEquals(record.get("fooA", "baz"), singletonMap("b", 2));
 
-        Map<String, Map<String, Double>> dataB = new HashMap<>();
-        dataB.put("bar", singletonMap("a", 0.2));
-        dataB.put("baz", singletonMap("b", 0.1));
-        record.setMapOfDoubleMap("fooB", dataB);
+        Map<String, Map<String, Long>> dataB = new HashMap<>();
+        dataB.put("bar", singletonMap("a", 1L));
+        dataB.put("baz", singletonMap("b", 2L));
+        record.setMapOfLongMap("fooB", dataB);
         Assert.assertTrue(record.get("fooB") instanceof Map);
         Assert.assertTrue(record.get("fooB", "bar") instanceof Map);
         Assert.assertTrue(record.get("fooB", "baz") instanceof Map);
-        Assert.assertEquals(record.get("fooB", "bar"), singletonMap("a", 0.2));
-        Assert.assertEquals(record.get("fooB", "baz"), singletonMap("b", 0.1));
+        Assert.assertEquals(record.get("fooB", "bar"), singletonMap("a", 1L));
+        Assert.assertEquals(record.get("fooB", "baz"), singletonMap("b", 2L));
 
-        Map<String, Map<String, Boolean>> dataC = new HashMap<>();
-        dataC.put("bar", singletonMap("a", false));
-        dataC.put("baz", singletonMap("b", true));
-        record.setMapOfBooleanMap("fooC", dataC);
+        Map<String, Map<String, Float>> dataC = new HashMap<>();
+        dataC.put("bar", singletonMap("a", 0.2f));
+        dataC.put("baz", singletonMap("b", 0.1f));
+        record.setMapOfFloatMap("fooC", dataC);
         Assert.assertTrue(record.get("fooC") instanceof Map);
         Assert.assertTrue(record.get("fooC", "bar") instanceof Map);
         Assert.assertTrue(record.get("fooC", "baz") instanceof Map);
-        Assert.assertEquals(record.get("fooC", "bar"), singletonMap("a", false));
-        Assert.assertEquals(record.get("fooC", "baz"), singletonMap("b", true));
+        Assert.assertEquals(record.get("fooC", "bar"), singletonMap("a", 0.2f));
+        Assert.assertEquals(record.get("fooC", "baz"), singletonMap("b", 0.1f));
 
-        Map<String, Map<String, String>> dataD = new HashMap<>();
-        dataD.put("bar", singletonMap("a", "foo"));
-        dataD.put("baz", singletonMap("b", "norf"));
-        record.setMapOfStringMap("fooD", dataD);
+        Map<String, Map<String, Double>> dataD = new HashMap<>();
+        dataD.put("bar", singletonMap("a", 0.2));
+        dataD.put("baz", singletonMap("b", 0.1));
+        record.setMapOfDoubleMap("fooD", dataD);
         Assert.assertTrue(record.get("fooD") instanceof Map);
         Assert.assertTrue(record.get("fooD", "bar") instanceof Map);
         Assert.assertTrue(record.get("fooD", "baz") instanceof Map);
-        Assert.assertEquals(record.get("fooD", "bar"), singletonMap("a", "foo"));
-        Assert.assertEquals(record.get("fooD", "baz"), singletonMap("b", "norf"));
+        Assert.assertEquals(record.get("fooD", "bar"), singletonMap("a", 0.2));
+        Assert.assertEquals(record.get("fooD", "baz"), singletonMap("b", 0.1));
+
+        Map<String, Map<String, Boolean>> dataE = new HashMap<>();
+        dataE.put("bar", singletonMap("a", false));
+        dataE.put("baz", singletonMap("b", true));
+        record.setMapOfBooleanMap("fooE", dataE);
+        Assert.assertTrue(record.get("fooE") instanceof Map);
+        Assert.assertTrue(record.get("fooE", "bar") instanceof Map);
+        Assert.assertTrue(record.get("fooE", "baz") instanceof Map);
+        Assert.assertEquals(record.get("fooE", "bar"), singletonMap("a", false));
+        Assert.assertEquals(record.get("fooE", "baz"), singletonMap("b", true));
+
+        Map<String, Map<String, String>> dataF = new HashMap<>();
+        dataF.put("bar", singletonMap("a", "foo"));
+        dataF.put("baz", singletonMap("b", "norf"));
+        record.setMapOfStringMap("fooF", dataF);
+        Assert.assertTrue(record.get("fooF") instanceof Map);
+        Assert.assertTrue(record.get("fooF", "bar") instanceof Map);
+        Assert.assertTrue(record.get("fooF", "baz") instanceof Map);
+        Assert.assertEquals(record.get("fooF", "bar"), singletonMap("a", "foo"));
+        Assert.assertEquals(record.get("fooF", "baz"), singletonMap("b", "norf"));
 
         Assert.assertNull(record.get("dne"));
         Assert.assertNull(record.get("dne", "bar"));
@@ -200,45 +255,65 @@ public class BulletAvroRecordTest {
 
     @Test
     public void testSetListMaps() {
-        List<Map<String, Long>> dataA = new ArrayList<>();
-        dataA.add(singletonMap("a", 1L));
-        dataA.add(singletonMap("b", 2L));
-        record.setListOfLongMap("fooA", dataA);
+        List<Map<String, Integer>> dataA = new ArrayList<>();
+        dataA.add(singletonMap("a", 1));
+        dataA.add(singletonMap("b", 2));
+        record.setListOfIntegerMap("fooA", dataA);
         Assert.assertTrue(record.get("fooA") instanceof List);
         Assert.assertTrue(record.get("fooA", 0) instanceof Map);
         Assert.assertTrue(record.get("fooA", 1) instanceof Map);
-        Assert.assertEquals(record.get("fooA", 0), singletonMap("a", 1L));
-        Assert.assertEquals(record.get("fooA", 1), singletonMap("b", 2L));
+        Assert.assertEquals(record.get("fooA", 0), singletonMap("a", 1));
+        Assert.assertEquals(record.get("fooA", 1), singletonMap("b", 2));
 
-        List<Map<String, Double>> dataB = new ArrayList<>();
-        dataB.add(singletonMap("a", 0.2));
-        dataB.add(singletonMap("b", 0.1));
-        record.setListOfDoubleMap("fooB", dataB);
+        List<Map<String, Long>> dataB = new ArrayList<>();
+        dataB.add(singletonMap("a", 1L));
+        dataB.add(singletonMap("b", 2L));
+        record.setListOfLongMap("fooB", dataB);
         Assert.assertTrue(record.get("fooB") instanceof List);
         Assert.assertTrue(record.get("fooB", 0) instanceof Map);
         Assert.assertTrue(record.get("fooB", 1) instanceof Map);
-        Assert.assertEquals(record.get("fooB", 0), singletonMap("a", 0.2));
-        Assert.assertEquals(record.get("fooB", 1), singletonMap("b", 0.1));
+        Assert.assertEquals(record.get("fooB", 0), singletonMap("a", 1L));
+        Assert.assertEquals(record.get("fooB", 1), singletonMap("b", 2L));
 
-        List<Map<String, Boolean>> dataC = new ArrayList<>();
-        dataC.add(singletonMap("a", false));
-        dataC.add(singletonMap("b", true));
-        record.setListOfBooleanMap("fooC", dataC);
+        List<Map<String, Float>> dataC = new ArrayList<>();
+        dataC.add(singletonMap("a", 0.2f));
+        dataC.add(singletonMap("b", 0.1f));
+        record.setListOfFloatMap("fooC", dataC);
         Assert.assertTrue(record.get("fooC") instanceof List);
         Assert.assertTrue(record.get("fooC", 0) instanceof Map);
         Assert.assertTrue(record.get("fooC", 1) instanceof Map);
-        Assert.assertEquals(record.get("fooC", 0), singletonMap("a", false));
-        Assert.assertEquals(record.get("fooC", 1), singletonMap("b", true));
+        Assert.assertEquals(record.get("fooC", 0), singletonMap("a", 0.2f));
+        Assert.assertEquals(record.get("fooC", 1), singletonMap("b", 0.1f));
 
-        List<Map<String, String>> dataD = new ArrayList<>();
-        dataD.add(singletonMap("a", "foo"));
-        dataD.add(singletonMap("b", "norf"));
-        record.setListOfStringMap("fooD", dataD);
+        List<Map<String, Double>> dataD = new ArrayList<>();
+        dataD.add(singletonMap("a", 0.2));
+        dataD.add(singletonMap("b", 0.1));
+        record.setListOfDoubleMap("fooD", dataD);
         Assert.assertTrue(record.get("fooD") instanceof List);
         Assert.assertTrue(record.get("fooD", 0) instanceof Map);
         Assert.assertTrue(record.get("fooD", 1) instanceof Map);
-        Assert.assertEquals(record.get("fooD", 0), singletonMap("a", "foo"));
-        Assert.assertEquals(record.get("fooD", 1), singletonMap("b", "norf"));
+        Assert.assertEquals(record.get("fooD", 0), singletonMap("a", 0.2));
+        Assert.assertEquals(record.get("fooD", 1), singletonMap("b", 0.1));
+
+        List<Map<String, Boolean>> dataE = new ArrayList<>();
+        dataE.add(singletonMap("a", false));
+        dataE.add(singletonMap("b", true));
+        record.setListOfBooleanMap("fooE", dataE);
+        Assert.assertTrue(record.get("fooE") instanceof List);
+        Assert.assertTrue(record.get("fooE", 0) instanceof Map);
+        Assert.assertTrue(record.get("fooE", 1) instanceof Map);
+        Assert.assertEquals(record.get("fooE", 0), singletonMap("a", false));
+        Assert.assertEquals(record.get("fooE", 1), singletonMap("b", true));
+
+        List<Map<String, String>> dataF = new ArrayList<>();
+        dataF.add(singletonMap("a", "foo"));
+        dataF.add(singletonMap("b", "norf"));
+        record.setListOfStringMap("fooF", dataF);
+        Assert.assertTrue(record.get("fooF") instanceof List);
+        Assert.assertTrue(record.get("fooF", 0) instanceof Map);
+        Assert.assertTrue(record.get("fooF", 1) instanceof Map);
+        Assert.assertEquals(record.get("fooF", 0), singletonMap("a", "foo"));
+        Assert.assertEquals(record.get("fooF", 1), singletonMap("b", "norf"));
 
         Assert.assertNull(record.get("dne", -1));
         Assert.assertNull(record.get("dne", 0));
@@ -323,13 +398,17 @@ public class BulletAvroRecordTest {
         record.setMap("4", Pair.of("4.1", false))
               .setString("1", "bar").setLong("2", 42L)
               .setBoolean("3", false)
-              .setListOfDoubleMap("5", singletonList(singletonMap("5.1", 3.1)));
+              .setInteger("7", 88)
+              .setListOfDoubleMap("5", singletonList(singletonMap("5.1", 3.1)))
+              .setListOfFloatMap("6", singletonList(singletonMap("8.8", 8.8f)));
         Map<String, Object> expectedMap = new HashMap<>();
         expectedMap.put("1", "bar");
         expectedMap.put("2", 42L);
         expectedMap.put("3", false);
         expectedMap.put("4", singletonMap("4.1", false));
         expectedMap.put("5", singletonList(singletonMap("5.1", 3.1)));
+        expectedMap.put("6", singletonList(singletonMap("8.8", 8.8f)));
+        expectedMap.put("7", 88);
 
         int lastEntry = 0;
         for (Map.Entry<String, Object> entry : record) {
