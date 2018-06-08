@@ -677,81 +677,6 @@ public class BulletAvroRecordTest {
     }
 
     @Test
-    public void testRawByteArrayIsNotBacking() throws IOException {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
-        byte[] rawByteArray = record.getAsByteArray();
-        record.setString("1", "foo");
-        record.setString("5", "bar");
-        byte[] after = record.getAsByteArray();
-        Assert.assertNotEquals(after, rawByteArray);
-    }
-
-    @Test
-    public void testSerializationWithMapAndRawByteArray() throws IOException {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
-
-        // Get the raw data out
-        byte[] rawDataBytes = record.getAsByteArray();
-        // Create a new record from the raw data
-        BulletAvroRecord reified = new BulletAvroRecord(rawDataBytes);
-        Assert.assertTrue(record.equals(reified));
-    }
-
-    @Test
-    public void testBackingByteArrayIfDeserialized() throws IOException {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
-        byte[] rawDataBytes = record.getAsByteArray();
-
-        BulletAvroRecord record = new BulletAvroRecord(rawDataBytes);
-
-        Assert.assertEquals(record.getAsByteArray(), rawDataBytes);
-
-        Assert.assertEquals(record.get("1"), "bar");
-        Assert.assertEquals(record.get("2"), 42L);
-        Assert.assertEquals(record.get("3"), false);
-        Assert.assertEquals(record.get("4"), 0.34);
-        Assert.assertEquals(record.fieldCount(), 4);
-    }
-
-    @Test
-    public void testSameByteArrayPostSerialization() throws IOException {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
-        byte[] originalByteArray = record.getAsByteArray();
-
-        // Now serialize and deserialize the record
-        byte[] serialized = getRecordBytes(record);
-        BulletAvroRecord reified = fromRecordBytes(serialized);
-
-        // Get the raw data again as bytes
-        byte[] rawByteArray = record.getAsByteArray();
-        Assert.assertEquals(rawByteArray, originalByteArray);
-
-        // Read something from it to force a map conversion
-        Assert.assertEquals(record.get("1"), "bar");
-        // Then check if it is still the same byte array
-        Assert.assertEquals(record.getAsByteArray(), rawByteArray);
-    }
-
-    @Test
-    public void testCopyRecordWithMap() {
-        Map<String, Object> contents = new HashMap<>();
-        Map<String, Long> innerMap = new HashMap<>();
-        contents.put("1", "foo");
-        contents.put("2", false);
-        contents.put("3", 1L);
-        contents.put("4", innerMap);
-        innerMap.put("4.1", 1L);
-        innerMap.put("4.2", 3L);
-
-        record.setString("1", "foo");
-        record.setBoolean("2", false);
-        record.setMap("4", Pair.of("4.1", 1L), Pair.of("4.2", 3L));
-        record.setLong("3", 1L);
-
-        Assert.assertEquals(new BulletAvroRecord(contents), record);
-    }
-
-    @Test
     public void testRenaming() {
         record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
@@ -781,7 +706,7 @@ public class BulletAvroRecordTest {
         record.remove("7");
         Assert.assertEquals(record.fieldCount(), 1);
 
-        BulletAvroRecord another = new BulletAvroRecord(record.getAsByteArray());
+        BulletAvroRecord another = new BulletAvroRecord(record);
         Assert.assertEquals(another.fieldCount(), 1);
     }
 

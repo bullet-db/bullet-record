@@ -31,40 +31,92 @@ import java.util.Objects;
 
 /**
  * The default implementation of {@link BulletRecord}.
+ *
+ * By default, after serialization the record deserializes lazily. It will only deserialize when one of
+ * the get/set methods are called. This makes the object cheap to send through repeated read-write cycles
+ * without modifications. You can force a read by either calling a get/set method or using {@link #forceReadData()}.
  */
 @Slf4j @Setter(AccessLevel.PACKAGE) @NoArgsConstructor
-public class BulletAvroRecord implements BulletRecord {
+public class BulletAvroRecord extends BulletRecord {
     public static final long serialVersionUID = 926415013785021742L;
 
     protected boolean isDeserialized = true;
-    protected byte[] serializedData;
     protected Map<String, Object> data = new HashMap<>();
-    protected static final SpecificDatumWriter<BulletAvro> WRITER = new SpecificDatumWriter<>(BulletAvro.class);
+    protected byte[] serializedData;
+    private static final SpecificDatumWriter<BulletAvro> WRITER = new SpecificDatumWriter<>(BulletAvro.class);
 
     /**
-     * Constructor that takes in the raw serialized byte[] that represents the data in the BulletAvroRecord. The user is
-     * responsible for ensuring that this byte[] was indeed produced by the same {@link #getAsByteArray()} method. The
-     * user is also responsible for ensuring that the byte[] was produced by the same version of the BulletAvroRecord as
-     * is the version that the user is invoking this constructor on.
+     * Copy constuctor.
      *
-     * @param data The serialized contents that represent this BulletAvroRecord.
+     * @param other The BulletAvroRecord to copy.
      */
-    public BulletAvroRecord(byte[] data) {
-        serializedData = data;
+    public BulletAvroRecord(BulletAvroRecord other) throws IOException {
+        serializedData = other.getAsByteArray();
         isDeserialized = false;
     }
 
     /**
-     * Constructor that lets you set an arbitrary {@link Map} of field names to values as the data for the BulletAvroRecord.
-     * No checks are performed so this method is <strong>unsafe</strong> to use if you are not absolutely sure the
-     * data can be placed into a BulletAvroRecord. This is meant as a convenience method to copy the same data into
-     * multiple BulletRecords.
+     * Force read and convert the raw serialized data to valid Java objects. This method will force the record to
+     * become reified. Otherwise, it will keep the raw data as is till fields are attempted to be extracted from it.
      *
-     * @param data The mapping of field names to their typed values that constitutes the data for this BulletAvroRecord.
+     * @return true iff the data was able to be read from the raw data.
      */
-    public BulletAvroRecord(Map<String, Object> data) {
-        this.data = data;
-        isDeserialized = true;
+    public boolean forceReadData() {
+        if (isDeserialized) {
+            return true;
+        }
+        try {
+            data = reify(serializedData);
+            // Get rid of the byte array to not store both. It will need to be recreated (since we have no dirty flag)
+            // when writing out anyway since more things may have been inserted into the record.
+            serializedData = null;
+            isDeserialized = true;
+            return true;
+        } catch (Exception e) {
+            log.error("Unable to read record from raw data", e);
+            return false;
+        }
+    }
+
+    @Override
+    protected BulletAvroRecord set(String field, Object object) {
+        Objects.requireNonNull(field);
+        forceReadData();
+        data.put(field, object);
+        return this;
+    }
+
+    @Override
+    public Object get(String field) {
+        if (!forceReadData()) {
+            return null;
+        }
+        return data.get(field);
+    }
+
+    @Override
+    public boolean hasField(String field) {
+        forceFailIfCannotRead();
+        return data.containsKey(field);
+    }
+
+    @Override
+    public int fieldCount() {
+        forceFailIfCannotRead();
+        return data.size();
+    }
+
+    @Override
+    public Object getAndRemove(String field) {
+        return hasField(field) ? data.remove(field) : null;
+    }
+
+    @Override
+    public BulletRecord remove(String field) {
+        if (hasField(field)) {
+            data.remove(field);
+        }
+        return this;
     }
 
     @Override
@@ -103,242 +155,6 @@ public class BulletAvroRecord implements BulletRecord {
         return data == null ? 42 : data.hashCode();
     }
 
-    @Override
-    public byte[] getAsByteArray() throws IOException {
-        if (isDeserialized) {
-            return serialize(data);
-        }
-        return serializedData;
-    }
-
-    @Override
-    public boolean forceReadData() {
-        if (isDeserialized) {
-            return true;
-        }
-        try {
-            data = reify(serializedData);
-            // Get rid of the byte array to not store both. It will need to be recreated (since we have no dirty flag)
-            // when writing out anyway since more things may have been inserted into the record.
-            serializedData = null;
-            isDeserialized = true;
-            return true;
-        } catch (Exception e) {
-            log.error("Unable to read record from raw data", e);
-            return false;
-        }
-    }
-
-    // ******************************************** GETTERS ********************************************
-
-    @Override
-    public Object get(String field) {
-        if (!forceReadData()) {
-            return null;
-        }
-        return data.get(field);
-    }
-
-    @Override
-    public Object get(String field, String subKey) {
-        Object value = get(field);
-        if (value == null) {
-            return null;
-        }
-        @SuppressWarnings("unchecked")
-        Map<String, Object> casted = (Map<String, Object>) value;
-        return casted.get(subKey);
-    }
-
-    @Override
-    public Object get(String field, int index) {
-        Object value = get(field);
-        if (value == null) {
-            return null;
-        }
-        @SuppressWarnings("unchecked")
-        List<Object> casted = (List<Object>) value;
-        return casted.get(index);
-    }
-
-    @Override
-    public boolean hasField(String field) {
-        forceFailIfCannotRead();
-        return data.containsKey(field);
-    }
-
-    @Override
-    public int fieldCount() {
-        forceFailIfCannotRead();
-        return data.size();
-    }
-
-    @Override
-    public Object getAndRemove(String field) {
-        // Use hasField to deserialize if necessary
-        return hasField(field) ? data.remove(field) : null;
-    }
-
-    @Override
-    public BulletRecord remove(String field) {
-        if (hasField(field)) {
-            data.remove(field);
-        }
-        return this;
-    }
-
-    @Override
-    public BulletRecord rename(String field, String newName) {
-        if (hasField(field)) {
-            set(newName, getAndRemove(field));
-        }
-        return this;
-    }
-
-    // ******************************************** SETTERS ********************************************
-
-    @Override
-    public BulletRecord setBoolean(String field, Boolean object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setString(String field, String object) {
-        return set(field, object);
-    }
-
-    @Override
-    public  BulletRecord setInteger(String field, Integer object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setLong(String field, Long object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setFloat(String field, Float object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setDouble(String field, Double object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setBooleanMap(String field, Map<String, Boolean> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletAvroRecord setStringMap(String field, Map<String, String> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setIntegerMap(String field, Map<String, Integer> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setLongMap(String field, Map<String, Long> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setFloatMap(String field, Map<String, Float> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setDoubleMap(String field, Map<String, Double> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setMapOfBooleanMap(String field, Map<String, Map<String, Boolean>> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setMapOfStringMap(String field, Map<String, Map<String, String>> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setMapOfIntegerMap(String field, Map<String, Map<String, Integer>> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setMapOfLongMap(String field, Map<String, Map<String, Long>> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setMapOfFloatMap(String field, Map<String, Map<String, Float>> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setMapOfDoubleMap(String field, Map<String, Map<String, Double>> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setListOfBooleanMap(String field, List<Map<String, Boolean>> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setListOfStringMap(String field, List<Map<String, String>> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setListOfIntegerMap(String field, List<Map<String, Integer>> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setListOfLongMap(String field, List<Map<String, Long>> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setListOfFloatMap(String field, List<Map<String, Float>> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord setListOfDoubleMap(String field, List<Map<String, Double>> object) {
-        return set(field, object);
-    }
-
-    @Override
-    public BulletRecord set(String field, BulletRecord that, String thatField) {
-        return set(field, that.get(thatField));
-    }
-
-    @Override
-    public BulletRecord set(String field, BulletRecord that, String thatMapField, String thatMapKey) {
-        return set(field, that.get(thatMapField, thatMapKey));
-    }
-
-    @Override
-    public BulletRecord set(String field, BulletRecord that, String thatListField, int thatListIndex) {
-        return set(field, that.get(thatListField, thatListIndex));
-    }
-
-    private BulletAvroRecord set(String field, Object object) {
-        Objects.requireNonNull(field);
-        forceReadData();
-        data.put(field, object);
-        return this;
-    }
-
     private void forceFailIfCannotRead() {
         if (!forceReadData()) {
             throw new RuntimeException("Cannot read from record. Unable to proceed.");
@@ -375,6 +191,13 @@ public class BulletAvroRecord implements BulletRecord {
         serializedData = (byte[]) in.readObject();
         data = null;
         isDeserialized = false;
+    }
+
+    private byte[] getAsByteArray() throws IOException {
+        if (isDeserialized) {
+            return serialize(data);
+        }
+        return serializedData;
     }
 
     /**
