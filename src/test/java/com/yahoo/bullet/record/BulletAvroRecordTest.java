@@ -767,4 +767,23 @@ public class BulletAvroRecordTest {
         Assert.assertTrue(record.isDeserialized);
         Assert.assertNotNull(record.data);
     }
+
+    @Test
+    public void testCopyConstructor() throws Exception {
+        BulletAvroRecord record = new BulletAvroRecord();
+        record.set("someField", "someValue");
+        BulletAvroRecord copy = new BulletAvroRecord(record);
+        Assert.assertEquals(copy.get("someField"), "someValue");
+        Assert.assertEquals(copy.fieldCount(), 1);
+    }
+
+    @Test
+    public void testCopyOfCopy() throws Exception {
+        BulletAvroRecord record = new BulletAvroRecord();
+        record.set("someField", "someValue");
+        BulletAvroRecord copy = new BulletAvroRecord(record);
+        BulletAvroRecord copyOfCopy = new BulletAvroRecord(copy);
+        Assert.assertEquals(copyOfCopy.get("someField"), "someValue");
+        Assert.assertEquals(copyOfCopy.fieldCount(), 1);
+    }
 }
