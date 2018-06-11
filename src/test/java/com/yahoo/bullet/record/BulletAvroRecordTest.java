@@ -760,4 +760,11 @@ public class BulletAvroRecordTest {
         record.setDeserialized(false);
         record.hasField("foo");
     }
+
+    @Test
+    public void testNoArgsConstructor() {
+        BulletAvroRecord record = new BulletAvroRecord();
+        Assert.assertTrue(record.isDeserialized);
+        Assert.assertNotNull(record.data);
+    }
 }
