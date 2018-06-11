@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * The default implementation of {@link BulletRecord}.
+ * An implementation of {@link BulletRecord} using Avro for serialization.
  *
  * By default, after serialization the record deserializes lazily. It will only deserialize when one of
  * the get/set methods are called. This makes the object cheap to send through repeated read-write cycles
