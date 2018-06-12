@@ -8,6 +8,7 @@ package com.yahoo.bullet.record;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Data sent to Bullet should be wrapped in a class that extends this abstract class. It is
@@ -31,7 +32,7 @@ import java.util.Map;
  *
  * Instead of setting a field to null (you cannot for top level Java primitives), avoid setting it instead.
  */
-public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serializable {
+public abstract class BulletRecord implements Iterable<Pair<String, Object>>, Serializable {
     private static final long serialVersionUID = 3319286957467020672L;
 
     /**

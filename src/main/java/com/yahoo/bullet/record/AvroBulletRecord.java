@@ -16,6 +16,9 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -36,7 +39,7 @@ import java.util.Objects;
  * without modifications. You can force a read by either calling a get/set method or using {@link #forceReadData()}.
  */
 @Slf4j @Setter(AccessLevel.PACKAGE) @NoArgsConstructor
-public class BulletAvroRecord extends BulletRecord {
+public class AvroBulletRecord extends BulletRecord {
     public static final long serialVersionUID = 926415013785021742L;
 
     protected boolean isDeserialized = true;
@@ -47,9 +50,9 @@ public class BulletAvroRecord extends BulletRecord {
     /**
      * Constuctor.
      *
-     * @param other The BulletAvroRecord to copy.
+     * @param other The AvroBulletRecord to copy.
      */
-    public BulletAvroRecord(BulletAvroRecord other) throws IOException {
+    public AvroBulletRecord(AvroBulletRecord other) throws IOException {
         serializedData = other.getAsByteArray();
         isDeserialized = false;
     }
@@ -78,7 +81,7 @@ public class BulletAvroRecord extends BulletRecord {
     }
 
     @Override
-    protected BulletAvroRecord set(String field, Object object) {
+    protected AvroBulletRecord set(String field, Object object) {
         Objects.requireNonNull(field);
         forceReadData();
         data.put(field, object);
@@ -119,8 +122,22 @@ public class BulletAvroRecord extends BulletRecord {
     }
 
     @Override
-    public Iterator<Map.Entry<String, Object>> iterator() {
-        return forceReadData() ? data.entrySet().iterator() : Collections.<String, Object>emptyMap().entrySet().iterator();
+    public Iterator<Pair<String, Object>> iterator() {
+        return new Iterator<Pair<String, Object>>() {
+            Iterator<Map.Entry<String, Object>> entries =
+                    forceReadData() ? data.entrySet().iterator() : Collections.<String, Object>emptyMap().entrySet().iterator();
+            
+            @Override
+            public boolean hasNext() {
+                return entries.hasNext();
+            }
+
+            @Override
+            public Pair<String, Object> next() {
+                Map.Entry<String, Object> entry = entries.next();
+                return new ImmutablePair<>(entry.getKey(), entry.getValue());
+            }
+        };
     }
 
     @Override
@@ -136,10 +153,10 @@ public class BulletAvroRecord extends BulletRecord {
 
     @Override
     public boolean equals(Object object) {
-        if (!(object instanceof BulletAvroRecord)) {
+        if (!(object instanceof AvroBulletRecord)) {
             return false;
         }
-        BulletAvroRecord that = (BulletAvroRecord) object;
+        AvroBulletRecord that = (AvroBulletRecord) object;
         // We need to force read the data since writing out data to bytes will give different byte arrays
         // if the content is the same but the order isn't.
         forceReadData();
@@ -209,7 +226,7 @@ public class BulletAvroRecord extends BulletRecord {
      * @param entries The non-null entries to insert.
      * @return this object for chaining.
      */
-    BulletAvroRecord setMap(String field, Map.Entry<String, Object>... entries) {
+    AvroBulletRecord setMap(String field, Map.Entry<String, Object>... entries) {
         Objects.requireNonNull(entries);
         Map<String, Object> newMap = new HashMap<>(entries.length);
         for (Map.Entry<String, Object> entry : entries) {
@@ -228,7 +245,7 @@ public class BulletAvroRecord extends BulletRecord {
      * @param entries The non-null entries to insert.
      * @return this object for chaining.
      */
-    BulletAvroRecord setListMap(String field, Map<String, Object>... entries) {
+    AvroBulletRecord setListMap(String field, Map<String, Object>... entries) {
         Objects.requireNonNull(entries);
         List<Map<String, Object>> data = new ArrayList<>();
         for (Map<String, Object> entry : entries) {
