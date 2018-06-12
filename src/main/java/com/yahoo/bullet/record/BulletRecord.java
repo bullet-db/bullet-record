@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Data sent to bullet should be wrapped in a class that extends this abstract class. It is
+ * Data sent to Bullet should be wrapped in a class that extends this abstract class. It is
  * {@link Serializable} and {@link Iterable} so records can be used in for-each loops. The various
  * set methods can be used to insert fields into the record. They are implemented by default to use
  * the base {@link #set(String, Object)} method which should be overridden in child classes. Field
@@ -39,7 +39,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * and should remain protected in child classes to ensure type safety.
      *
      * @param field The non-null name of the field
-     * @return The value of the field or null if it does not exist.
+     * @return This object for chaining.
      */
     protected abstract BulletRecord set(String field, Object object);
 
@@ -128,7 +128,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setBoolean(String field, Boolean object) {
         return set(field, object);
@@ -139,51 +139,51 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setString(String field, String object) {
         return set(field, object);
     }
 
     /**
-     * Insert an int field.
+     * Insert an Integer field.
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setInteger(String field, Integer object) {
         return set(field, object);
     }
 
     /**
-     * Insert a long field.
+     * Insert a Long field.
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setLong(String field, Long object) {
         return set(field, object);
     }
 
     /**
-     * Insert a float field.
+     * Insert a Float field.
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setFloat(String field, Float object) {
         return set(field, object);
     }
 
     /**
-     * Insert a double field.
+     * Insert a Double field.
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setDouble(String field, Double object) {
         return set(field, object);
@@ -194,7 +194,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setBooleanMap(String field, Map<String, Boolean> object) {
         return set(field, object);
@@ -205,7 +205,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setStringMap(String field, Map<String, String> object) {
         return set(field, object);
@@ -216,7 +216,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setIntegerMap(String field, Map<String, Integer> object) {
         return set(field, object);
@@ -227,7 +227,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setLongMap(String field, Map<String, Long> object) {
         return set(field, object);
@@ -238,7 +238,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setFloatMap(String field, Map<String, Float> object) {
         return set(field, object);
@@ -249,7 +249,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setDoubleMap(String field, Map<String, Double> object) {
         return set(field, object);
@@ -260,7 +260,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setMapOfBooleanMap(String field, Map<String, Map<String, Boolean>> object) {
         return set(field, object);
@@ -271,7 +271,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setMapOfStringMap(String field, Map<String, Map<String, String>> object) {
         return set(field, object);
@@ -282,7 +282,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setMapOfIntegerMap(String field, Map<String, Map<String, Integer>> object) {
         return set(field, object);
@@ -293,7 +293,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setMapOfLongMap(String field, Map<String, Map<String, Long>> object) {
         return set(field, object);
@@ -304,7 +304,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setMapOfFloatMap(String field, Map<String, Map<String, Float>> object) {
         return set(field, object);
@@ -315,7 +315,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setMapOfDoubleMap(String field, Map<String, Map<String, Double>> object) {
         return set(field, object);
@@ -326,7 +326,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setListOfBooleanMap(String field, List<Map<String, Boolean>> object) {
         return set(field, object);
@@ -337,7 +337,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setListOfStringMap(String field, List<Map<String, String>> object) {
         return set(field, object);
@@ -348,7 +348,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setListOfIntegerMap(String field, List<Map<String, Integer>> object) {
         return set(field, object);
@@ -359,7 +359,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setListOfLongMap(String field, List<Map<String, Long>> object) {
         return set(field, object);
@@ -370,7 +370,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setListOfFloatMap(String field, List<Map<String, Float>> object) {
         return set(field, object);
@@ -381,7 +381,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord setListOfDoubleMap(String field, List<Map<String, Double>> object) {
         return set(field, object);
@@ -393,7 +393,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * @param field The name in this record to insert the field as.
      * @param that The non-null record to extract the field from.
      * @param thatField The name of the field in that record to get the field from.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord set(String field, BulletRecord that, String thatField) {
         return set(field, that.get(thatField));
@@ -406,7 +406,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * @param that The non-null record to extract the field from.
      * @param thatMapField The name of the Map field in that record to get the key from.
      * @param thatMapKey The name of the key in the Map field in that record.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord set(String field, BulletRecord that, String thatMapField, String thatMapKey) {
         return set(field, that.get(thatMapField, thatMapKey));
@@ -419,7 +419,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * @param that The non-null record to extract the field from.
      * @param thatListField The name of the List field in that record to get the index of.
      * @param thatListIndex The index of the field in the List to get.
-     * @return this object for chaining.
+     * @return This object for chaining.
      */
     public BulletRecord set(String field, BulletRecord that, String thatListField, int thatListIndex) {
         return set(field, that.get(thatListField, thatListIndex));
