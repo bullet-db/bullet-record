@@ -10,6 +10,8 @@ package com.yahoo.bullet.record;
  * Factory for AvroBulletRecord.
  */
 public class AvroBulletRecordProvider implements BulletRecordProvider {
+    private static final long serialVersionUID = 8064632505561405799L;
+
     @Override
     public BulletRecord getInstance() {
         return new AvroBulletRecord();

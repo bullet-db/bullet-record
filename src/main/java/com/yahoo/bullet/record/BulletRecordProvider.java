@@ -5,10 +5,12 @@
  */
 package com.yahoo.bullet.record;
 
+import java.io.Serializable;
+
 /**
  * Factories used to produce BulletRecords should implement this interface.
  */
-public interface BulletRecordProvider {
+public interface BulletRecordProvider extends Serializable {
     /**
      * Get an instance of a BulletRecord.
      *
