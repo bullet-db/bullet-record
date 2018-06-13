@@ -27,8 +27,8 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
 @SuppressWarnings("unchecked")
-public class BulletRecordTest {
-    private BulletRecord record;
+public class AvroBulletRecordTest {
+    private AvroBulletRecord record;
 
     public static byte[] getAvroBytes(Map<String, Object> data) {
         try {
@@ -46,7 +46,7 @@ public class BulletRecordTest {
         }
     }
 
-    public static byte[] getRecordBytes(BulletRecord record) {
+    public static byte[] getRecordBytes(AvroBulletRecord record) {
         try {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
             ObjectOutputStream outputStream = new ObjectOutputStream(byteStream);
@@ -59,10 +59,10 @@ public class BulletRecordTest {
         }
     }
 
-    public static BulletRecord fromRecordBytes(byte[] data) {
+    public static AvroBulletRecord fromRecordBytes(byte[] data) {
         try {
             ObjectInputStream stream = new ObjectInputStream(new ByteArrayInputStream(data));
-            return (BulletRecord) stream.readObject();
+            return (AvroBulletRecord) stream.readObject();
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -70,7 +70,7 @@ public class BulletRecordTest {
 
     @BeforeMethod
     public void setup() {
-        record = new BulletRecord();
+        record = new AvroBulletRecord();
     }
 
     @Test
@@ -93,11 +93,30 @@ public class BulletRecordTest {
     }
 
     @Test
+    public void testSetInteger() {
+        record.setInteger("foo", 88).setInteger("bar", 51);
+
+        Assert.assertEquals(record.get("foo"), 88);
+        Assert.assertEquals(record.get("bar"), 51);
+        Assert.assertNull(record.get("dne"));
+    }
+
+    @Test
     public void testSetLong() {
         record.setLong("foo", 0L).setLong("bar", -1231231231231231231L).setLong("baz", null);
 
         Assert.assertEquals(record.get("foo"), 0L);
         Assert.assertEquals(record.get("bar"), -1231231231231231231L);
+        Assert.assertNull(record.get("baz"));
+        Assert.assertNull(record.get("dne"));
+    }
+
+    @Test
+    public void testSetFloat() {
+        record.setFloat("foo", 42.1f).setFloat("bar", -1.13f).setFloat("baz", null);
+
+        Assert.assertEquals(record.get("foo"), 42.1f);
+        Assert.assertEquals(record.get("bar"), -1.13f);
         Assert.assertNull(record.get("baz"));
         Assert.assertNull(record.get("dne"));
     }
@@ -114,34 +133,50 @@ public class BulletRecordTest {
 
     @Test
     public void testSetMaps() {
-        Map<String, Long> dataA = new HashMap<>();
-        dataA.put("bar", 1L);
-        dataA.put("baz", 2L);
-        record.setLongMap("fooA", dataA);
+        Map<String, Integer> dataA = new HashMap<>();
+        dataA.put("bar", 1);
+        dataA.put("baz", 2);
+        record.setIntegerMap("fooA", dataA);
+        Assert.assertTrue(record.get("fooA") instanceof Map);
+        Assert.assertEquals(record.get("fooA", "bar"), 1);
+        Assert.assertEquals(record.get("fooA", "baz"), 2);
+
+        Map<String, Long> dataB = new HashMap<>();
+        dataB.put("bar", 1L);
+        dataB.put("baz", 2L);
+        record.setLongMap("fooA", dataB);
         Assert.assertTrue(record.get("fooA") instanceof Map);
         Assert.assertEquals(record.get("fooA", "bar"), 1L);
         Assert.assertEquals(record.get("fooA", "baz"), 2L);
 
-        Map<String, Double> dataB = new HashMap<>();
-        dataB.put("bar", 1.1);
-        dataB.put("baz", 2.2);
-        record.setDoubleMap("fooB", dataB);
+        Map<String, Float> dataC = new HashMap<>();
+        dataC.put("bar", 1.1f);
+        dataC.put("baz", 2.2f);
+        record.setFloatMap("fooA", dataC);
+        Assert.assertTrue(record.get("fooA") instanceof Map);
+        Assert.assertEquals(record.get("fooA", "bar"), 1.1f);
+        Assert.assertEquals(record.get("fooA", "baz"), 2.2f);
+
+        Map<String, Double> dataD = new HashMap<>();
+        dataD.put("bar", 1.1);
+        dataD.put("baz", 2.2);
+        record.setDoubleMap("fooB", dataD);
         Assert.assertTrue(record.get("fooB") instanceof Map);
         Assert.assertEquals(record.get("fooB", "bar"), 1.1);
         Assert.assertEquals(record.get("fooB", "baz"), 2.2);
 
-        Map<String, Boolean> dataC = new HashMap<>();
-        dataC.put("bar", false);
-        dataC.put("baz", true);
-        record.setBooleanMap("fooC", dataC);
+        Map<String, Boolean> dataE = new HashMap<>();
+        dataE.put("bar", false);
+        dataE.put("baz", true);
+        record.setBooleanMap("fooC", dataE);
         Assert.assertTrue(record.get("fooC") instanceof Map);
         Assert.assertEquals(record.get("fooC", "bar"), false);
         Assert.assertEquals(record.get("fooC", "baz"), true);
 
-        Map<String, String> dataD = new HashMap<>();
-        dataD.put("bar", "foo");
-        dataD.put("baz", "norf");
-        record.setStringMap("fooD", dataD);
+        Map<String, String> dataF = new HashMap<>();
+        dataF.put("bar", "foo");
+        dataF.put("baz", "norf");
+        record.setStringMap("fooD", dataF);
         Assert.assertTrue(record.get("fooD") instanceof Map);
         Assert.assertEquals(record.get("fooD", "bar"), "foo");
         Assert.assertEquals(record.get("fooD", "baz"), "norf");
@@ -153,45 +188,65 @@ public class BulletRecordTest {
 
     @Test
     public void testSetMapOfMaps() {
-        Map<String, Map<String, Long>> dataA = new HashMap<>();
-        dataA.put("bar", singletonMap("a", 1L));
-        dataA.put("baz", singletonMap("b", 2L));
-        record.setMapOfLongMap("fooA", dataA);
+        Map<String, Map<String, Integer>> dataA = new HashMap<>();
+        dataA.put("bar", singletonMap("a", 1));
+        dataA.put("baz", singletonMap("b", 2));
+        record.setMapOfIntegerMap("fooA", dataA);
         Assert.assertTrue(record.get("fooA") instanceof Map);
         Assert.assertTrue(record.get("fooA", "bar") instanceof Map);
         Assert.assertTrue(record.get("fooA", "baz") instanceof Map);
-        Assert.assertEquals(record.get("fooA", "bar"), singletonMap("a", 1L));
-        Assert.assertEquals(record.get("fooA", "baz"), singletonMap("b", 2L));
+        Assert.assertEquals(record.get("fooA", "bar"), singletonMap("a", 1));
+        Assert.assertEquals(record.get("fooA", "baz"), singletonMap("b", 2));
 
-        Map<String, Map<String, Double>> dataB = new HashMap<>();
-        dataB.put("bar", singletonMap("a", 0.2));
-        dataB.put("baz", singletonMap("b", 0.1));
-        record.setMapOfDoubleMap("fooB", dataB);
+        Map<String, Map<String, Long>> dataB = new HashMap<>();
+        dataB.put("bar", singletonMap("a", 1L));
+        dataB.put("baz", singletonMap("b", 2L));
+        record.setMapOfLongMap("fooB", dataB);
         Assert.assertTrue(record.get("fooB") instanceof Map);
         Assert.assertTrue(record.get("fooB", "bar") instanceof Map);
         Assert.assertTrue(record.get("fooB", "baz") instanceof Map);
-        Assert.assertEquals(record.get("fooB", "bar"), singletonMap("a", 0.2));
-        Assert.assertEquals(record.get("fooB", "baz"), singletonMap("b", 0.1));
+        Assert.assertEquals(record.get("fooB", "bar"), singletonMap("a", 1L));
+        Assert.assertEquals(record.get("fooB", "baz"), singletonMap("b", 2L));
 
-        Map<String, Map<String, Boolean>> dataC = new HashMap<>();
-        dataC.put("bar", singletonMap("a", false));
-        dataC.put("baz", singletonMap("b", true));
-        record.setMapOfBooleanMap("fooC", dataC);
+        Map<String, Map<String, Float>> dataC = new HashMap<>();
+        dataC.put("bar", singletonMap("a", 0.2f));
+        dataC.put("baz", singletonMap("b", 0.1f));
+        record.setMapOfFloatMap("fooC", dataC);
         Assert.assertTrue(record.get("fooC") instanceof Map);
         Assert.assertTrue(record.get("fooC", "bar") instanceof Map);
         Assert.assertTrue(record.get("fooC", "baz") instanceof Map);
-        Assert.assertEquals(record.get("fooC", "bar"), singletonMap("a", false));
-        Assert.assertEquals(record.get("fooC", "baz"), singletonMap("b", true));
+        Assert.assertEquals(record.get("fooC", "bar"), singletonMap("a", 0.2f));
+        Assert.assertEquals(record.get("fooC", "baz"), singletonMap("b", 0.1f));
 
-        Map<String, Map<String, String>> dataD = new HashMap<>();
-        dataD.put("bar", singletonMap("a", "foo"));
-        dataD.put("baz", singletonMap("b", "norf"));
-        record.setMapOfStringMap("fooD", dataD);
+        Map<String, Map<String, Double>> dataD = new HashMap<>();
+        dataD.put("bar", singletonMap("a", 0.2));
+        dataD.put("baz", singletonMap("b", 0.1));
+        record.setMapOfDoubleMap("fooD", dataD);
         Assert.assertTrue(record.get("fooD") instanceof Map);
         Assert.assertTrue(record.get("fooD", "bar") instanceof Map);
         Assert.assertTrue(record.get("fooD", "baz") instanceof Map);
-        Assert.assertEquals(record.get("fooD", "bar"), singletonMap("a", "foo"));
-        Assert.assertEquals(record.get("fooD", "baz"), singletonMap("b", "norf"));
+        Assert.assertEquals(record.get("fooD", "bar"), singletonMap("a", 0.2));
+        Assert.assertEquals(record.get("fooD", "baz"), singletonMap("b", 0.1));
+
+        Map<String, Map<String, Boolean>> dataE = new HashMap<>();
+        dataE.put("bar", singletonMap("a", false));
+        dataE.put("baz", singletonMap("b", true));
+        record.setMapOfBooleanMap("fooE", dataE);
+        Assert.assertTrue(record.get("fooE") instanceof Map);
+        Assert.assertTrue(record.get("fooE", "bar") instanceof Map);
+        Assert.assertTrue(record.get("fooE", "baz") instanceof Map);
+        Assert.assertEquals(record.get("fooE", "bar"), singletonMap("a", false));
+        Assert.assertEquals(record.get("fooE", "baz"), singletonMap("b", true));
+
+        Map<String, Map<String, String>> dataF = new HashMap<>();
+        dataF.put("bar", singletonMap("a", "foo"));
+        dataF.put("baz", singletonMap("b", "norf"));
+        record.setMapOfStringMap("fooF", dataF);
+        Assert.assertTrue(record.get("fooF") instanceof Map);
+        Assert.assertTrue(record.get("fooF", "bar") instanceof Map);
+        Assert.assertTrue(record.get("fooF", "baz") instanceof Map);
+        Assert.assertEquals(record.get("fooF", "bar"), singletonMap("a", "foo"));
+        Assert.assertEquals(record.get("fooF", "baz"), singletonMap("b", "norf"));
 
         Assert.assertNull(record.get("dne"));
         Assert.assertNull(record.get("dne", "bar"));
@@ -200,45 +255,65 @@ public class BulletRecordTest {
 
     @Test
     public void testSetListMaps() {
-        List<Map<String, Long>> dataA = new ArrayList<>();
-        dataA.add(singletonMap("a", 1L));
-        dataA.add(singletonMap("b", 2L));
-        record.setListOfLongMap("fooA", dataA);
+        List<Map<String, Integer>> dataA = new ArrayList<>();
+        dataA.add(singletonMap("a", 1));
+        dataA.add(singletonMap("b", 2));
+        record.setListOfIntegerMap("fooA", dataA);
         Assert.assertTrue(record.get("fooA") instanceof List);
         Assert.assertTrue(record.get("fooA", 0) instanceof Map);
         Assert.assertTrue(record.get("fooA", 1) instanceof Map);
-        Assert.assertEquals(record.get("fooA", 0), singletonMap("a", 1L));
-        Assert.assertEquals(record.get("fooA", 1), singletonMap("b", 2L));
+        Assert.assertEquals(record.get("fooA", 0), singletonMap("a", 1));
+        Assert.assertEquals(record.get("fooA", 1), singletonMap("b", 2));
 
-        List<Map<String, Double>> dataB = new ArrayList<>();
-        dataB.add(singletonMap("a", 0.2));
-        dataB.add(singletonMap("b", 0.1));
-        record.setListOfDoubleMap("fooB", dataB);
+        List<Map<String, Long>> dataB = new ArrayList<>();
+        dataB.add(singletonMap("a", 1L));
+        dataB.add(singletonMap("b", 2L));
+        record.setListOfLongMap("fooB", dataB);
         Assert.assertTrue(record.get("fooB") instanceof List);
         Assert.assertTrue(record.get("fooB", 0) instanceof Map);
         Assert.assertTrue(record.get("fooB", 1) instanceof Map);
-        Assert.assertEquals(record.get("fooB", 0), singletonMap("a", 0.2));
-        Assert.assertEquals(record.get("fooB", 1), singletonMap("b", 0.1));
+        Assert.assertEquals(record.get("fooB", 0), singletonMap("a", 1L));
+        Assert.assertEquals(record.get("fooB", 1), singletonMap("b", 2L));
 
-        List<Map<String, Boolean>> dataC = new ArrayList<>();
-        dataC.add(singletonMap("a", false));
-        dataC.add(singletonMap("b", true));
-        record.setListOfBooleanMap("fooC", dataC);
+        List<Map<String, Float>> dataC = new ArrayList<>();
+        dataC.add(singletonMap("a", 0.2f));
+        dataC.add(singletonMap("b", 0.1f));
+        record.setListOfFloatMap("fooC", dataC);
         Assert.assertTrue(record.get("fooC") instanceof List);
         Assert.assertTrue(record.get("fooC", 0) instanceof Map);
         Assert.assertTrue(record.get("fooC", 1) instanceof Map);
-        Assert.assertEquals(record.get("fooC", 0), singletonMap("a", false));
-        Assert.assertEquals(record.get("fooC", 1), singletonMap("b", true));
+        Assert.assertEquals(record.get("fooC", 0), singletonMap("a", 0.2f));
+        Assert.assertEquals(record.get("fooC", 1), singletonMap("b", 0.1f));
 
-        List<Map<String, String>> dataD = new ArrayList<>();
-        dataD.add(singletonMap("a", "foo"));
-        dataD.add(singletonMap("b", "norf"));
-        record.setListOfStringMap("fooD", dataD);
+        List<Map<String, Double>> dataD = new ArrayList<>();
+        dataD.add(singletonMap("a", 0.2));
+        dataD.add(singletonMap("b", 0.1));
+        record.setListOfDoubleMap("fooD", dataD);
         Assert.assertTrue(record.get("fooD") instanceof List);
         Assert.assertTrue(record.get("fooD", 0) instanceof Map);
         Assert.assertTrue(record.get("fooD", 1) instanceof Map);
-        Assert.assertEquals(record.get("fooD", 0), singletonMap("a", "foo"));
-        Assert.assertEquals(record.get("fooD", 1), singletonMap("b", "norf"));
+        Assert.assertEquals(record.get("fooD", 0), singletonMap("a", 0.2));
+        Assert.assertEquals(record.get("fooD", 1), singletonMap("b", 0.1));
+
+        List<Map<String, Boolean>> dataE = new ArrayList<>();
+        dataE.add(singletonMap("a", false));
+        dataE.add(singletonMap("b", true));
+        record.setListOfBooleanMap("fooE", dataE);
+        Assert.assertTrue(record.get("fooE") instanceof List);
+        Assert.assertTrue(record.get("fooE", 0) instanceof Map);
+        Assert.assertTrue(record.get("fooE", 1) instanceof Map);
+        Assert.assertEquals(record.get("fooE", 0), singletonMap("a", false));
+        Assert.assertEquals(record.get("fooE", 1), singletonMap("b", true));
+
+        List<Map<String, String>> dataF = new ArrayList<>();
+        dataF.add(singletonMap("a", "foo"));
+        dataF.add(singletonMap("b", "norf"));
+        record.setListOfStringMap("fooF", dataF);
+        Assert.assertTrue(record.get("fooF") instanceof List);
+        Assert.assertTrue(record.get("fooF", 0) instanceof Map);
+        Assert.assertTrue(record.get("fooF", 1) instanceof Map);
+        Assert.assertEquals(record.get("fooF", 0), singletonMap("a", "foo"));
+        Assert.assertEquals(record.get("fooF", 1), singletonMap("b", "norf"));
 
         Assert.assertNull(record.get("dne", -1));
         Assert.assertNull(record.get("dne", 0));
@@ -253,7 +328,7 @@ public class BulletRecordTest {
         data.put("c.1", false);
         record.setListOfBooleanMap("c", singletonList(data));
 
-        BulletRecord newRecord = new BulletRecord();
+        AvroBulletRecord newRecord = new AvroBulletRecord();
 
         newRecord.set("newA", record, "a");
         Assert.assertEquals(newRecord.get("newA"), "foo");
@@ -320,16 +395,20 @@ public class BulletRecordTest {
 
     @Test
     public void testIterator() {
-        record.setString("1", "bar").setLong("2", 42L)
+        record.setMap("4", Pair.of("4.1", false))
+              .setString("1", "bar").setLong("2", 42L)
               .setBoolean("3", false)
-              .setMap("4", Pair.of("4.1", false))
-              .setListOfDoubleMap("5", singletonList(singletonMap("5.1", 3.1)));
+              .setInteger("7", 88)
+              .setListOfDoubleMap("5", singletonList(singletonMap("5.1", 3.1)))
+              .setListOfFloatMap("6", singletonList(singletonMap("8.8", 8.8f)));
         Map<String, Object> expectedMap = new HashMap<>();
         expectedMap.put("1", "bar");
         expectedMap.put("2", 42L);
         expectedMap.put("3", false);
         expectedMap.put("4", singletonMap("4.1", false));
         expectedMap.put("5", singletonList(singletonMap("5.1", 3.1)));
+        expectedMap.put("6", singletonList(singletonMap("8.8", 8.8f)));
+        expectedMap.put("7", 88);
 
         int lastEntry = 0;
         for (Map.Entry<String, Object> entry : record) {
@@ -349,11 +428,11 @@ public class BulletRecordTest {
 
     @Test
     public void testHashcodeEdgeCases() {
-        Assert.assertEquals(record.hashCode(), new BulletRecord().hashCode());
+        Assert.assertEquals(record.hashCode(), new AvroBulletRecord().hashCode());
 
         record.setSerializedData(null);
         record.setData(null);
-        BulletRecord another = new BulletRecord();
+        AvroBulletRecord another = new AvroBulletRecord();
         another.setSerializedData(null);
         another.setData(null);
         Assert.assertEquals(record.hashCode(), another.hashCode());
@@ -369,18 +448,18 @@ public class BulletRecordTest {
     @Test
     public void testEqualsDifferentRecord() {
         record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false);
-        BulletRecord another = new BulletRecord().setString("1", "bar");
+        AvroBulletRecord another = (AvroBulletRecord) new AvroBulletRecord().setString("1", "bar");
         Assert.assertFalse(record.equals(another));
     }
 
     @Test
     public void testEqualsAndHashcodeByteArrays() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-              .setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+        record.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
-        BulletRecord another = new BulletRecord();
-        another.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-               .setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+        AvroBulletRecord another = new AvroBulletRecord();
+        another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
 
         record.setSerializedData(getRecordBytes(record));
@@ -394,22 +473,22 @@ public class BulletRecordTest {
 
     @Test
     public void testEqualsAndHashcodeSameRecord() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-              .setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+        record.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
-        BulletRecord another = new BulletRecord();
-        another.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-               .setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+        AvroBulletRecord another = new AvroBulletRecord();
+        another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
 
         Assert.assertTrue(record.equals(another));
         Assert.assertEquals(record.hashCode(), another.hashCode());
 
         // Change order and it should still pass
-        another = new BulletRecord();
-        another.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")))
-               .setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null));
+        another = new AvroBulletRecord();
+        another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
+               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
+               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
         Assert.assertTrue(record.equals(another));
         Assert.assertEquals(record.hashCode(), another.hashCode());
 
@@ -428,7 +507,7 @@ public class BulletRecordTest {
         record.setData(null);
         record.setDeserialized(false);
 
-        BulletRecord another = new BulletRecord();
+        AvroBulletRecord another = new AvroBulletRecord();
         another.setSerializedData(null);
         another.setData(null);
         another.setDeserialized(false);
@@ -436,7 +515,7 @@ public class BulletRecordTest {
         Assert.assertTrue(record.equals(another));
         Assert.assertEquals(record.hashCode(), another.hashCode());
 
-        another = new BulletRecord();
+        another = new AvroBulletRecord();
         another.setString("foo", "bar");
 
         Assert.assertFalse(record.equals(another));
@@ -454,13 +533,13 @@ public class BulletRecordTest {
         Assert.assertFalse(record.forceReadData());
 
         // Set the data to an invalid byte array and force a read
-        record = new BulletRecord();
+        record = new AvroBulletRecord();
         record.setSerializedData("foo".getBytes());
         record.setDeserialized(false);
         Assert.assertFalse(record.forceReadData());
 
         // Set the data to a valid byte array and force a read
-        record = new BulletRecord();
+        record = new AvroBulletRecord();
         Map<String, Object> data = new HashMap<>();
         data.put("foo", singletonMap("bar", "baz"));
         data.put("qux", singletonList(singletonMap("bar", "baz")));
@@ -479,16 +558,16 @@ public class BulletRecordTest {
 
     @Test
     public void testSerializationDeserialization() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true), Pair.of("7.3", null))
+        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true), Pair.of("7.3", null))
               .setMap("8", Pair.of("8.1", "foo"), Pair.of("8.2", "bar"), Pair.of("8.3", "baz"))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)))
               .setListOfBooleanMap("10", singletonList(singletonMap("10.1", true)));
 
         byte[] serialized = getRecordBytes(record);
         Assert.assertNotNull(serialized);
 
-        BulletRecord reified = fromRecordBytes(serialized);
+        AvroBulletRecord reified = fromRecordBytes(serialized);
         Assert.assertNotNull(reified);
         Assert.assertEquals(reified.get("2"), 42L);
         Assert.assertTrue((Boolean) reified.get("7", "7.2"));
@@ -501,7 +580,7 @@ public class BulletRecordTest {
         byte[] serialized = getRecordBytes(record);
         Assert.assertNotNull(serialized);
 
-        BulletRecord reified = fromRecordBytes(serialized);
+        AvroBulletRecord reified = fromRecordBytes(serialized);
         Assert.assertNotNull(reified);
 
         byte[] serializedAgain = getRecordBytes(record);
@@ -511,7 +590,7 @@ public class BulletRecordTest {
     @Test
     public void testSerializationWithBadStates() {
         byte[] serialized = getRecordBytes(record);
-        BulletRecord reified = fromRecordBytes(serialized);
+        AvroBulletRecord reified = fromRecordBytes(serialized);
 
         // This will destroy the byte array and force the record to think it has data in its map (it doesn't)
         reified.setSerializedData(null);
@@ -525,7 +604,7 @@ public class BulletRecordTest {
     @Test
     public void testDeserializationWithBadStates() {
         byte[] serialized = getRecordBytes(record);
-        BulletRecord reified = fromRecordBytes(serialized);
+        AvroBulletRecord reified = fromRecordBytes(serialized);
 
         // This will destroy the byte array, force the record to think it doesn't have data in its map and then
         // force a read
@@ -544,7 +623,7 @@ public class BulletRecordTest {
 
         byte[] serialized = getRecordBytes(record);
         Assert.assertNotNull(serialized);
-        BulletRecord reified = fromRecordBytes(serialized);
+        AvroBulletRecord reified = fromRecordBytes(serialized);
 
         // Read and write without accessing anything
         serialized = getRecordBytes(reified);
@@ -556,15 +635,15 @@ public class BulletRecordTest {
 
     @Test
     public void testSerializationDeserializationWithDataInput() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true), Pair.of("7.3", null))
+        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true), Pair.of("7.3", null))
               .setMap("8", Pair.of("8.1", "foo"), Pair.of("8.2", "bar"), Pair.of("8.3", "baz"))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)))
               .setListOfBooleanMap("10", singletonList(singletonMap("10.1", true)));
 
         // SerDe
         byte[] serialized = getRecordBytes(record);
-        BulletRecord reified = fromRecordBytes(serialized);
+        AvroBulletRecord reified = fromRecordBytes(serialized);
 
         Assert.assertNotNull(serialized);
         Assert.assertNotNull(reified);
@@ -598,91 +677,16 @@ public class BulletRecordTest {
     }
 
     @Test
-    public void testRawByteArrayIsNotBacking() throws IOException {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
-        byte[] rawByteArray = record.getAsByteArray();
-        record.setString("1", "foo");
-        record.setString("5", "bar");
-        byte[] after = record.getAsByteArray();
-        Assert.assertNotEquals(after, rawByteArray);
-    }
-
-    @Test
-    public void testSerializationWithMapAndRawByteArray() throws IOException {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
-
-        // Get the raw data out
-        byte[] rawDataBytes = record.getAsByteArray();
-        // Create a new record from the raw data
-        BulletRecord reified = new BulletRecord(rawDataBytes);
-        Assert.assertTrue(record.equals(reified));
-    }
-
-    @Test
-    public void testBackingByteArrayIfDeserialized() throws IOException {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
-        byte[] rawDataBytes = record.getAsByteArray();
-
-        BulletRecord record = new BulletRecord(rawDataBytes);
-
-        Assert.assertEquals(record.getAsByteArray(), rawDataBytes);
-
-        Assert.assertEquals(record.get("1"), "bar");
-        Assert.assertEquals(record.get("2"), 42L);
-        Assert.assertEquals(record.get("3"), false);
-        Assert.assertEquals(record.get("4"), 0.34);
-        Assert.assertEquals(record.fieldCount(), 4);
-    }
-
-    @Test
-    public void testSameByteArrayPostSerialization() throws IOException {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
-        byte[] originalByteArray = record.getAsByteArray();
-
-        // Now serialize and deserialize the record
-        byte[] serialized = getRecordBytes(record);
-        BulletRecord reified = fromRecordBytes(serialized);
-
-        // Get the raw data again as bytes
-        byte[] rawByteArray = record.getAsByteArray();
-        Assert.assertEquals(rawByteArray, originalByteArray);
-
-        // Read something from it to force a map conversion
-        Assert.assertEquals(record.get("1"), "bar");
-        // Then check if it is still the same byte array
-        Assert.assertEquals(record.getAsByteArray(), rawByteArray);
-    }
-
-    @Test
-    public void testCopyRecordWithMap() {
-        Map<String, Object> contents = new HashMap<>();
-        Map<String, Long> innerMap = new HashMap<>();
-        contents.put("1", "foo");
-        contents.put("2", false);
-        contents.put("3", 1L);
-        contents.put("4", innerMap);
-        innerMap.put("4.1", 1L);
-        innerMap.put("4.2", 3L);
-
-        record.setString("1", "foo");
-        record.setBoolean("2", false);
-        record.setMap("4", Pair.of("4.1", 1L), Pair.of("4.2", 3L));
-        record.setLong("3", 1L);
-
-        Assert.assertEquals(new BulletRecord(contents), record);
-    }
-
-    @Test
     public void testRenaming() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         record.rename("1", "new1").rename("3", "new3").rename("7.4.1", "new2");
 
-        BulletRecord expected = new BulletRecord().setString("new1", "bar").setLong("2", 42L).setBoolean("new3", false)
+        BulletRecord expected = new AvroBulletRecord().setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+                                                  .setString("new1", "bar").setLong("2", 42L).setBoolean("new3", false)
                                                   .setDouble("4", 0.34)
-                                                  .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
                                                   .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         Assert.assertTrue(expected.equals(record));
@@ -702,27 +706,27 @@ public class BulletRecordTest {
         record.remove("7");
         Assert.assertEquals(record.fieldCount(), 1);
 
-        BulletRecord another = new BulletRecord(record.getAsByteArray());
+        AvroBulletRecord another = new AvroBulletRecord(record);
         Assert.assertEquals(another.fieldCount(), 1);
     }
 
     @Test
     public void testRemoving() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         record.remove("1").remove("3").remove("7.4.1").remove("9");
 
-        BulletRecord expected = new BulletRecord().setLong("2", 42L).setDouble("4", 0.34)
-                                                  .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true));
+        BulletRecord expected = new AvroBulletRecord().setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+                                                          .setLong("2", 42L).setDouble("4", 0.34);
         Assert.assertTrue(expected.equals(record));
     }
 
     @Test
     public void testRemovingField() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         Object data;
@@ -740,8 +744,8 @@ public class BulletRecordTest {
 
     @Test
     public void testFieldPresence() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setMap("7", Pair.of("4.1", false), Pair.of("7.2", true));
+        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
 
         Assert.assertTrue(record.hasField("1"));
         Assert.assertTrue(record.hasField("7"));
@@ -751,9 +755,35 @@ public class BulletRecordTest {
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Cannot read from record.*")
     public void testFailingWhenCannotRead() {
-        record = new BulletRecord();
+        record = new AvroBulletRecord();
         record.setSerializedData("foo".getBytes());
         record.setDeserialized(false);
         record.hasField("foo");
+    }
+
+    @Test
+    public void testNoArgsConstructor() {
+        AvroBulletRecord record = new AvroBulletRecord();
+        Assert.assertTrue(record.isDeserialized);
+        Assert.assertNotNull(record.data);
+    }
+
+    @Test
+    public void testCopyConstructor() throws Exception {
+        AvroBulletRecord record = new AvroBulletRecord();
+        record.set("someField", "someValue");
+        AvroBulletRecord copy = new AvroBulletRecord(record);
+        Assert.assertEquals(copy.get("someField"), "someValue");
+        Assert.assertEquals(copy.fieldCount(), 1);
+    }
+
+    @Test
+    public void testCopyOfCopy() throws Exception {
+        AvroBulletRecord record = new AvroBulletRecord();
+        record.set("someField", "someValue");
+        AvroBulletRecord copy = new AvroBulletRecord(record);
+        AvroBulletRecord copyOfCopy = new AvroBulletRecord(copy);
+        Assert.assertEquals(copyOfCopy.get("someField"), "someValue");
+        Assert.assertEquals(copyOfCopy.fieldCount(), 1);
     }
 }

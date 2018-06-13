@@ -11,7 +11,9 @@
           "null",
           "boolean",
           "string",
+          "int",
           "long",
+          "float",
           "double",
           {
             "type": "map",
@@ -19,7 +21,9 @@
               "null",
               "boolean",
               "string",
+              "int",
               "long",
+              "float",
               "double",
               {
                 "type": "map",
@@ -27,7 +31,9 @@
                   "null",
                   "boolean",
                   "string",
+                  "int",
                   "long",
+                  "float",
                   "double"
                 ]
               }
@@ -41,7 +47,9 @@
                 "null",
                 "boolean",
                 "string",
+                "int",
                 "long",
+                "float",
                 "double"
               ]
             }
