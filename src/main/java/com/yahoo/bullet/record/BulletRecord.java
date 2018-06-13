@@ -40,6 +40,7 @@ public abstract class BulletRecord implements Iterable<Pair<String, Object>>, Se
      * and should remain protected in child classes to ensure type safety.
      *
      * @param field The non-null name of the field
+     * @param object The object to be set
      * @return This object for chaining.
      */
     protected abstract BulletRecord set(String field, Object object);

@@ -51,6 +51,7 @@ public class AvroBulletRecord extends BulletRecord {
      * Constructor.
      *
      * @param other The AvroBulletRecord to copy.
+     * @throws IOException if failed to serialize the AvroBulletRecord object.
      */
     public AvroBulletRecord(AvroBulletRecord other) throws IOException {
         serializedData = other.getAsByteArray();
