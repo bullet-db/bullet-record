@@ -125,7 +125,7 @@ public abstract class BulletRecord implements Iterable<Pair<String, Object>>, Se
     // ******************************************** SETTERS ********************************************
 
     /**
-     * Insert a boolean field.
+     * Insert a Boolean field.
      *
      * @param field The non-null name of the field.
      * @param object The value to insert.

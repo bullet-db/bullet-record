@@ -48,7 +48,7 @@ public class AvroBulletRecord extends BulletRecord {
     private static final SpecificDatumWriter<BulletAvro> WRITER = new SpecificDatumWriter<>(BulletAvro.class);
 
     /**
-     * Constuctor.
+     * Constructor.
      *
      * @param other The AvroBulletRecord to copy.
      */
