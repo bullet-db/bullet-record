@@ -764,14 +764,14 @@ public class AvroBulletRecordTest {
     @Test
     public void testNoArgsConstructor() {
         AvroBulletRecord record = new AvroBulletRecord();
-        Assert.assertTrue(record.isDeserialized);
-        Assert.assertNotNull(record.data);
+        Assert.assertTrue(record.isDeserialized());
+        Assert.assertNotNull(record.getData());
     }
 
     @Test
     public void testCopyConstructor() throws Exception {
         AvroBulletRecord record = new AvroBulletRecord();
-        record.set("someField", "someValue");
+        record.setString("someField", "someValue");
         AvroBulletRecord copy = new AvroBulletRecord(record);
         Assert.assertEquals(copy.get("someField"), "someValue");
         Assert.assertEquals(copy.fieldCount(), 1);
@@ -780,7 +780,7 @@ public class AvroBulletRecordTest {
     @Test
     public void testCopyOfCopy() throws Exception {
         AvroBulletRecord record = new AvroBulletRecord();
-        record.set("someField", "someValue");
+        record.setString("someField", "someValue");
         AvroBulletRecord copy = new AvroBulletRecord(record);
         AvroBulletRecord copyOfCopy = new AvroBulletRecord(copy);
         Assert.assertEquals(copyOfCopy.get("someField"), "someValue");

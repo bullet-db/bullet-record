@@ -6,9 +6,11 @@
 package com.yahoo.bullet.record;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.Objects;
 
 /**
  * Data sent to Bullet should be wrapped in a class that extends this abstract class. It is
@@ -32,7 +34,7 @@ import org.apache.commons.lang3.tuple.Pair;
  *
  * Instead of setting a field to null (you cannot for top level Java primitives), avoid setting it instead.
  */
-public abstract class BulletRecord implements Iterable<Pair<String, Object>>, Serializable {
+public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serializable {
     private static final long serialVersionUID = 3319286957467020672L;
 
     /**
@@ -439,5 +441,54 @@ public abstract class BulletRecord implements Iterable<Pair<String, Object>>, Se
             set(newName, getAndRemove(field));
         }
         return this;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder().append("{");
+        String prefix = "";
+        for (Map.Entry<String, Object> fields : this) {
+            builder.append(prefix).append(fields.getKey()).append(":").append(fields.getValue());
+            prefix = ", ";
+        }
+        return builder.append("}").toString();
+    }
+
+    /**
+     * For Testing.
+     * <p>
+     * Insert a map field with values as Pairs or Map.Entry. The value of
+     * the entries must be in "Primitives".
+     *
+     * @param field The non-null name of the field.
+     * @param entries The non-null entries to insert.
+     * @return this object for chaining.
+     */
+    BulletRecord setMap(String field, Map.Entry<String, Object>... entries) {
+        Objects.requireNonNull(entries);
+        Map<String, Object> newMap = new HashMap<>(entries.length);
+        for (Map.Entry<String, Object> entry : entries) {
+            newMap.put(entry.getKey(), entry.getValue());
+        }
+        return set(field, newMap);
+    }
+
+    /**
+     * For Testing.
+     * <p>
+     * Insert a list field with values as Pairs or Map.Entry of maps. The value of
+     * the maps must be in "Primitives".
+     *
+     * @param field The non-null name of the field.
+     * @param entries The non-null entries to insert.
+     * @return this object for chaining.
+     */
+    BulletRecord setListMap(String field, Map<String, Object>... entries) {
+        Objects.requireNonNull(entries);
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (Map<String, Object> entry : entries) {
+            data.add(entry);
+        }
+        return set(field, data);
     }
 }
