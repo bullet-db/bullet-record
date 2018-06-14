@@ -5,19 +5,11 @@
  */
 package com.yahoo.bullet.record;
 
-import org.apache.avro.io.Encoder;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,54 +19,11 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
 @SuppressWarnings("unchecked")
-public class AvroBulletRecordTest {
-    private AvroBulletRecord record;
-
-    public static byte[] getAvroBytes(Map<String, Object> data) {
-        try {
-            // Keep this independent from the code
-            BulletAvro record = new BulletAvro(data);
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            SpecificDatumWriter<BulletAvro> writer = new SpecificDatumWriter<>(BulletAvro.class);
-            Encoder encoder = new EncoderFactory().directBinaryEncoder(stream, null);
-            stream.reset();
-            writer.write(record, encoder);
-            encoder.flush();
-            return stream.toByteArray();
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-        }
-    }
-
-    public static byte[] getRecordBytes(AvroBulletRecord record) {
-        try {
-            ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-            ObjectOutputStream outputStream = new ObjectOutputStream(byteStream);
-            outputStream.writeObject(record);
-            outputStream.close();
-            return byteStream.toByteArray();
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-
-        }
-    }
-
-    public static AvroBulletRecord fromRecordBytes(byte[] data) {
-        try {
-            ObjectInputStream stream = new ObjectInputStream(new ByteArrayInputStream(data));
-            return (AvroBulletRecord) stream.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @BeforeMethod
-    public void setup() {
-        record = new AvroBulletRecord();
-    }
+public class SimpleBulletRecordTest {
 
     @Test
     public void testSetBoolean() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setBoolean("foo", false).setBoolean("bar", true).setBoolean("baz", null);
 
         Assert.assertTrue((Boolean) record.get("bar"));
@@ -85,6 +34,7 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testSetString() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setString("foo", "bar").setString("bar", "baz");
 
         Assert.assertEquals(record.get("foo"), "bar");
@@ -94,6 +44,7 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testSetInteger() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setInteger("foo", 88).setInteger("bar", 51);
 
         Assert.assertEquals(record.get("foo"), 88);
@@ -103,6 +54,7 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testSetLong() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setLong("foo", 0L).setLong("bar", -1231231231231231231L).setLong("baz", null);
 
         Assert.assertEquals(record.get("foo"), 0L);
@@ -113,6 +65,7 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testSetFloat() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setFloat("foo", 42.1f).setFloat("bar", -1.13f).setFloat("baz", null);
 
         Assert.assertEquals(record.get("foo"), 42.1f);
@@ -123,6 +76,7 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testSetDouble() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setDouble("foo", 42.1).setDouble("bar", -1.13).setDouble("baz", null);
 
         Assert.assertEquals(record.get("foo"), 42.1);
@@ -133,6 +87,7 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testSetMaps() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         Map<String, Integer> dataA = new HashMap<>();
         dataA.put("bar", 1);
         dataA.put("baz", 2);
@@ -188,6 +143,7 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testSetMapOfMaps() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         Map<String, Map<String, Integer>> dataA = new HashMap<>();
         dataA.put("bar", singletonMap("a", 1));
         dataA.put("baz", singletonMap("b", 2));
@@ -255,6 +211,7 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testSetListMaps() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         List<Map<String, Integer>> dataA = new ArrayList<>();
         dataA.add(singletonMap("a", 1));
         dataA.add(singletonMap("b", 2));
@@ -322,13 +279,14 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testInsertingFromAnotherRecord() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setString("a", "foo");
         record.setStringMap("b", singletonMap("b.1", "bar"));
         Map<String, Boolean> data = new HashMap<>();
         data.put("c.1", false);
         record.setListOfBooleanMap("c", singletonList(data));
 
-        AvroBulletRecord newRecord = new AvroBulletRecord();
+        SimpleBulletRecord newRecord = new SimpleBulletRecord();
 
         newRecord.set("newA", record, "a");
         Assert.assertEquals(newRecord.get("newA"), "foo");
@@ -352,6 +310,7 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testGetTopLevelField() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setListOfStringMap("foo", singletonList(singletonMap("qux", "norf")));
         record.setString("bar", null);
 
@@ -363,6 +322,7 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testGetMapField() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("foo", Pair.of("bar", "baz"), Pair.of("baz", "qux"));
 
         Assert.assertTrue(record.get("foo") instanceof Map);
@@ -377,6 +337,7 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testGetListIndex() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setListMap("foo", singletonMap("a", 1L), singletonMap("b", 2L));
         Assert.assertTrue(record.get("foo") instanceof List);
         Assert.assertEquals(record.get("foo", 0), singletonMap("a", 1L));
@@ -389,12 +350,14 @@ public class AvroBulletRecordTest {
 
     @Test(expectedExceptions = IndexOutOfBoundsException.class)
     public void testGetListBadIndex() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setListMap("foo", singletonMap("a", 1L));
         record.get("foo", 1);
     }
 
     @Test
     public void testIterator() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("4", Pair.of("4.1", false))
               .setString("1", "bar").setLong("2", 42L)
               .setBoolean("3", false)
@@ -421,6 +384,7 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testToString() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         Assert.assertEquals(record.toString(), "{}");
         record.setString("1", "bar");
         Assert.assertEquals(record.toString(), "{1:bar}");
@@ -428,18 +392,18 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testHashcodeEdgeCases() {
-        Assert.assertEquals(record.hashCode(), new AvroBulletRecord().hashCode());
+        SimpleBulletRecord record = new SimpleBulletRecord();
+        Assert.assertEquals(record.hashCode(), new SimpleBulletRecord().hashCode());
 
-        record.setSerializedData(null);
         record.setData(null);
-        AvroBulletRecord another = new AvroBulletRecord();
-        another.setSerializedData(null);
+        SimpleBulletRecord another = new SimpleBulletRecord();
         another.setData(null);
         Assert.assertEquals(record.hashCode(), another.hashCode());
     }
 
     @Test
     public void testEqualsEdgeCases() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false);
         Assert.assertFalse(record.equals(null));
         Assert.assertFalse(record.equals("foo"));
@@ -447,36 +411,31 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testEqualsDifferentRecord() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false);
-        AvroBulletRecord another = (AvroBulletRecord) new AvroBulletRecord().setString("1", "bar");
+        SimpleBulletRecord another = (SimpleBulletRecord) new SimpleBulletRecord().setString("1", "bar");
         Assert.assertFalse(record.equals(another));
     }
 
     @Test
     public void testEqualsAndHashcodeByteArrays() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
-        AvroBulletRecord another = new AvroBulletRecord();
+        SimpleBulletRecord another = new SimpleBulletRecord();
         another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
-
-        record.setSerializedData(getRecordBytes(record));
-        record.setDeserialized(false);
-        another.setSerializedData(getRecordBytes(another));
-        another.setDeserialized(false);
-
-        Assert.assertTrue(record.equals(another));
-        Assert.assertEquals(record.hashCode(), another.hashCode());
     }
 
     @Test
     public void testEqualsAndHashcodeSameRecord() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
-        AvroBulletRecord another = new AvroBulletRecord();
+        SimpleBulletRecord another = new SimpleBulletRecord();
         another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
@@ -485,37 +444,26 @@ public class AvroBulletRecordTest {
         Assert.assertEquals(record.hashCode(), another.hashCode());
 
         // Change order and it should still pass
-        another = new AvroBulletRecord();
+        another = new SimpleBulletRecord();
         another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
-        Assert.assertTrue(record.equals(another));
-        Assert.assertEquals(record.hashCode(), another.hashCode());
-
-        // If you reify the changed order and compare, it still should
-        record.setSerializedData(getRecordBytes(record));
-        record.setDeserialized(false);
-        another.setSerializedData(getRecordBytes(another));
-        another.setDeserialized(false);
         Assert.assertTrue(record.equals(another));
         Assert.assertEquals(record.hashCode(), another.hashCode());
     }
 
     @Test
     public void testEqualsAndHashcodeCorruptedRecord() {
-        record.setSerializedData(null);
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setData(null);
-        record.setDeserialized(false);
 
-        AvroBulletRecord another = new AvroBulletRecord();
-        another.setSerializedData(null);
+        SimpleBulletRecord another = new SimpleBulletRecord();
         another.setData(null);
-        another.setDeserialized(false);
 
         Assert.assertTrue(record.equals(another));
         Assert.assertEquals(record.hashCode(), another.hashCode());
 
-        another = new AvroBulletRecord();
+        another = new SimpleBulletRecord();
         another.setString("foo", "bar");
 
         Assert.assertFalse(record.equals(another));
@@ -524,176 +472,25 @@ public class AvroBulletRecordTest {
     }
 
     @Test
-    public void testForceReadData() {
-        // If already deserialized, should succeed
-        Assert.assertTrue(record.forceReadData());
-
-        // Force a bad read with no data and not deserialized.
-        record.setDeserialized(false);
-        Assert.assertFalse(record.forceReadData());
-
-        // Set the data to an invalid byte array and force a read
-        record = new AvroBulletRecord();
-        record.setSerializedData("foo".getBytes());
-        record.setDeserialized(false);
-        Assert.assertFalse(record.forceReadData());
-
-        // Set the data to a valid byte array and force a read
-        record = new AvroBulletRecord();
-        Map<String, Object> data = new HashMap<>();
-        data.put("foo", singletonMap("bar", "baz"));
-        data.put("qux", singletonList(singletonMap("bar", "baz")));
-        record.setSerializedData(getAvroBytes(data));
-        record.setDeserialized(false);
-        Assert.assertTrue(record.forceReadData());
-        Assert.assertEquals(record.get("foo"), singletonMap("bar", "baz"));
-        Assert.assertEquals(record.get("foo", "bar"), "baz");
-        Assert.assertEquals(record.get("qux"), singletonList(singletonMap("bar", "baz")));
-        Assert.assertEquals(record.get("qux", 0), singletonMap("bar", "baz"));
-
-        // Further force reads should return true
-        Assert.assertTrue(record.forceReadData());
-        Assert.assertTrue(record.forceReadData());
-    }
-
-    @Test
-    public void testSerializationDeserialization() {
-        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true), Pair.of("7.3", null))
-              .setMap("8", Pair.of("8.1", "foo"), Pair.of("8.2", "bar"), Pair.of("8.3", "baz"))
-              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)))
-              .setListOfBooleanMap("10", singletonList(singletonMap("10.1", true)));
-
-        byte[] serialized = getRecordBytes(record);
-        Assert.assertNotNull(serialized);
-
-        AvroBulletRecord reified = fromRecordBytes(serialized);
-        Assert.assertNotNull(reified);
-        Assert.assertEquals(reified.get("2"), 42L);
-        Assert.assertTrue((Boolean) reified.get("7", "7.2"));
-        Assert.assertNull(reified.get("7", "7.3"));
-        Assert.assertEquals(reified.get("9", 0), singletonMap("9.1", 3L));
-    }
-
-    @Test
-    public void testSerializationDeserializationOfEmptyRecord() {
-        byte[] serialized = getRecordBytes(record);
-        Assert.assertNotNull(serialized);
-
-        AvroBulletRecord reified = fromRecordBytes(serialized);
-        Assert.assertNotNull(reified);
-
-        byte[] serializedAgain = getRecordBytes(record);
-        Assert.assertEquals(serializedAgain, serialized);
-    }
-
-    @Test
-    public void testSerializationWithBadStates() {
-        byte[] serialized = getRecordBytes(record);
-        AvroBulletRecord reified = fromRecordBytes(serialized);
-
-        // This will destroy the byte array and force the record to think it has data in its map (it doesn't)
-        reified.setSerializedData(null);
-        reified.setDeserialized(true);
-
-        // The record should handle this case by pretending to be an empty record
-        byte[] serializedAgain = getRecordBytes(reified);
-        Assert.assertEquals(serializedAgain, serialized);
-    }
-
-    @Test
-    public void testDeserializationWithBadStates() {
-        byte[] serialized = getRecordBytes(record);
-        AvroBulletRecord reified = fromRecordBytes(serialized);
-
-        // This will destroy the byte array, force the record to think it doesn't have data in its map and then
-        // force a read
-        reified.setSerializedData(null);
-        reified.setDeserialized(false);
-        Assert.assertFalse(reified.forceReadData());
-
-        // But the record is still iterable
-        Assert.assertNotNull(reified.iterator());
-        Assert.assertNull(reified.get("some field"));
-    }
-
-    @Test
-    public void testSerializationDeserializationWithoutReading() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
-
-        byte[] serialized = getRecordBytes(record);
-        Assert.assertNotNull(serialized);
-        AvroBulletRecord reified = fromRecordBytes(serialized);
-
-        // Read and write without accessing anything
-        serialized = getRecordBytes(reified);
-        reified = fromRecordBytes(serialized);
-
-        Assert.assertNotNull(reified);
-        Assert.assertEquals(reified.get("4"), 0.34);
-    }
-
-    @Test
-    public void testSerializationDeserializationWithDataInput() {
-        record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true), Pair.of("7.3", null))
-              .setMap("8", Pair.of("8.1", "foo"), Pair.of("8.2", "bar"), Pair.of("8.3", "baz"))
-              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)))
-              .setListOfBooleanMap("10", singletonList(singletonMap("10.1", true)));
-
-        // SerDe
-        byte[] serialized = getRecordBytes(record);
-        AvroBulletRecord reified = fromRecordBytes(serialized);
-
-        Assert.assertNotNull(serialized);
-        Assert.assertNotNull(reified);
-        Assert.assertEquals(reified.get("2"), 42L);
-        Assert.assertTrue((Boolean) reified.get("7", "7.2"));
-        Assert.assertNull(reified.get("7", "4.3"));
-        Assert.assertEquals(reified.get("9", 0), singletonMap("9.1", 3L));
-
-        // Add new fields and modify fields in the record
-        reified.setMap("2", Pair.of("2.1", 42L));
-        reified.setLong("11", 4L);
-        reified.setMap("12", Pair.of("12.1", "foo"));
-
-        // SerDe again
-        serialized = getRecordBytes(reified);
-        reified = fromRecordBytes(serialized);
-
-        // The old ones that went through the first cycle
-        Assert.assertNotNull(reified);
-        Assert.assertEquals(reified.get("1"), "bar");
-        Assert.assertEquals(reified.get("2", "2.1"), 42L);
-        Assert.assertFalse((Boolean) reified.get("3"));
-        Assert.assertEquals(reified.get("4"), 0.34);
-        Assert.assertNull(reified.get("7", "7.3"));
-        Assert.assertEquals(reified.get("8", "8.3"), "baz");
-        Assert.assertEquals(reified.get("10", 0), singletonMap("10.1", true));
-
-        // New ones added at the last cycle
-        Assert.assertEquals(reified.get("11"), 4L);
-        Assert.assertEquals(reified.get("12", "12.1"), "foo");
-    }
-
-    @Test
     public void testRenaming() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         record.rename("1", "new1").rename("3", "new3").rename("7.4.1", "new2");
 
-        BulletRecord expected = new AvroBulletRecord().setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
-                                                  .setString("new1", "bar").setLong("2", 42L).setBoolean("new3", false)
-                                                  .setDouble("4", 0.34)
-                                                  .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
+        BulletRecord expected = new SimpleBulletRecord().setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+                                                        .setString("new1", "bar").setLong("2", 42L).setBoolean("new3", false)
+                                                        .setDouble("4", 0.34)
+                                                        .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         Assert.assertTrue(expected.equals(record));
     }
 
     @Test
     public void testFieldCount() throws IOException {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         Assert.assertEquals(record.fieldCount(), 0);
 
         record.setString("foo", "bar");
@@ -705,26 +502,25 @@ public class AvroBulletRecordTest {
         record.remove("2");
         record.remove("7");
         Assert.assertEquals(record.fieldCount(), 1);
-
-        AvroBulletRecord another = new AvroBulletRecord(record);
-        Assert.assertEquals(another.fieldCount(), 1);
     }
 
     @Test
     public void testRemoving() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         record.remove("1").remove("3").remove("7.4.1").remove("9");
 
-        BulletRecord expected = new AvroBulletRecord().setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
-                                                          .setLong("2", 42L).setDouble("4", 0.34);
+        BulletRecord expected = new SimpleBulletRecord().setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
+                                                        .setLong("2", 42L).setDouble("4", 0.34);
         Assert.assertTrue(expected.equals(record));
     }
 
     @Test
     public void testRemovingField() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
@@ -744,6 +540,7 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testFieldPresence() {
+        SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
 
@@ -751,39 +548,5 @@ public class AvroBulletRecordTest {
         Assert.assertTrue(record.hasField("7"));
         Assert.assertFalse(record.hasField("7.4.1"));
         Assert.assertFalse(record.hasField("foo"));
-    }
-
-    @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Cannot read from record.*")
-    public void testFailingWhenCannotRead() {
-        record = new AvroBulletRecord();
-        record.setSerializedData("foo".getBytes());
-        record.setDeserialized(false);
-        record.hasField("foo");
-    }
-
-    @Test
-    public void testNoArgsConstructor() {
-        AvroBulletRecord record = new AvroBulletRecord();
-        Assert.assertTrue(record.isDeserialized());
-        Assert.assertNotNull(record.getData());
-    }
-
-    @Test
-    public void testCopyConstructor() throws Exception {
-        AvroBulletRecord record = new AvroBulletRecord();
-        record.setString("someField", "someValue");
-        AvroBulletRecord copy = new AvroBulletRecord(record);
-        Assert.assertEquals(copy.get("someField"), "someValue");
-        Assert.assertEquals(copy.fieldCount(), 1);
-    }
-
-    @Test
-    public void testCopyOfCopy() throws Exception {
-        AvroBulletRecord record = new AvroBulletRecord();
-        record.setString("someField", "someValue");
-        AvroBulletRecord copy = new AvroBulletRecord(record);
-        AvroBulletRecord copyOfCopy = new AvroBulletRecord(copy);
-        Assert.assertEquals(copyOfCopy.get("someField"), "someValue");
-        Assert.assertEquals(copyOfCopy.fieldCount(), 1);
     }
 }

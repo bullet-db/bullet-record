@@ -6,6 +6,7 @@
 package com.yahoo.bullet.record;
 
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -16,18 +17,14 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -42,15 +39,18 @@ import java.util.Objects;
 public class AvroBulletRecord extends BulletRecord {
     public static final long serialVersionUID = 926415013785021742L;
 
-    protected boolean isDeserialized = true;
-    protected Map<String, Object> data = new HashMap<>();
-    protected byte[] serializedData;
+    @Getter(AccessLevel.PACKAGE)
+    private boolean isDeserialized = true;
+    @Getter(AccessLevel.PACKAGE)
+    private Map<String, Object> data = new HashMap<>();
+    private byte[] serializedData;
     private static final SpecificDatumWriter<BulletAvro> WRITER = new SpecificDatumWriter<>(BulletAvro.class);
 
     /**
      * Constructor.
      *
      * @param other The AvroBulletRecord to copy.
+     * @throws IOException if failed to serialize the AvroBulletRecord object.
      */
     public AvroBulletRecord(AvroBulletRecord other) throws IOException {
         serializedData = other.getAsByteArray();
@@ -81,7 +81,7 @@ public class AvroBulletRecord extends BulletRecord {
     }
 
     @Override
-    protected AvroBulletRecord set(String field, Object object) {
+    protected BulletRecord set(String field, Object object) {
         Objects.requireNonNull(field);
         forceReadData();
         data.put(field, object);
@@ -122,33 +122,8 @@ public class AvroBulletRecord extends BulletRecord {
     }
 
     @Override
-    public Iterator<Pair<String, Object>> iterator() {
-        return new Iterator<Pair<String, Object>>() {
-            Iterator<Map.Entry<String, Object>> entries =
-                    forceReadData() ? data.entrySet().iterator() : Collections.<String, Object>emptyMap().entrySet().iterator();
-            
-            @Override
-            public boolean hasNext() {
-                return entries.hasNext();
-            }
-
-            @Override
-            public Pair<String, Object> next() {
-                Map.Entry<String, Object> entry = entries.next();
-                return new ImmutablePair<>(entry.getKey(), entry.getValue());
-            }
-        };
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder().append("{");
-        String prefix = "";
-        for (Map.Entry<String, Object> fields : this) {
-            builder.append(prefix).append(fields.getKey()).append(":").append(fields.getValue());
-            prefix = ", ";
-        }
-        return builder.append("}").toString();
+    public Iterator<Map.Entry<String, Object>> iterator() {
+        return forceReadData() ? data.entrySet().iterator() : Collections.<String, Object>emptyMap().entrySet().iterator();
     }
 
     @Override
@@ -214,43 +189,5 @@ public class AvroBulletRecord extends BulletRecord {
             return serialize(data);
         }
         return serializedData;
-    }
-
-    /**
-     * For Testing.
-     *
-     * Insert a map field with values as Pairs or Map.Entry. The value of
-     * the entries must be in "Primitives".
-     *
-     * @param field The non-null name of the field.
-     * @param entries The non-null entries to insert.
-     * @return this object for chaining.
-     */
-    AvroBulletRecord setMap(String field, Map.Entry<String, Object>... entries) {
-        Objects.requireNonNull(entries);
-        Map<String, Object> newMap = new HashMap<>(entries.length);
-        for (Map.Entry<String, Object> entry : entries) {
-            newMap.put(entry.getKey(), entry.getValue());
-        }
-        return set(field, newMap);
-    }
-
-    /**
-     * For Testing.
-     *
-     * Insert a list field with values as Pairs or Map.Entry of maps. The value of
-     * the maps must be in "Primitives".
-     *
-     * @param field The non-null name of the field.
-     * @param entries The non-null entries to insert.
-     * @return this object for chaining.
-     */
-    AvroBulletRecord setListMap(String field, Map<String, Object>... entries) {
-        Objects.requireNonNull(entries);
-        List<Map<String, Object>> data = new ArrayList<>();
-        for (Map<String, Object> entry : entries) {
-            data.add(entry);
-        }
-        return set(field, data);
     }
 }
