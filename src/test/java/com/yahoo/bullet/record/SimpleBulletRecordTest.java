@@ -359,11 +359,11 @@ public class SimpleBulletRecordTest {
     public void testIterator() {
         SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("4", Pair.of("4.1", false))
-                .setString("1", "bar").setLong("2", 42L)
-                .setBoolean("3", false)
-                .setInteger("7", 88)
-                .setListOfDoubleMap("5", singletonList(singletonMap("5.1", 3.1)))
-                .setListOfFloatMap("6", singletonList(singletonMap("8.8", 8.8f)));
+              .setString("1", "bar").setLong("2", 42L)
+              .setBoolean("3", false)
+              .setInteger("7", 88)
+              .setListOfDoubleMap("5", singletonList(singletonMap("5.1", 3.1)))
+              .setListOfFloatMap("6", singletonList(singletonMap("8.8", 8.8f)));
         Map<String, Object> expectedMap = new HashMap<>();
         expectedMap.put("1", "bar");
         expectedMap.put("2", 42L);
@@ -421,24 +421,24 @@ public class SimpleBulletRecordTest {
     public void testEqualsAndHashcodeByteArrays() {
         SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
-                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
+              .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
         SimpleBulletRecord another = new SimpleBulletRecord();
         another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
-                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
+               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
+               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
     }
 
     @Test
     public void testEqualsAndHashcodeSameRecord() {
         SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
-                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
+              .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
         SimpleBulletRecord another = new SimpleBulletRecord();
         another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
-                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
+               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
+               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
 
         Assert.assertTrue(record.equals(another));
         Assert.assertEquals(record.hashCode(), another.hashCode());
@@ -446,8 +446,8 @@ public class SimpleBulletRecordTest {
         // Change order and it should still pass
         another = new SimpleBulletRecord();
         another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
-                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
+               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
+               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
         Assert.assertTrue(record.equals(another));
         Assert.assertEquals(record.hashCode(), another.hashCode());
     }
@@ -475,15 +475,15 @@ public class SimpleBulletRecordTest {
     public void testRenaming() {
         SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
-                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-                .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
+              .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         record.rename("1", "new1").rename("3", "new3").rename("7.4.1", "new2");
 
         BulletRecord expected = new SimpleBulletRecord().setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
-                .setString("new1", "bar").setLong("2", 42L).setBoolean("new3", false)
-                .setDouble("4", 0.34)
-                .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
+                                                        .setString("new1", "bar").setLong("2", 42L).setBoolean("new3", false)
+                                                        .setDouble("4", 0.34)
+                                                        .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         Assert.assertTrue(expected.equals(record));
     }
@@ -508,13 +508,13 @@ public class SimpleBulletRecordTest {
     public void testRemoving() {
         SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
-                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-                .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
+              .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         record.remove("1").remove("3").remove("7.4.1").remove("9");
 
         BulletRecord expected = new SimpleBulletRecord().setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
-                .setLong("2", 42L).setDouble("4", 0.34);
+                                                        .setLong("2", 42L).setDouble("4", 0.34);
         Assert.assertTrue(expected.equals(record));
     }
 
@@ -522,8 +522,8 @@ public class SimpleBulletRecordTest {
     public void testRemovingField() {
         SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
-                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-                .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
+              .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         Object data;
         data = record.getAndRemove("1");
@@ -542,7 +542,7 @@ public class SimpleBulletRecordTest {
     public void testFieldPresence() {
         SimpleBulletRecord record = new SimpleBulletRecord();
         record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
-                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
+              .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
 
         Assert.assertTrue(record.hasField("1"));
         Assert.assertTrue(record.hasField("7"));
