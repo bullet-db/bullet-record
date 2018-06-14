@@ -456,7 +456,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
 
     /**
      * For Testing.
-     * <p>
+     *
      * Insert a map field with values as Pairs or Map.Entry. The value of
      * the entries must be in "Primitives".
      *
@@ -475,7 +475,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
 
     /**
      * For Testing.
-     * <p>
+     *
      * Insert a list field with values as Pairs or Map.Entry of maps. The value of
      * the maps must be in "Primitives".
      *
