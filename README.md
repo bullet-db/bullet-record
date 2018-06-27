@@ -12,7 +12,8 @@ All documentation has moved to **[Github Pages here](https://bullet-db.github.io
 
 ### Useful links
 
-* [Quick Start](https://bullet-db.github.io/quick-start/) to start with a Bullet instance running locally.
+* [Spark Quick Start](https://bullet-db.github.io/quick-start/spark) to start with a Bullet instance running locally on Spark.
+* [Storm Quick Start](https://bullet-db.github.io/quick-start/storm) to start with a Bullet instance running locally on Storm.
 * [Data Ingestion](https://bullet-db.github.io/backend/ingestion/) to see how this project works to get arbitrary data into Bullet.
 * [Setup UI](https://bullet-db.github.io/ui/setup/) to setup the Bullet UI.
 * [Setup Web Service](https://bullet-db.github.io/ws/setup/) to setup the Bullet Web Service.
