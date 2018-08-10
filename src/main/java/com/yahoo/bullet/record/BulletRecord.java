@@ -29,7 +29,7 @@ import java.util.Objects;
  * <pre>
  * Primitives: Boolean, Integer, Long, Float, Double, String
  * Complex: {@code Map <String, "Primitives">, Map<String, Map<String, "Primitives">>, List<Map<String, "Primitives">},
- *           where "Primitives" refers to the afore-mentioned Primitives.
+ *           List<"Primitives"> where "Primitives" refers to the afore-mentioned Primitives.
  * </pre>
  *
  * Instead of setting a field to null (you cannot for top level Java primitives), avoid setting it instead.
@@ -256,6 +256,72 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * @return This object for chaining.
      */
     public BulletRecord setDoubleMap(String field, Map<String, Double> object) {
+        return set(field, object);
+    }
+
+    /**
+     * Insert a List of Boolean field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return This object for chaining.
+     */
+    public BulletRecord setBooleanList(String field, List<Boolean> object) {
+        return set(field, object);
+    }
+
+    /**
+     * Insert a List of String field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return This object for chaining.
+     */
+    public BulletRecord setStringList(String field, List<String> object) {
+        return set(field, object);
+    }
+
+    /**
+     * Insert a List of Integer field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return This object for chaining.
+     */
+    public BulletRecord setIntegerList(String field, List<Integer> object) {
+        return set(field, object);
+    }
+
+    /**
+     * Insert a List of Long field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return This object for chaining.
+     */
+    public BulletRecord setLongList(String field, List<Long> object) {
+        return set(field, object);
+    }
+
+    /**
+     * Insert a List of Float field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return This object for chaining.
+     */
+    public BulletRecord setFloatList(String field, List<Float> object) {
+        return set(field, object);
+    }
+
+    /**
+     * Insert a List of Double field.
+     *
+     * @param field The non-null name of the field.
+     * @param object The value to insert.
+     * @return This object for chaining.
+     */
+    public BulletRecord setDoubleList(String field, List<Double> object) {
         return set(field, object);
     }
 
