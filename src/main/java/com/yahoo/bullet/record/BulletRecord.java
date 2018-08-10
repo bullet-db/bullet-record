@@ -28,8 +28,8 @@ import java.util.Objects;
  * The record currently supports these fields:
  * <pre>
  * Primitives: Boolean, Integer, Long, Float, Double, String
- * Complex: {@code Map <String, "Primitives">, Map<String, Map<String, "Primitives">>, List<Map<String, "Primitives">},
- *           List<"Primitives"> where "Primitives" refers to the afore-mentioned Primitives.
+ * Complex: {@code Map <String, "Primitives">, Map<String, Map<String, "Primitives">>, List<Map<String, "Primitives">,
+ *           List<"Primitives">} where "Primitives" refers to the afore-mentioned Primitives.
  * </pre>
  *
  * Instead of setting a field to null (you cannot for top level Java primitives), avoid setting it instead.
