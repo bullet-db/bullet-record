@@ -188,7 +188,6 @@ public class AvroBulletRecordTest {
 
     @Test
     public void testSetLists() {
-        SimpleBulletRecord record = new SimpleBulletRecord();
         List<Integer> dataA = new ArrayList<>();
         dataA.add(1);
         dataA.add(2);
