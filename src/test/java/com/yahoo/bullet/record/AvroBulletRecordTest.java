@@ -187,6 +187,61 @@ public class AvroBulletRecordTest {
     }
 
     @Test
+    public void testSetLists() {
+        List<Integer> dataA = new ArrayList<>();
+        dataA.add(1);
+        dataA.add(2);
+        record.setIntegerList("fooA", dataA);
+        Assert.assertTrue(record.get("fooA") instanceof List);
+        Assert.assertEquals(record.get("fooA", 0), 1);
+        Assert.assertEquals(record.get("fooA", 1), 2);
+
+        List<Long> dataB = new ArrayList<>();
+        dataB.add(1L);
+        dataB.add(2L);
+        record.setLongList("fooA", dataB);
+        Assert.assertTrue(record.get("fooA") instanceof List);
+        Assert.assertEquals(record.get("fooA", 0), 1L);
+        Assert.assertEquals(record.get("fooA", 1), 2L);
+
+        List<Float> dataC = new ArrayList<>();
+        dataC.add(1.1f);
+        dataC.add(2.2f);
+        record.setFloatList("fooA", dataC);
+        Assert.assertTrue(record.get("fooA") instanceof List);
+        Assert.assertEquals(record.get("fooA", 0), 1.1f);
+        Assert.assertEquals(record.get("fooA", 1), 2.2f);
+
+        List<Double> dataD = new ArrayList<>();
+        dataD.add(1.1);
+        dataD.add(2.2);
+        record.setDoubleList("fooB", dataD);
+        Assert.assertTrue(record.get("fooB") instanceof List);
+        Assert.assertEquals(record.get("fooB", 0), 1.1);
+        Assert.assertEquals(record.get("fooB", 1), 2.2);
+
+        List<Boolean> dataE = new ArrayList<>();
+        dataE.add(false);
+        dataE.add(true);
+        record.setBooleanList("fooC", dataE);
+        Assert.assertTrue(record.get("fooC") instanceof List);
+        Assert.assertEquals(record.get("fooC", 0), false);
+        Assert.assertEquals(record.get("fooC", 1), true);
+
+        List<String> dataF = new ArrayList<>();
+        dataF.add("foo");
+        dataF.add("norf");
+        record.setStringList("fooD", dataF);
+        Assert.assertTrue(record.get("fooD") instanceof List);
+        Assert.assertEquals(record.get("fooD", 0), "foo");
+        Assert.assertEquals(record.get("fooD", 1), "norf");
+
+        Assert.assertNull(record.get("dne"));
+        Assert.assertNull(record.get("dne", 0));
+        Assert.assertNull(record.get("dne", 1));
+    }
+
+    @Test
     public void testSetMapOfMaps() {
         Map<String, Map<String, Integer>> dataA = new HashMap<>();
         dataA.put("bar", singletonMap("a", 1));
@@ -327,6 +382,7 @@ public class AvroBulletRecordTest {
         Map<String, Boolean> data = new HashMap<>();
         data.put("c.1", false);
         record.setListOfBooleanMap("c", singletonList(data));
+        record.setStringList("d", singletonList("norf"));
 
         AvroBulletRecord newRecord = new AvroBulletRecord();
 
@@ -348,6 +404,9 @@ public class AvroBulletRecordTest {
         data.put("c.2", false);
         Assert.assertEquals(((Map) record.get("c", 0)).get("c.2"), false);
         Assert.assertEquals(newRecord.get("newC", "c.2"), false);
+
+        newRecord.set("newD", record, "d", 0);
+        Assert.assertEquals(newRecord.get("newD"), "norf");
     }
 
     @Test
@@ -378,9 +437,16 @@ public class AvroBulletRecordTest {
     @Test
     public void testGetListIndex() {
         record.setListMap("foo", singletonMap("a", 1L), singletonMap("b", 2L));
+        List<String> data = new ArrayList<>();
+        data.add("qux");
+        data.add("norf");
+        record.setStringList("bar", data);
         Assert.assertTrue(record.get("foo") instanceof List);
         Assert.assertEquals(record.get("foo", 0), singletonMap("a", 1L));
         Assert.assertEquals(record.get("foo", 1), singletonMap("b", 2L));
+        Assert.assertTrue(record.get("bar") instanceof List);
+        Assert.assertEquals(record.get("bar", 0), "qux");
+        Assert.assertEquals(record.get("bar", 1), "norf");
 
         Assert.assertNull(record.get("dne", -1));
         Assert.assertNull(record.get("dne", 0));
@@ -400,7 +466,8 @@ public class AvroBulletRecordTest {
               .setBoolean("3", false)
               .setInteger("7", 88)
               .setListOfDoubleMap("5", singletonList(singletonMap("5.1", 3.1)))
-              .setListOfFloatMap("6", singletonList(singletonMap("8.8", 8.8f)));
+              .setListOfFloatMap("6", singletonList(singletonMap("8.8", 8.8f)))
+              .setStringList("8", singletonList("foo"));
         Map<String, Object> expectedMap = new HashMap<>();
         expectedMap.put("1", "bar");
         expectedMap.put("2", 42L);
@@ -409,6 +476,7 @@ public class AvroBulletRecordTest {
         expectedMap.put("5", singletonList(singletonMap("5.1", 3.1)));
         expectedMap.put("6", singletonList(singletonMap("8.8", 8.8f)));
         expectedMap.put("7", 88);
+        expectedMap.put("8", singletonList("foo"));
 
         int lastEntry = 0;
         for (Map.Entry<String, Object> entry : record) {
@@ -456,11 +524,13 @@ public class AvroBulletRecordTest {
     public void testEqualsAndHashcodeByteArrays() {
         record.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-              .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
+              .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")))
+              .setStringList("6", singletonList("baz"));
         AvroBulletRecord another = new AvroBulletRecord();
         another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
+               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")))
+               .setStringList("6", singletonList("baz"));
 
         record.setSerializedData(getRecordBytes(record));
         record.setDeserialized(false);
@@ -475,11 +545,13 @@ public class AvroBulletRecordTest {
     public void testEqualsAndHashcodeSameRecord() {
         record.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-              .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
+              .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")))
+              .setStringList("6", singletonList("baz"));
         AvroBulletRecord another = new AvroBulletRecord();
         another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
+               .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")))
+               .setStringList("6", singletonList("baz"));
 
         Assert.assertTrue(record.equals(another));
         Assert.assertEquals(record.hashCode(), another.hashCode());
@@ -488,6 +560,7 @@ public class AvroBulletRecordTest {
         another = new AvroBulletRecord();
         another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
+               .setStringList("6", singletonList("baz"))
                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
         Assert.assertTrue(record.equals(another));
         Assert.assertEquals(record.hashCode(), another.hashCode());
@@ -680,14 +753,16 @@ public class AvroBulletRecordTest {
     public void testRenaming() {
         record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
+              .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)))
+              .setLongList("11", singletonList(4L));
 
         record.rename("1", "new1").rename("3", "new3").rename("7.4.1", "new2");
 
         BulletRecord expected = new AvroBulletRecord().setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
                                                   .setString("new1", "bar").setLong("2", 42L).setBoolean("new3", false)
                                                   .setDouble("4", 0.34)
-                                                  .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
+                                                  .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)))
+                                                  .setLongList("11", singletonList(4L));
 
         Assert.assertTrue(expected.equals(record));
     }
@@ -714,9 +789,10 @@ public class AvroBulletRecordTest {
     public void testRemoving() {
         record.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
               .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-              .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
+              .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)))
+              .setLongList("11", singletonList(4L));
 
-        record.remove("1").remove("3").remove("7.4.1").remove("9");
+        record.remove("1").remove("3").remove("7.4.1").remove("9").remove("11");
 
         BulletRecord expected = new AvroBulletRecord().setMap("7", Pair.of("4.1", false), Pair.of("7.2", true))
                                                           .setLong("2", 42L).setDouble("4", 0.34);

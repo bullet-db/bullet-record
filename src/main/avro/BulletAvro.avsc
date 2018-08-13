@@ -41,18 +41,27 @@
           },
           {
             "type": "array",
-            "items": {
-              "type": "map",
-              "values": [
-                "null",
-                "boolean",
-                "string",
-                "int",
-                "long",
-                "float",
-                "double"
-              ]
-            }
+            "items": [
+              "null",
+              "boolean",
+              "string",
+              "int",
+              "long",
+              "float",
+              "double",
+              {
+                "type": "map",
+                "values": [
+                  "null",
+                  "boolean",
+                  "string",
+                  "int",
+                  "long",
+                  "float",
+                  "double"
+                ]
+              }
+            ]
           }
         ]
       }
