@@ -8,17 +8,17 @@ import javafx.util.Pair;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Creates a converter for a POJO. Field::get() is 60x slower than accessing fields directly. Method::invoke() a getter
  * is 30x slower than accessing fields directly. Probably shouldn't even support this... Code generation is probably
  * better.
  *
+ * Lists/maps are not copies.
  * Assumes maps and lists are declared as their base classes.
  *
  * Try to find getters automatically?
@@ -35,33 +35,46 @@ public class BulletRecordConverter<T> {
         } else if (type == Map.class) {
             ParameterizedType pt = (ParameterizedType) field.getGenericType();
             Class keyType = (Class)pt.getActualTypeArguments()[0];
-            Class valueType = (Class)pt.getActualTypeArguments()[1];
+            Type valueType = pt.getActualTypeArguments()[1];
             if (keyType == String.class) {
-                if (PRIMITIVES.contains(valueType)) {
-                    return true;
-                } else if (valueType == Map.class) {
-                    pt = (ParameterizedType) field.getGenericType();
-                    keyType = (Class) pt.getActualTypeArguments()[0];
-                    valueType = (Class) pt.getActualTypeArguments()[1];
-                    return keyType == String.class && PRIMITIVES.contains(valueType);
+                if (valueType instanceof Class) {
+                    return PRIMITIVES.contains(valueType);
+                } else {
+                    pt = (ParameterizedType) valueType;
+                    if (pt.getRawType() == Map.class) {
+                        keyType = (Class) pt.getActualTypeArguments()[0];
+                        try {
+                            valueType = (Class) pt.getActualTypeArguments()[1];
+                            return keyType == String.class && PRIMITIVES.contains(valueType);
+                        } catch (ClassCastException e) {
+                            return false;
+                        }
+                    }
                 }
             }
         } else if (type == List.class) {
             ParameterizedType pt = (ParameterizedType) field.getGenericType();
-            Class listType = (Class)pt.getActualTypeArguments()[0];
-            if (PRIMITIVES.contains(listType)) {
-                return true;
-            } else if (listType == Map.class) {
-                pt = (ParameterizedType) field.getGenericType();
-                Class keyType = (Class)pt.getActualTypeArguments()[0];
-                Class valueType = (Class)pt.getActualTypeArguments()[1];
-                return keyType == String.class && PRIMITIVES.contains(valueType);
+            Type listType = pt.getActualTypeArguments()[0];
+            if (listType instanceof Class) {
+                return PRIMITIVES.contains(listType);
+            } else {
+                pt = (ParameterizedType) listType;
+                if (pt.getRawType() == Map.class) {
+                    Class keyType = (Class) pt.getActualTypeArguments()[0];
+                    try {
+                        Class valueType = (Class) pt.getActualTypeArguments()[1];
+                        return keyType == String.class && PRIMITIVES.contains(valueType);
+                    } catch (ClassCastException e) {
+                        return false;
+                    }
+                }
             }
         }
         return false;
     };
 
-    private class BulletRecordField {
+    // Exposed for coverage
+    static class BulletRecordField {
         String name;
         String getter;
     }
@@ -72,13 +85,14 @@ public class BulletRecordConverter<T> {
      * Takes all fields regardless of access. does not include inherited fields
      */
     private BulletRecordConverter(Class<T> type) {
-        fields = Arrays.asList(type.getDeclaredFields());
-        if (!fields.stream().allMatch(IS_VALID_TYPE)) {
-            throw new RuntimeException("Object contains a field with an unsupported type.");
-        }
+        fields = Stream.of(type.getDeclaredFields()).filter(field -> !field.isSynthetic()).collect(Collectors.toList());
         for (Field field : fields) {
+            if (!IS_VALID_TYPE.test(field)) {
+                throw new RuntimeException("Object contains a field with an unsupported type: " + field.getName());
+            }
             field.setAccessible(true);
         }
+        getters = Collections.emptyList();
     }
 
     /**
@@ -89,18 +103,21 @@ public class BulletRecordConverter<T> {
         try {
             reader = new JsonReader(new FileReader(schema));
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(schema + " file not found", e);
+            throw new RuntimeException(schema + " file not found.", e);
         }
 
         List<BulletRecordField> fieldList =
                 new Gson().fromJson(reader, new TypeToken<List<BulletRecordField>>(){}.getType());
+
+        fields = new ArrayList<>();
+        getters = new ArrayList<>();
 
         for (BulletRecordField field : fieldList) {
             Field f;
             try {
                 f = type.getDeclaredField(field.name);
                 if (!IS_VALID_TYPE.test(f)) {
-                    throw new RuntimeException("Object contains a listed field with an unsupported type.");
+                    throw new RuntimeException("Object contains a listed field with an unsupported type: " + field.name);
                 }
                 f.setAccessible(true);
             } catch (NoSuchFieldException e) {
@@ -112,6 +129,9 @@ public class BulletRecordConverter<T> {
                 try {
                     Method m = type.getDeclaredMethod(field.getter);
                     m.setAccessible(true);
+                    if (m.getReturnType() != f.getType()) {
+                        throw new RuntimeException("Listed getter return type does not match field: " + field.getter);
+                    }
                     getters.add(new Pair<>(field.name, m));
                 } catch (NoSuchMethodException e) {
                     throw new RuntimeException("Object is missing listed getter: " + field.getter);
@@ -158,8 +178,8 @@ public class BulletRecordConverter<T> {
             for (Pair<String, Method> getter : getters) {
                 record.set(getter.getKey(), getter.getValue().invoke(object));
             }
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException("Object contains inaccessible field.", e);
+        } catch (IllegalAccessException ignore) {
+            throw new RuntimeException("Object contains inaccessible field.", ignore);
         } catch (InvocationTargetException e) {
             throw new RuntimeException("Exception thrown by getter.", e);
         }

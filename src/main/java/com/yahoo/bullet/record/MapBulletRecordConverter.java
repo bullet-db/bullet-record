@@ -57,8 +57,9 @@ public class MapBulletRecordConverter {
             return primitive;
         }
     }
-    
-    private class MapBulletRecordField {
+
+    // Exposed for coverage
+    static class MapBulletRecordField {
         String name;
         Type type;
         Type subtype;

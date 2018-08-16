@@ -1,0 +1,20 @@
+[
+  {
+    "name" : "myBoolMap"
+  },
+  {
+    "name" : "myBoolList"
+  },
+  {
+    "name" : "myStringList"
+  },
+  {
+    "name" : "myDoubleMap"
+  },
+  {
+    "name" : "myIntMapMap"
+  },
+  {
+    "name" : "myLongMapList"
+  }
+]
