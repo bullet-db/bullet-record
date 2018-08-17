@@ -7,16 +7,18 @@ import com.google.gson.stream.JsonReader;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  *  Converts Map to BulletRecord based on schema file.
  *  If 'enumerations' is used, the outer map is replaced by a new map in the record.
- *
+ *  Not recommended for large maps since the schema will need an entry for each field.
+ *  BUG: Doesn't throw classcastexceptions....
  */
 public class MapBulletRecordConverter {
-    // Maybe change to enum...............?
-    private enum Type {
+    public enum Type {
         @SerializedName("BOOLEAN")
         BOOLEAN (true),
 
@@ -58,8 +60,7 @@ public class MapBulletRecordConverter {
         }
     }
 
-    // Exposed for coverage
-    static class MapBulletRecordField {
+    private static class MapBulletRecordField {
         String name;
         Type type;
         Type subtype;
@@ -90,34 +91,34 @@ public class MapBulletRecordConverter {
         try {
             reader = new JsonReader(new FileReader(schema));
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(schema + " file not found", e);
+            throw new RuntimeException(schema + " file not found.", e);
         }
         Gson gson = new Gson();
-        fields = gson.fromJson(reader, new TypeToken<List<MapBulletRecordField>>(){}.getType());
+        fields = gson.fromJson(reader, new TypeToken<List<MapBulletRecordField>>() { }.getType());
 
         // validate fields; does not check for duplicate names
         // why
         for (MapBulletRecordField field : fields) {
             if (field.name == null || field.name.isEmpty()) {
-                throw new RuntimeException("'name' is null");
+                throw new RuntimeException("'name' is null.");
             }
             if (field.type == null) {
-                throw new RuntimeException("'type' is either null or unsupported");
+                throw new RuntimeException("'type' is either null or unsupported.");
             }
             if (!field.type.isPrimitive()) {
                 if (field.subtype == null) {
-                    throw new RuntimeException("'subtype' is either null or unsupported given 'type' is a list/map");
+                    throw new RuntimeException("'subtype' is either null or unsupported given 'type' is a list/map.");
                 }
                 if (!field.subtype.isPrimitive()) {
-                    throw new RuntimeException(field.subtype + " is not an appropriate 'subtype'");
+                    throw new RuntimeException(field.subtype + " is not an appropriate 'subtype'.");
                 }
                 if ((field.type == Type.MAP || field.type == Type.MAPOFMAP) && field.enumerations != null) {
                     if (field.enumerations.isEmpty()) {
-                        throw new RuntimeException("'enumerations' array in schema is empty");
+                        throw new RuntimeException("'enumerations' array in schema is empty.");
                     }
                     for (String name : field.enumerations) {
                         if (name == null || name.isEmpty()) {
-                            throw new RuntimeException("'enumerations' array in schema contains an empty string");
+                            throw new RuntimeException("'enumerations' array in schema contains an empty string.");
                         }
                     }
                 }
@@ -126,7 +127,7 @@ public class MapBulletRecordConverter {
     }
 
     /**
-     * Not necessary but mirrors {@link BulletRecordConverter}
+     * Not necessary but mirrors {@link POJOBulletRecordConverter}.
      *
      * @param schema
      * @return
@@ -136,7 +137,7 @@ public class MapBulletRecordConverter {
     }
 
     /**
-     * Converts map to BulletRecord with previously-given schema
+     * Converts map to BulletRecord with previously-given schema.
      *
      * @param map
      * @return

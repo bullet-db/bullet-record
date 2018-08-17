@@ -1,0 +1,8 @@
+[
+  {
+    "name" : "myBoolMap",
+    "type" : "MAP",
+    "subtype" : "BOOLEAN",
+    "enumerations" : [ "hello", "", "bye" ]
+  }
+]

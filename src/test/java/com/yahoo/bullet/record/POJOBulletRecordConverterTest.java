@@ -4,11 +4,14 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.singletonMap;
 
-public class BulletRecordConverterTest {
+public class POJOBulletRecordConverterTest {
 
     private static class Foo {
         private Integer myInt = 123;
@@ -18,17 +21,37 @@ public class BulletRecordConverterTest {
         private Double myDouble = 0.12;
         private Float myFloat = 3.45f;
 
-        private Integer getMyInt() { return myInt; }
-        private Long getMyLong() { return myLong; }
-        private Boolean getMyBool() { return myBool; }
-        private String getMyString() { return myString; }
-        private Double getMyDouble() { return myDouble; }
-        private Float getMyFloat() { return myFloat; }
-        private Integer throwMyInt() throws Exception { throw new Exception(); }
+        private Integer getMyInt() {
+            return myInt;
+        }
+
+        private Long getMyLong() {
+            return myLong;
+        }
+
+        private Boolean getMyBool() {
+            return myBool;
+        }
+
+        private String getMyString() {
+            return myString;
+        }
+
+        private Double getMyDouble() {
+            return myDouble;
+        }
+
+        private Float getMyFloat() {
+            return myFloat;
+        }
+
+        private Integer throwMyInt() throws Exception {
+            throw new Exception();
+        }
     }
 
     private static class Bar {
-        private Map<String, Boolean> myBoolMap = new HashMap<>();
+        private HashMap<String, Boolean> myBoolMap = new HashMap<>();
         private Map<String, Integer> myIntMap = new HashMap<>();
         private Map<String, Long> myLongMap = new HashMap<>();
         private Map<String, Double> myDoubleMap = new HashMap<>();
@@ -57,7 +80,7 @@ public class BulletRecordConverterTest {
     @Test
     public void testFromFoo() {
         Foo foo = new Foo();
-        BulletRecordConverter<Foo> converter = BulletRecordConverter.from(Foo.class);
+        POJOBulletRecordConverter<Foo> converter = POJOBulletRecordConverter.from(Foo.class);
 
         BulletRecord record = converter.convert(foo);
         Assert.assertEquals(record.get("myInt"), 123);
@@ -88,7 +111,7 @@ public class BulletRecordConverterTest {
         Foo foo = new Foo();
 
         // This schema accepts lists all fields except myInt and also provides getters
-        BulletRecordConverter<Foo> converter = BulletRecordConverter.from(Foo.class, "src/test/resources/foo_schema_simple.json");
+        POJOBulletRecordConverter<Foo> converter = POJOBulletRecordConverter.from(Foo.class, "src/test/resources/foo_schema_simple.json");
 
         BulletRecord record = converter.convert(foo);
         Assert.assertNull(record.get("myInt"));
@@ -118,7 +141,7 @@ public class BulletRecordConverterTest {
     public void testFromBar() {
         Bar bar = new Bar();
 
-        BulletRecordConverter<Bar> converter = BulletRecordConverter.from(Bar.class);
+        POJOBulletRecordConverter<Bar> converter = POJOBulletRecordConverter.from(Bar.class);
 
         // Lists and maps in record are not new objects
         BulletRecord record = converter.convert(bar);
@@ -194,7 +217,7 @@ public class BulletRecordConverterTest {
     public void testFromBarSchema() {
         Bar bar = new Bar();
 
-        BulletRecordConverter<Bar> converter = BulletRecordConverter.from(Bar.class, "src/test/resources/bar_schema_simple.json");
+        POJOBulletRecordConverter<Bar> converter = POJOBulletRecordConverter.from(Bar.class, "src/test/resources/bar_schema_simple.json");
 
         // Lists and maps in record are not new objects
         BulletRecord record = converter.convert(bar);
@@ -271,7 +294,7 @@ public class BulletRecordConverterTest {
         class Dummy {
             Byte myInt;
         }
-        BulletRecordConverter.from(Dummy.class, "src/test/resources/throw.json");
+        POJOBulletRecordConverter.from(Dummy.class, "src/test/resources/throw.json");
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Object is missing listed field.*")
@@ -279,16 +302,17 @@ public class BulletRecordConverterTest {
         class Dummy {
 
         }
-        BulletRecordConverter.from(Dummy.class, "src/test/resources/throw.json");
+        POJOBulletRecordConverter.from(Dummy.class, "src/test/resources/throw.json");
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Listed getter return type.*")
     public void testNotValidGetter() {
         class Dummy {
             Integer myInt;
-            void throwMyInt() {}
+            void throwMyInt() {
+            }
         }
-        BulletRecordConverter.from(Dummy.class, "src/test/resources/throw.json");
+        POJOBulletRecordConverter.from(Dummy.class, "src/test/resources/throw.json");
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Object is missing listed getter.*")
@@ -296,7 +320,7 @@ public class BulletRecordConverterTest {
         class Dummy {
             Integer myInt;
         }
-        BulletRecordConverter.from(Dummy.class, "src/test/resources/throw.json");
+        POJOBulletRecordConverter.from(Dummy.class, "src/test/resources/throw.json");
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Object contains a field with an unsupported type: myMap")
@@ -305,7 +329,7 @@ public class BulletRecordConverterTest {
             Map<Integer, String> myMap;
         }
         // Map key needs to be String
-        BulletRecordConverter.from(Dummy.class);
+        POJOBulletRecordConverter.from(Dummy.class);
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Object contains a field with an unsupported type: myListMap")
@@ -314,7 +338,7 @@ public class BulletRecordConverterTest {
             Map<String, List<String>> myListMap;
         }
         // Doesn't support Map of List
-        BulletRecordConverter.from(Dummy.class);
+        POJOBulletRecordConverter.from(Dummy.class);
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Object contains a field with an unsupported type: myMapMap")
@@ -323,7 +347,7 @@ public class BulletRecordConverterTest {
             Map<String, Map<Integer, String>> myMapMap;
         }
         // Inner Map key needs to be String
-        BulletRecordConverter.from(Dummy.class);
+        POJOBulletRecordConverter.from(Dummy.class);
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Object contains a field with an unsupported type: myByteMapMap")
@@ -332,7 +356,7 @@ public class BulletRecordConverterTest {
             Map<String, Map<String, Byte>> myByteMapMap;
         }
         // Inner Map value needs to be a supported primitive
-        BulletRecordConverter.from(Dummy.class);
+        POJOBulletRecordConverter.from(Dummy.class);
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Object contains a field with an unsupported type: myListMapMap")
@@ -341,16 +365,7 @@ public class BulletRecordConverterTest {
             Map<String, Map<String, List<String>>> myListMapMap;
         }
         // ClassCastException if inner value is a parameterized type <>
-        BulletRecordConverter.from(Dummy.class);
-    }
-
-    @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Object contains a field with an unsupported type: myList")
-    public void testUnsupportedType() {
-        class Dummy {
-            ArrayList<String> myList;
-        }
-        // ArrayList doesn't count as List
-        BulletRecordConverter.from(Dummy.class);
+        POJOBulletRecordConverter.from(Dummy.class);
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Object contains a field with an unsupported type: myListList")
@@ -359,7 +374,7 @@ public class BulletRecordConverterTest {
             List<List<String>> myListList;
         }
         // Doesn't support List of List
-        BulletRecordConverter.from(Dummy.class);
+        POJOBulletRecordConverter.from(Dummy.class);
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Object contains a field with an unsupported type: myMapList")
@@ -368,7 +383,7 @@ public class BulletRecordConverterTest {
             List<Map<Integer, String>> myMapList;
         }
         // Map key needs to be String
-        BulletRecordConverter.from(Dummy.class);
+        POJOBulletRecordConverter.from(Dummy.class);
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Object contains a field with an unsupported type: myByteMapList")
@@ -377,7 +392,7 @@ public class BulletRecordConverterTest {
             List<Map<String, Byte>> myByteMapList;
         }
         // Map value needs to be a supported primitive
-        BulletRecordConverter.from(Dummy.class);
+        POJOBulletRecordConverter.from(Dummy.class);
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Object contains a field with an unsupported type: myListMapList")
@@ -386,7 +401,7 @@ public class BulletRecordConverterTest {
             List<Map<String, List<String>>> myListMapList;
         }
         // ClassCastException if inner value is a parameterized type <>
-        BulletRecordConverter.from(Dummy.class);
+        POJOBulletRecordConverter.from(Dummy.class);
     }
 
     @Test
@@ -395,36 +410,36 @@ public class BulletRecordConverterTest {
 
         }
         // Ok
-        BulletRecord record = BulletRecordConverter.from(Dummy.class).convert(new Dummy());
+        BulletRecord record = POJOBulletRecordConverter.from(Dummy.class).convert(new Dummy());
         Assert.assertEquals(record.fieldCount(), 0);
     }
 
     @Test
     public void testEmptySchema() {
         // Without empty schema
-        BulletRecord record = BulletRecordConverter.from(Foo.class).convert(new Foo());
+        BulletRecord record = POJOBulletRecordConverter.from(Foo.class).convert(new Foo());
         Assert.assertEquals(record.fieldCount(), 6);
 
         // Ok
-        record = BulletRecordConverter.from(Foo.class, "src/test/resources/empty.json").convert(new Foo());
+        record = POJOBulletRecordConverter.from(Foo.class, "src/test/resources/empty.json").convert(new Foo());
         Assert.assertEquals(record.fieldCount(), 0);
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "does-not-exist\\.json file not found\\.")
     public void testMissingSchema() {
-        BulletRecordConverter.from(Foo.class, "does-not-exist.json");
+        POJOBulletRecordConverter.from(Foo.class, "does-not-exist.json");
     }
 
     @Test(expectedExceptions = Exception.class)
     public void testBadSchema() {
         // Gson exception
-        BulletRecordConverter.from(Foo.class, "src/test/resources/bad_schema.json");
+        POJOBulletRecordConverter.from(Foo.class, "src/test/resources/bad_schema.json");
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Object contains inaccessible field\\.")
     public void testConvertInaccessible() {
         // Should never happen really
-        BulletRecordConverter<AnotherDummy> converter = BulletRecordConverter.from(AnotherDummy.class);
+        POJOBulletRecordConverter<Dummy> converter = POJOBulletRecordConverter.from(Dummy.class);
         try {
             Field f = converter.getClass().getDeclaredField("fields");
             f.setAccessible(true);
@@ -432,18 +447,18 @@ public class BulletRecordConverterTest {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        converter.convert(new AnotherDummy());
+        converter.convert(new Dummy());
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Exception thrown by getter.")
     public void testConvertGetterThrows() {
-        BulletRecordConverter<Foo> converter = BulletRecordConverter.from(Foo.class, "src/test/resources/throw.json");
+        POJOBulletRecordConverter<Foo> converter = POJOBulletRecordConverter.from(Foo.class, "src/test/resources/throw.json");
         converter.convert(new Foo());
     }
 
     @Test
     public void testBulletRecordField() {
         // For coverage
-        new BulletRecordConverter.BulletRecordField();
+        new POJOBulletRecordConverter.BulletRecordField();
     }
 }

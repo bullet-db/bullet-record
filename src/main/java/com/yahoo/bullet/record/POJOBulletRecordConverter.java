@@ -7,9 +7,16 @@ import javafx.util.Pair;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.lang.reflect.*;
-import java.util.*;
-import java.util.function.Predicate;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,53 +32,13 @@ import java.util.stream.Stream;
  *
  * @param <T>
  */
-public class BulletRecordConverter<T> {
+public class POJOBulletRecordConverter<T> {
     private static final List<Class> PRIMITIVES = Arrays.asList(Boolean.class, Integer.class, Long.class, Float.class,
                                                                 Double.class, String.class);
-    private static final Predicate<Field> IS_VALID_TYPE = field -> {
-        Type type = field.getType();
-        if (PRIMITIVES.contains(type)) {
-            return true;
-        } else if (type == Map.class) {
-            ParameterizedType pt = (ParameterizedType) field.getGenericType();
-            Class keyType = (Class)pt.getActualTypeArguments()[0];
-            Type valueType = pt.getActualTypeArguments()[1];
-            if (keyType == String.class) {
-                if (valueType instanceof Class) {
-                    return PRIMITIVES.contains(valueType);
-                } else {
-                    pt = (ParameterizedType) valueType;
-                    if (pt.getRawType() == Map.class) {
-                        keyType = (Class) pt.getActualTypeArguments()[0];
-                        try {
-                            valueType = (Class) pt.getActualTypeArguments()[1];
-                            return keyType == String.class && PRIMITIVES.contains(valueType);
-                        } catch (ClassCastException e) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        } else if (type == List.class) {
-            ParameterizedType pt = (ParameterizedType) field.getGenericType();
-            Type listType = pt.getActualTypeArguments()[0];
-            if (listType instanceof Class) {
-                return PRIMITIVES.contains(listType);
-            } else {
-                pt = (ParameterizedType) listType;
-                if (pt.getRawType() == Map.class) {
-                    Class keyType = (Class) pt.getActualTypeArguments()[0];
-                    try {
-                        Class valueType = (Class) pt.getActualTypeArguments()[1];
-                        return keyType == String.class && PRIMITIVES.contains(valueType);
-                    } catch (ClassCastException e) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return false;
-    };
+
+    private static boolean isThisInterface(Class type, Class clazz) {
+        return type == clazz || Arrays.asList(type.getInterfaces()).contains(clazz);
+    }
 
     // Exposed for coverage
     static class BulletRecordField {
@@ -84,10 +51,10 @@ public class BulletRecordConverter<T> {
     /**
      * Takes all fields regardless of access. does not include inherited fields
      */
-    private BulletRecordConverter(Class<T> type) {
+    private POJOBulletRecordConverter(Class<T> type) {
         fields = Stream.of(type.getDeclaredFields()).filter(field -> !field.isSynthetic()).collect(Collectors.toList());
         for (Field field : fields) {
-            if (!IS_VALID_TYPE.test(field)) {
+            if (!isValidType(field)) {
                 throw new RuntimeException("Object contains a field with an unsupported type: " + field.getName());
             }
             field.setAccessible(true);
@@ -96,9 +63,9 @@ public class BulletRecordConverter<T> {
     }
 
     /**
-     * Fields defined by config
+     * Fields defined by config.
      */
-    private BulletRecordConverter(Class<T> type, String schema) {
+    private POJOBulletRecordConverter(Class<T> type, String schema) {
         JsonReader reader;
         try {
             reader = new JsonReader(new FileReader(schema));
@@ -107,7 +74,7 @@ public class BulletRecordConverter<T> {
         }
 
         List<BulletRecordField> fieldList =
-                new Gson().fromJson(reader, new TypeToken<List<BulletRecordField>>(){}.getType());
+                new Gson().fromJson(reader, new TypeToken<List<BulletRecordField>>() { }.getType());
 
         fields = new ArrayList<>();
         getters = new ArrayList<>();
@@ -116,7 +83,7 @@ public class BulletRecordConverter<T> {
             Field f;
             try {
                 f = type.getDeclaredField(field.name);
-                if (!IS_VALID_TYPE.test(f)) {
+                if (!isValidType(f)) {
                     throw new RuntimeException("Object contains a listed field with an unsupported type: " + field.name);
                 }
                 f.setAccessible(true);
@@ -147,8 +114,8 @@ public class BulletRecordConverter<T> {
      * @param <T>
      * @return
      */
-    public static <T> BulletRecordConverter<T> from(Class<T> type) {
-        return new BulletRecordConverter<T>(type);
+    public static <T> POJOBulletRecordConverter<T> from(Class<T> type) {
+        return new POJOBulletRecordConverter<T>(type);
     }
 
     /**
@@ -159,8 +126,8 @@ public class BulletRecordConverter<T> {
      * @param <T>
      * @return
      */
-    public static <T> BulletRecordConverter<T> from(Class<T> type, String schema) {
-        return new BulletRecordConverter<T>(type, schema);
+    public static <T> POJOBulletRecordConverter<T> from(Class<T> type, String schema) {
+        return new POJOBulletRecordConverter<T>(type, schema);
     }
 
     /**
@@ -184,5 +151,50 @@ public class BulletRecordConverter<T> {
             throw new RuntimeException("Exception thrown by getter.", e);
         }
         return record;
+    }
+
+    private static boolean isValidType(Field field) {
+        Class type = field.getType();
+        if (PRIMITIVES.contains(type)) {
+            return true;
+        } else if (isThisInterface(type, Map.class)) {
+            ParameterizedType pt = (ParameterizedType) field.getGenericType();
+            Class keyType = (Class) pt.getActualTypeArguments()[0];
+            Type valueType = pt.getActualTypeArguments()[1];
+            if (keyType == String.class) {
+                if (valueType instanceof Class) {
+                    return PRIMITIVES.contains(valueType);
+                } else {
+                    pt = (ParameterizedType) valueType;
+                    if (isThisInterface((Class) pt.getRawType(), Map.class)) {
+                        keyType = (Class) pt.getActualTypeArguments()[0];
+                        try {
+                            valueType = (Class) pt.getActualTypeArguments()[1];
+                            return keyType == String.class && PRIMITIVES.contains(valueType);
+                        } catch (ClassCastException e) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        } else if (isThisInterface(type, List.class)) {
+            ParameterizedType pt = (ParameterizedType) field.getGenericType();
+            Type listType = pt.getActualTypeArguments()[0];
+            if (listType instanceof Class) {
+                return PRIMITIVES.contains(listType);
+            } else {
+                pt = (ParameterizedType) listType;
+                if (isThisInterface((Class) pt.getRawType(), Map.class)) {
+                    Class keyType = (Class) pt.getActualTypeArguments()[0];
+                    try {
+                        Class valueType = (Class) pt.getActualTypeArguments()[1];
+                        return keyType == String.class && PRIMITIVES.contains(valueType);
+                    } catch (ClassCastException e) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

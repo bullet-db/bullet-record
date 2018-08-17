@@ -6,6 +6,7 @@
 package com.yahoo.bullet.record;
 
 import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.HashMap;
@@ -16,12 +17,22 @@ import java.util.Objects;
 /**
  * A simple implementation of {@link BulletRecord}.
  */
+@NoArgsConstructor
 public class SimpleBulletRecord extends BulletRecord {
     private static final long serialVersionUID = -4045166645513428587L;
 
     // Exposed for testing.
     @Setter(AccessLevel.PACKAGE)
     private Map<String, Object> data = new HashMap<>();
+
+    /**
+     * This constructor wraps the data given without making checks.
+     *
+     * @param data The data to be wrapped
+     */
+    public SimpleBulletRecord(Map<String, Object> data) {
+        this.data = data;
+    }
 
     @Override
     protected BulletRecord set(String field, Object object) {
