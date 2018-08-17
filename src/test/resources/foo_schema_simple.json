@@ -1,0 +1,22 @@
+[
+  {
+    "name" : "myLong",
+    "getter" : "getMyLong"
+  },
+  {
+    "name" : "myDouble",
+    "getter" : "getMyDouble"
+  },
+  {
+    "name" : "myString",
+    "getter" : "getMyString"
+  },
+  {
+    "name" : "myFloat",
+    "getter" : "getMyFloat"
+  },
+  {
+    "name" : "myBool",
+    "getter" : "getMyBool"
+  }
+]

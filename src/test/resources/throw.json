@@ -1,0 +1,6 @@
+[
+  {
+    "name" : "myInt",
+    "getter" : "throwMyInt"
+  }
+]
