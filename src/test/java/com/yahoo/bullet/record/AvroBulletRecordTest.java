@@ -460,6 +460,62 @@ public class AvroBulletRecordTest {
     }
 
     @Test
+    public void testExtractTopLevelField() {
+        record.setListOfStringMap("foo", singletonList(singletonMap("qux", "norf")));
+        record.setString("bar", "baz");
+
+        Assert.assertEquals(record.extract("bar"), "baz");
+        Assert.assertNull(record.extract("bar.baz"));
+        Assert.assertEquals(record.extract("foo"), singletonList(singletonMap("qux", "norf")));
+        Assert.assertNull(record.extract("foo.bar"));
+        Assert.assertNull(record.extract("dne"));
+    }
+
+    @Test
+    public void testExtractMapField() {
+        record.setMap("foo", Pair.of("bar", singletonMap("baz", 1L)), Pair.of("baz", singletonMap("qux", 2L)));
+
+        Assert.assertTrue(record.extract("foo") instanceof Map);
+        Assert.assertEquals(record.extract("foo.bar"), singletonMap("baz", 1L));
+        Assert.assertEquals(record.extract("foo.baz"), singletonMap("qux", 2L));
+        Assert.assertEquals(record.extract("foo.bar.baz"), 1L);
+        Assert.assertEquals(record.extract("foo.baz.qux"), 2L);
+        Assert.assertNull(record.extract("foo.bar.dne"));
+
+        Assert.assertNull(record.extract("dne"));
+        Assert.assertNull(record.extract("foo."));
+        Assert.assertNull(record.extract("foo.dne"));
+    }
+
+    @Test
+    public void testExtractListIndex() {
+        record.setListMap("foo", singletonMap("a", 1L), singletonMap("b", 2L));
+        List<String> data = new ArrayList<>();
+        data.add("qux");
+        data.add("norf");
+        record.setStringList("bar", data);
+        Assert.assertTrue(record.extract("foo") instanceof List);
+        Assert.assertEquals(record.extract("foo.0"), singletonMap("a", 1L));
+        Assert.assertEquals(record.extract("foo.1"), singletonMap("b", 2L));
+        Assert.assertEquals(record.extract("foo.0.a"), 1L);
+        Assert.assertEquals(record.extract("foo.1.b"), 2L);
+        Assert.assertNull(record.extract("foo.0.c"));
+        Assert.assertTrue(record.extract("bar") instanceof List);
+        Assert.assertEquals(record.extract("bar.0"), "qux");
+        Assert.assertEquals(record.extract("bar.1"), "norf");
+
+        Assert.assertNull(record.extract("dne.-1"));
+        Assert.assertNull(record.extract("dne.0"));
+        Assert.assertNull(record.extract("dne.123123"));
+    }
+
+    @Test
+    public void testExtractListBadIndex() {
+        record.setListMap("foo", singletonMap("a", 1L));
+        Assert.assertNull(record.extract("foo.1"));
+    }
+
+    @Test
     public void testIterator() {
         record.setMap("4", Pair.of("4.1", false))
               .setString("1", "bar").setLong("2", 42L)
