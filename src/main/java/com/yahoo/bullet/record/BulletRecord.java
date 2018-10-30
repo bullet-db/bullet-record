@@ -537,7 +537,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * Insert into this record a field from another record.
      *
      * @param field The name in this record to insert the field as.
-     * @param that The non-null record to extractField the field from.
+     * @param that The non-null record to extract the field from.
      * @param thatField The name of the field in that record to get the field from.
      * @return This object for chaining.
      */
@@ -549,7 +549,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * Insert into this record a Map sub-field from another record.
      *
      * @param field The name in this record to insert the field as.
-     * @param that The non-null record to extractField the field from.
+     * @param that The non-null record to extract the field from.
      * @param thatMapField The name of the Map field in that record to get the key from.
      * @param thatMapKey The name of the key in the Map field in that record.
      * @return This object for chaining.
@@ -562,7 +562,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * Insert into this record a List index from another record. The item is not copied.
      *
      * @param field The name in this record to insert the field as.
-     * @param that The non-null record to extractField the field from.
+     * @param that The non-null record to extract the field from.
      * @param thatListField The name of the List field in that record to get the index of.
      * @param thatListIndex The index of the field in the List to get.
      * @return This object for chaining.
