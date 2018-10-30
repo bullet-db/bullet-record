@@ -36,6 +36,7 @@ import java.util.Objects;
  */
 public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serializable {
     private static final long serialVersionUID = 3319286957467020672L;
+    private static final String KEY_DELIMITER = "\\.";
 
     /**
      * Insert a field into this BulletRecord. This is the base method used by the other set methods
@@ -50,7 +51,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
     /**
      * Gets a field stored in the record.
      *
-     * @param field The non-null name of the field
+     * @param field The non-null name of the field.
      * @return The value of the field or null if it does not exist.
      */
     public abstract Object get(String field);
@@ -96,14 +97,32 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * @return The value of the subfield in the {@link Map} or null if the field does not exist.
      * @throws ClassCastException if the field is not a {@link Map}.
      */
+    @SuppressWarnings("unchecked")
     public Object get(String field, String subKey) {
-        Object value = get(field);
+        Map<String, Object> value = (Map<String, Object>) get(field);
         if (value == null) {
             return null;
         }
-        @SuppressWarnings("unchecked")
-        Map<String, Object> casted = (Map<String, Object>) value;
-        return casted.get(subKey);
+        return value.get(subKey);
+    }
+
+    /**
+     * Gets an object from a {@link Map} stored in the record.
+     *
+     * @param field The field name in the record that is a {@link Map}.
+     * @param subKey The subfield map in the {@link Map} that is desired.
+     * @param subSubKey The subfield in the subfield {@link Map} that is desired.
+     * @return The value of the subfield in the subfield {@link Map} or null if the field does not exist.
+     * @throws ClassCastException if the field or subfield is not a {@link Map}.
+     */
+    @SuppressWarnings("unchecked")
+    public Object get(String field, String subKey, String subSubKey) {
+        Map<String, Map<String, Object>> first = (Map<String, Map<String, Object>>) get(field);
+        if (first == null) {
+            return null;
+        }
+        Map<String, Object> second = first.get(subKey);
+        return second == null ? null : second.get(subSubKey);
     }
 
     /**
@@ -115,14 +134,71 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * @throws IndexOutOfBoundsException for invalid indices.
      * @throws ClassCastException if the field is not a {@link List}.
      */
+    @SuppressWarnings("unchecked")
     public Object get(String field, int index) {
-        Object value = get(field);
+        List<Object> value = (List<Object>) get(field);
         if (value == null) {
             return null;
         }
-        @SuppressWarnings("unchecked")
-        List<Object> casted = (List<Object>) value;
-        return casted.get(index);
+        return value.get(index);
+    }
+
+    /**
+     * Gets an object from a {@link List} stored in the record.
+     *
+     * @param field The field name in the record that is a {@link List}.
+     * @param index The position in the {@link List} that is desired.
+     * @param subKey The subfield of the {@link List} element that is desired.
+     * @return The object at the index or null if the field does not exist.
+     * @throws IndexOutOfBoundsException for invalid indices.
+     * @throws ClassCastException if the field is not a {@link List} or the indexed element is not a {@link Map}
+     */
+    @SuppressWarnings("unchecked")
+    public Object get(String field, int index, String subKey) {
+        List<Map<String, Object>> first = (List<Map<String, Object>>) get(field);
+        if (first == null) {
+            return null;
+        }
+        Map<String, Object> second = first.get(index);
+        return second.get(subKey);
+    }
+
+    /**
+     * Gets a field from the record by identifier.<br>
+     * <br>
+     * For example, suppose a record has a map of boolean maps called "aaa". Then <br>
+     * - "aaa" identifies that map of maps <br>
+     * - "aaa.bbb" identifies the inner map that "aaa" maps "bbb" to (if it exists) <br>
+     * - "aaa.bbb.ccc" identifies the boolean that "aaa.bbb" (if it exists) maps "ccc" to (if it exists) <br>
+     * <br>
+     * For a list element, the index is the key, e.g. "my_list.0" or "my_list.0.some_key"
+     *
+     * @param identifier The non-null identifier of the field to get.
+     * @return The value of the field or null if it does not exist.
+     */
+    @SuppressWarnings("unchecked")
+    public Object extractField(String identifier) {
+        try {
+            String[] keys = identifier.split(KEY_DELIMITER, 3);
+            Object first = get(keys[0]);
+            if (keys.length == 1) {
+                return first;
+            }
+            Object second;
+            if (first instanceof Map) {
+                second = ((Map<String, Object>) first).get(keys[1]);
+            } else if (first instanceof List) {
+                second = ((List<Object>) first).get(Integer.parseInt(keys[1]));
+            } else {
+                return null;
+            }
+            if (keys.length == 2) {
+                return second;
+            }
+            return ((Map<String, Object>) second).get(keys[2]);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     // ******************************************** SETTERS ********************************************
