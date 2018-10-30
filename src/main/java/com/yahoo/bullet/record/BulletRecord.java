@@ -36,6 +36,7 @@ import java.util.Objects;
  */
 public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>>, Serializable {
     private static final long serialVersionUID = 3319286957467020672L;
+    private static final String KEY_DELIMITER = "\\.";
 
     /**
      * Insert a field into this BulletRecord. This is the base method used by the other set methods
@@ -96,14 +97,32 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * @return The value of the subfield in the {@link Map} or null if the field does not exist.
      * @throws ClassCastException if the field is not a {@link Map}.
      */
+    @SuppressWarnings("unchecked")
     public Object get(String field, String subKey) {
-        Object value = get(field);
+        Map<String, Object> value = (Map<String, Object>) get(field);
         if (value == null) {
             return null;
         }
-        @SuppressWarnings("unchecked")
-        Map<String, Object> casted = (Map<String, Object>) value;
-        return casted.get(subKey);
+        return value.get(subKey);
+    }
+
+    /**
+     * Gets an object from a {@link Map} stored in the record.
+     *
+     * @param field The field name in the record that is a {@link Map}.
+     * @param subKey The subfield map in the {@link Map} that is desired.
+     * @param subSubKey The subfield in the subfield {@link Map} that is desired.
+     * @return The value of the subfield in the subfield {@link Map} or null if the field does not exist.
+     * @throws ClassCastException if the field or subfield is not a {@link Map}.
+     */
+    @SuppressWarnings("unchecked")
+    public Object get(String field, String subKey, String subSubKey) {
+        Map<String, Map<String, Object>> first = (Map<String, Map<String, Object>>) get(field);
+        if (first == null) {
+            return null;
+        }
+        Map<String, Object> second = first.get(subKey);
+        return second == null ? null : second.get(subSubKey);
     }
 
     /**
@@ -115,14 +134,33 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * @throws IndexOutOfBoundsException for invalid indices.
      * @throws ClassCastException if the field is not a {@link List}.
      */
+    @SuppressWarnings("unchecked")
     public Object get(String field, int index) {
-        Object value = get(field);
+        List<Object> value = (List<Object>) get(field);
         if (value == null) {
             return null;
         }
-        @SuppressWarnings("unchecked")
-        List<Object> casted = (List<Object>) value;
-        return casted.get(index);
+        return value.get(index);
+    }
+
+    /**
+     * Gets an object from a {@link List} stored in the record.
+     *
+     * @param field The field name in the record that is a {@link List}.
+     * @param index The position in the {@link List} that is desired.
+     * @param subKey The subfield of the {@link List} element that is desired.
+     * @return The object at the index or null if the field does not exist.
+     * @throws IndexOutOfBoundsException for invalid indices.
+     * @throws ClassCastException if the field is not a {@link List} or the indexed element is not a {@link Map}
+     */
+    @SuppressWarnings("unchecked")
+    public Object get(String field, int index, String subKey) {
+        List<Map<String, Object>> first = (List<Map<String, Object>>) get(field);
+        if (first == null) {
+            return null;
+        }
+        Map<String, Object> second = first.get(index);
+        return second.get(subKey);
     }
 
     /**
@@ -135,13 +173,13 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * <br>
      * For a list element, the index is the key, e.g. "my_list.0" or "my_list.0.some_key"
      *
-     * @param field The non-null identifier of the field to get.
+     * @param identifier The non-null identifier of the field to get.
      * @return The value of the field or null if it does not exist.
      */
     @SuppressWarnings("unchecked")
-    public Object extract(String field) {
+    public Object extractField(String identifier) {
         try {
-            String[] keys = field.split("\\.", 3);
+            String[] keys = identifier.split(KEY_DELIMITER, 3);
             Object first = get(keys[0]);
             if (keys.length == 1) {
                 return first;
@@ -499,7 +537,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * Insert into this record a field from another record.
      *
      * @param field The name in this record to insert the field as.
-     * @param that The non-null record to extract the field from.
+     * @param that The non-null record to extractField the field from.
      * @param thatField The name of the field in that record to get the field from.
      * @return This object for chaining.
      */
@@ -511,7 +549,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * Insert into this record a Map sub-field from another record.
      *
      * @param field The name in this record to insert the field as.
-     * @param that The non-null record to extract the field from.
+     * @param that The non-null record to extractField the field from.
      * @param thatMapField The name of the Map field in that record to get the key from.
      * @param thatMapKey The name of the key in the Map field in that record.
      * @return This object for chaining.
@@ -524,7 +562,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * Insert into this record a List index from another record. The item is not copied.
      *
      * @param field The name in this record to insert the field as.
-     * @param that The non-null record to extract the field from.
+     * @param that The non-null record to extractField the field from.
      * @param thatListField The name of the List field in that record to get the index of.
      * @param thatListIndex The index of the field in the List to get.
      * @return This object for chaining.
