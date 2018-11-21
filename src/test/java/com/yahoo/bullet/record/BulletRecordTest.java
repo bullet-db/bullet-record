@@ -331,6 +331,7 @@ public abstract class BulletRecordTest {
         data.put("c.1", false);
         record.setListOfBooleanMap("c", singletonList(data));
         record.setStringList("d", singletonList("norf"));
+        record.setMapOfStringMap("e", singletonMap("e.f", singletonMap("e.f.g", "baz")));
 
         another.set("newA", record, "a");
         Assert.assertEquals(another.get("newA"), "foo");
@@ -353,6 +354,12 @@ public abstract class BulletRecordTest {
 
         another.set("newD", record, "d", 0);
         Assert.assertEquals(another.get("newD"), "norf");
+
+        another.set("newE", record, "e", "e.f", "e.f.g");
+        Assert.assertEquals(another.get("newE"), "baz");
+
+        another.set("newF", record, "c", 0, "c.1");
+        Assert.assertEquals(another.get("newF"), true);
     }
 
     @Test
@@ -618,5 +625,12 @@ public abstract class BulletRecordTest {
         Assert.assertTrue(record.hasField("7"));
         Assert.assertFalse(record.hasField("7.4.1"));
         Assert.assertFalse(record.hasField("foo"));
+    }
+
+    @Test
+    public void testForceSet() {
+        Assert.assertNull(record.get("foo"));
+        record.forceSet("foo", this);
+        Assert.assertSame(record.get("foo"), this);
     }
 }

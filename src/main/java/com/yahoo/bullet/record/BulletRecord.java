@@ -43,7 +43,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * and should remain protected in child classes to ensure type safety.
      *
      * @param field The non-null name of the field
-     * @param object The object to be set
+     * @param object The object to be set.
      * @return This object for chaining.
      */
     protected abstract BulletRecord set(String field, Object object);
@@ -542,11 +542,11 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * @return This object for chaining.
      */
     public BulletRecord set(String field, BulletRecord that, String thatField) {
-        return set(field, that.get(thatField));
+        return forceSet(field, that.get(thatField));
     }
 
     /**
-     * Insert into this record a Map sub-field from another record.
+     * Insert into this record a Map sub-field from another record. The item is not deep copied.
      *
      * @param field The name in this record to insert the field as.
      * @param that The non-null record to extract the field from.
@@ -555,11 +555,25 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * @return This object for chaining.
      */
     public BulletRecord set(String field, BulletRecord that, String thatMapField, String thatMapKey) {
-        return set(field, that.get(thatMapField, thatMapKey));
+        return forceSet(field, that.get(thatMapField, thatMapKey));
     }
 
     /**
-     * Insert into this record a List index from another record. The item is not copied.
+     * Insert into this record a sub-field from a Map of Maps in another record. The item is not deep copied.
+     *
+     * @param field The name in this record to insert the field as.
+     * @param that The non-null record to extract the field from.
+     * @param thatMapOfMapField The name of the Map of Map field in that record to get the field from.
+     * @param thatMapOfMapKey The name of the Map key in the Map of Map field in that record.
+     * @param thatMapKey The name of the key in the Map from the Map of Map field in that record to copy.
+     * @return This object for chaining.
+     */
+    public BulletRecord set(String field, BulletRecord that, String thatMapOfMapField, String thatMapOfMapKey, String thatMapKey) {
+        return forceSet(field, that.get(thatMapOfMapField, thatMapOfMapKey, thatMapKey));
+    }
+
+    /**
+     * Insert into this record a List index from another record. The item is not deep copied.
      *
      * @param field The name in this record to insert the field as.
      * @param that The non-null record to extract the field from.
@@ -568,7 +582,35 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * @return This object for chaining.
      */
     public BulletRecord set(String field, BulletRecord that, String thatListField, int thatListIndex) {
-        return set(field, that.get(thatListField, thatListIndex));
+        return forceSet(field, that.get(thatListField, thatListIndex));
+    }
+
+    /**
+     * Insert into this record a key from a Map at a List index from another record. The item is not deep copied.
+     *
+     * @param field The name in this record to insert the field as.
+     * @param that The non-null record to extract the field from.
+     * @param thatListField The name of the List field in that record to get the index of.
+     * @param thatListIndex The index of the Map field in the List to get.
+     * @param thatListMapKey The key in the Map field in the List to get.
+     * @return This object for chaining.
+     */
+    public BulletRecord set(String field, BulletRecord that, String thatListField, int thatListIndex, String thatListMapKey) {
+        return forceSet(field, that.get(thatListField, thatListIndex, thatListMapKey));
+    }
+
+    /**
+     * Try to forcibly set an arbitrary object as a top-level field in this record. This might be unsafe and your record
+     * may no longer serialize properly! Use the appropriate set method if you know the type of your field. Only use
+     * this method if you are sure of the type of the object and just do not want to bother casting or checking it. You
+     * can also use it to temporarily store something in the record as long as you remove it before serializing it.
+     *
+     * @param field The name in this record to insert the object as.
+     * @param object The object to be set.
+     * @return This object for chaining.
+     */
+    public BulletRecord forceSet(String field, Object object) {
+        return set(field, object);
     }
 
     /**
@@ -580,7 +622,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      */
     public BulletRecord rename(String field, String newName) {
         if (hasField(field)) {
-            set(newName, getAndRemove(field));
+            forceSet(newName, getAndRemove(field));
         }
         return this;
     }
