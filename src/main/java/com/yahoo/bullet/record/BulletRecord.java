@@ -42,7 +42,7 @@ public abstract class BulletRecord implements Iterable<Map.Entry<String, Object>
      * Insert a field into this BulletRecord. This is the base method used by the other set methods
      * and should remain protected in child classes to ensure type safety.
      *
-     * @param field The non-null name of the field
+     * @param field The non-null name of the field.
      * @param object The object to be set.
      * @return This object for chaining.
      */
