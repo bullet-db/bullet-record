@@ -78,7 +78,7 @@ public class TypedObject implements Comparable<TypedObject> {
      */
     public static TypedObject typeCast(Type type, String value) {
         try {
-            return new TypedObject(type, type.cast(value));
+            return new TypedObject(type, type.castString(value));
         } catch (RuntimeException e) {
             return GENERIC_UNKNOWN;
         }
@@ -115,7 +115,7 @@ public class TypedObject implements Comparable<TypedObject> {
             return GENERIC_UNKNOWN;
         }
         try {
-            return new TypedObject(Type.DOUBLE, Type.DOUBLE.cast(value.toString()));
+            return new TypedObject(Type.DOUBLE, Type.DOUBLE.castString(value.toString()));
         } catch (RuntimeException e) {
             return GENERIC_UNKNOWN;
         }

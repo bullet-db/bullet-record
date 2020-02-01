@@ -36,84 +36,84 @@ public class TypeTest {
 
     @Test
     public void testBooleanCasting() {
-        Assert.assertEquals(Type.BOOLEAN.cast("true"), true);
-        Assert.assertEquals(Type.BOOLEAN.cast("false"), false);
-        Assert.assertEquals(Type.BOOLEAN.cast("foo"), false);
-        Assert.assertEquals(Type.BOOLEAN.cast("1"), false);
+        Assert.assertEquals(Type.BOOLEAN.castString("true"), true);
+        Assert.assertEquals(Type.BOOLEAN.castString("false"), false);
+        Assert.assertEquals(Type.BOOLEAN.castString("foo"), false);
+        Assert.assertEquals(Type.BOOLEAN.castString("1"), false);
     }
 
     @Test
     public void testNullCasting() {
-        Assert.assertEquals(Type.NULL.cast("null"), null);
-        Assert.assertEquals(Type.NULL.cast("NULL"), null);
-        Assert.assertEquals(Type.NULL.cast("Null"), null);
-        Assert.assertEquals(Type.NULL.cast("false"), "false");
-        Assert.assertEquals(Type.NULL.cast("42"), "42");
+        Assert.assertEquals(Type.NULL.castString("null"), null);
+        Assert.assertEquals(Type.NULL.castString("NULL"), null);
+        Assert.assertEquals(Type.NULL.castString("Null"), null);
+        Assert.assertEquals(Type.NULL.castString("false"), "false");
+        Assert.assertEquals(Type.NULL.castString("42"), "42");
     }
 
     @Test
     public void testStringCasting() {
-        Assert.assertEquals(Type.STRING.cast("1"), "1");
-        Assert.assertEquals(Type.STRING.cast("foo"), "foo");
-        Assert.assertEquals(Type.STRING.cast("true"), "true");
-        Assert.assertEquals(Type.STRING.cast("1.23"), "1.23");
+        Assert.assertEquals(Type.STRING.castString("1"), "1");
+        Assert.assertEquals(Type.STRING.castString("foo"), "foo");
+        Assert.assertEquals(Type.STRING.castString("true"), "true");
+        Assert.assertEquals(Type.STRING.castString("1.23"), "1.23");
     }
 
     @Test(expectedExceptions = ClassCastException.class)
     public void testUnknownCasting() {
-        Assert.assertEquals(Type.UNKNOWN.cast("1"), "1");
+        Assert.assertEquals(Type.UNKNOWN.castString("1"), "1");
     }
 
     @Test
     public void testIntegerCasting() {
-        Assert.assertEquals(Type.INTEGER.cast("41"), 41);
+        Assert.assertEquals(Type.INTEGER.castString("41"), 41);
     }
 
     @Test(expectedExceptions = NumberFormatException.class)
     public void testIntegerFailCastingDouble() {
-        Type.INTEGER.cast("41.99");
+        Type.INTEGER.castString("41.99");
     }
 
     @Test(expectedExceptions = NumberFormatException.class)
     public void testIntegerFailCastingString() {
-        Type.INTEGER.cast("foo");
+        Type.INTEGER.castString("foo");
     }
 
     @Test
     public void testLongCasting() {
-        Assert.assertEquals(Type.LONG.cast("41"), 41L);
+        Assert.assertEquals(Type.LONG.castString("41"), 41L);
     }
 
     @Test(expectedExceptions = NumberFormatException.class)
     public void testLongFailCastingDouble() {
-        Type.LONG.cast("41.99");
+        Type.LONG.castString("41.99");
     }
 
     @Test(expectedExceptions = NumberFormatException.class)
     public void testLongFailCastingString() {
-        Type.LONG.cast("foo");
+        Type.LONG.castString("foo");
     }
 
     @Test
     public void testFloatCasting() {
-        Assert.assertEquals(Type.FLOAT.cast("42.0"), 42.0f);
-        Assert.assertEquals(Type.FLOAT.cast("42"), 42.0f);
+        Assert.assertEquals(Type.FLOAT.castString("42.0"), 42.0f);
+        Assert.assertEquals(Type.FLOAT.castString("42"), 42.0f);
     }
 
     @Test(expectedExceptions = NumberFormatException.class)
     public void testFloatFailCastingString() {
-        Type.FLOAT.cast("foo");
+        Type.FLOAT.castString("foo");
     }
 
     @Test
     public void testDoubleCasting() {
-        Assert.assertEquals(Type.DOUBLE.cast("42.0"), 42.0);
-        Assert.assertEquals(Type.DOUBLE.cast("42"), 42.0);
+        Assert.assertEquals(Type.DOUBLE.castString("42.0"), 42.0);
+        Assert.assertEquals(Type.DOUBLE.castString("42"), 42.0);
     }
 
     @Test(expectedExceptions = NumberFormatException.class)
     public void testDoubleFailCastingString() {
-        Type.DOUBLE.cast("foo");
+        Type.DOUBLE.castString("foo");
     }
 
     @Test(expectedExceptions = ClassCastException.class)
