@@ -3,7 +3,7 @@
  *  Licensed under the terms of the Apache License, Version 2.0.
  *  See the LICENSE file associated with the project for terms.
  */
-package com.yahoo.bullet.record;
+package com.yahoo.bullet.record.avro;
 
 /*
 import org.apache.avro.io.Encoder;
@@ -25,6 +25,7 @@ import java.util.Map;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 */
+import com.yahoo.bullet.record.BulletRecordTest;
 
 @SuppressWarnings("unchecked")
 public class UntypedAvroBulletRecordTest extends BulletRecordTest<Object> {

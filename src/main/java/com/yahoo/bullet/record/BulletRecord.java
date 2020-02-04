@@ -678,7 +678,7 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @return The value of the field or null if it does not exist.
      */
     @SuppressWarnings("unchecked")
-    T extractField(String identifier) {
+    protected T extractField(String identifier) {
         try {
             String[] keys = identifier.split(KEY_DELIMITER, 3);
             T first = get(keys[0]);
@@ -712,7 +712,7 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @param entries The non-null entries to insert.
      * @return This object for chaining.
      */
-    BulletRecord<T> setMap(String field, Map.Entry<String, Object>... entries) {
+    protected BulletRecord<T> setMap(String field, Map.Entry<String, Object>... entries) {
         Objects.requireNonNull(entries);
         Map<String, Object> newMap = new HashMap<>(entries.length);
         for (Map.Entry<String, Object> entry : entries) {
@@ -731,7 +731,7 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @param entries The non-null entries to insert.
      * @return This object for chaining.
      */
-    BulletRecord<T> setListMap(String field, Map<String, Object>... entries) {
+    protected BulletRecord<T> setListMap(String field, Map<String, Object>... entries) {
         Objects.requireNonNull(entries);
         List<Map<String, Object>> data = new ArrayList<>();
         for (Map<String, Object> entry : entries) {
