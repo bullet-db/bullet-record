@@ -10,14 +10,14 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 @SuppressWarnings("unchecked")
-public class SimpleBulletRecordTest extends BulletRecordTest {
-    private SimpleBulletRecord simpleRecord;
-    private SimpleBulletRecord simpleAnother;
+public class UntypedSimpleBulletRecordTest extends BulletRecordTest<Object> {
+    private UntypedSimpleBulletRecord simpleRecord;
+    private UntypedSimpleBulletRecord simpleAnother;
 
     @BeforeMethod
     public void setup() {
-        simpleRecord = new SimpleBulletRecord();
-        simpleAnother = new SimpleBulletRecord();
+        simpleRecord = new UntypedSimpleBulletRecord();
+        simpleAnother = new UntypedSimpleBulletRecord();
         record = simpleRecord;
         another = simpleAnother;
     }
@@ -38,7 +38,7 @@ public class SimpleBulletRecordTest extends BulletRecordTest {
         Assert.assertTrue(simpleRecord.equals(simpleAnother));
         Assert.assertEquals(simpleRecord.hashCode(), simpleAnother.hashCode());
 
-        simpleAnother = new SimpleBulletRecord();
+        simpleAnother = new UntypedSimpleBulletRecord();
         simpleAnother.setString("foo", "bar");
 
         Assert.assertFalse(simpleRecord.equals(simpleAnother));

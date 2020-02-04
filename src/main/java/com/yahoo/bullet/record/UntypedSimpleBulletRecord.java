@@ -14,9 +14,9 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * A simple implementation of {@link BulletRecord}.
+ * A simple implementation of {@link UntypedBulletRecord}.
  */
-public class SimpleBulletRecord extends BulletRecord<Object> {
+public class UntypedSimpleBulletRecord extends UntypedBulletRecord {
     private static final long serialVersionUID = -4045166645513428587L;
 
     // Exposed for testing.
@@ -24,16 +24,12 @@ public class SimpleBulletRecord extends BulletRecord<Object> {
     private Map<String, Object> data = new HashMap<>();
 
     @Override
-    protected BulletRecord rawSet(String field, Object object) {
+    protected UntypedSimpleBulletRecord rawSet(String field, Object object) {
         Objects.requireNonNull(field);
         data.put(field, object);
         return this;
     }
 
-    @Override
-    protected BulletRecord set(String field, Object object) {
-        return rawSet(field, object);
-    }
 
     @Override
     protected Object convert(Object object) {
@@ -61,7 +57,7 @@ public class SimpleBulletRecord extends BulletRecord<Object> {
     }
 
     @Override
-    public BulletRecord remove(String field) {
+    public UntypedSimpleBulletRecord remove(String field) {
         data.remove(field);
         return this;
     }
@@ -73,10 +69,10 @@ public class SimpleBulletRecord extends BulletRecord<Object> {
 
     @Override
     public boolean equals(Object object) {
-        if (!(object instanceof SimpleBulletRecord)) {
+        if (!(object instanceof UntypedSimpleBulletRecord)) {
             return false;
         }
-        SimpleBulletRecord that = (SimpleBulletRecord) object;
+        UntypedSimpleBulletRecord that = (UntypedSimpleBulletRecord) object;
         return data == that.data || (data != null && data.equals(that.data));
     }
 

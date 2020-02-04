@@ -23,20 +23,29 @@ import java.util.Objects;
  * When inserting into the Record, methods are explicitly provided for each type supported (listed
  * below). When reading from the Record, which may not be something needed by users of this very
  * frequently (as it is the entry point into Bullet), a generic Object is returned instead. Casting
- * it is left to the user.
+ * it is left to the user. See {@link TypedBulletRecord} for an alternative.
  *
- * The record currently supports these fields:
- * <pre>
- * Primitives: Boolean, Integer, Long, Float, Double, String
- * Complex: {@code Map <String, "Primitives">, Map<String, Map<String, "Primitives">>, List<"Primitives">,
- *           List<Map<String, "Primitives">>} where "Primitives" refers to the afore-mentioned Primitives.
- * </pre>
+ * For the types supported by this records, see {@link com.yahoo.bullet.typesystem.Type}.
+ * Primitives: {@link com.yahoo.bullet.typesystem.Type#PRIMITIVES}
+ * Complex: {@link com.yahoo.bullet.typesystem.Type#MAPS} and {@link com.yahoo.bullet.typesystem.Type#LISTS}
  *
  * Instead of setting a field to null (you cannot for top level Java primitives), avoid setting it instead.
  */
 public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>, Serializable {
     private static final long serialVersionUID = 3319286957467020672L;
     private static final String KEY_DELIMITER = "\\.";
+
+    /**
+     * Insert a field into this BulletRecord. This is the glue method used by the other set methods and should remain
+     * protected to not expose this to to the outside. It will call {@link #convert(Object)} first.
+     *
+     * @param field The non-null name of the field.
+     * @param object The object to be set.
+     * @return This object for chaining.
+     */
+    protected BulletRecord<T> set(String field,  Object object) {
+        return rawSet(field, convert(object));
+    }
 
     /**
      * Insert a field into this BulletRecord. This is the core method used by the other set methods and should remain
@@ -47,18 +56,6 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @return This object for chaining.
      */
     protected abstract BulletRecord<T> rawSet(String field, T object);
-
-    /**
-     * Insert a field into this BulletRecord. This is the glue method used by the other set methods and should remain
-     * protected in child classes to ensure type safety. It will call {@link #convert(Object)} first.
-     *
-     * @param field The non-null name of the field.
-     * @param object The object to be set.
-     * @return This object for chaining.
-     */
-    protected BulletRecord<T> set(String field,  Object object) {
-        return rawSet(field, convert(object));
-    }
 
     /**
      * Convert the given object into a the format stored in this record.

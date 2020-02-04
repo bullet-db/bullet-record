@@ -19,11 +19,13 @@ public abstract class TypedBulletRecord extends BulletRecord<TypedObject> {
     }
 
     /**
-     * Set a {@link TypedObject} field into this record.
+     * Set a {@link TypedObject} field directly into this record.
      *
      * @param field The name of the field.
      * @param object The non-null {@link TypedObject} with a valid type.
      * @return This record for chaining.
+     * @throws NullPointerException if {@link TypedObject} is null. Just avoid setting it instead.
+     * @throws UnsupportedOperationException if the {@link TypedObject} has {@link Type#NULL} or {@link Type#UNKNOWN}.
      */
     public BulletRecord<TypedObject> setTypedObject(String field, TypedObject object) {
         Objects.requireNonNull(object);

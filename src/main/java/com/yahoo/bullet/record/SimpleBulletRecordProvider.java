@@ -7,18 +7,18 @@
 package com.yahoo.bullet.record;
 
 /**
- * Factory for SimpleBulletRecord.
+ * Factory for simple BulletRecords.
  */
 public class SimpleBulletRecordProvider implements BulletRecordProvider {
     private static final long serialVersionUID = 6155338160701668740L;
 
     @Override
-    public BulletRecord getInstance() {
-        return new SimpleBulletRecord();
+    public UntypedSimpleBulletRecord getUntypedInstance() {
+        return new UntypedSimpleBulletRecord();
     }
 
     @Override
-    public TypedBulletRecord getTypedInstance() {
+    public TypedSimpleBulletRecord getTypedInstance() {
         throw new UnsupportedOperationException("Not supported yet!");
     }
 }

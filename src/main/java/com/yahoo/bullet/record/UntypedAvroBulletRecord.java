@@ -36,8 +36,8 @@ import java.util.Objects;
  * without modifications. You can force a read by either calling a get/set method or using {@link #forceReadData()}.
  */
 @Slf4j @Setter(AccessLevel.PACKAGE) @NoArgsConstructor
-public class AvroBulletRecord extends BulletRecord<Object> {
-    public static final long serialVersionUID = 926415013785021742L;
+public class UntypedAvroBulletRecord extends UntypedBulletRecord {
+    private static final long serialVersionUID = 926415013785021742L;
 
     @Getter(AccessLevel.PACKAGE)
     private boolean isDeserialized = true;
@@ -49,10 +49,10 @@ public class AvroBulletRecord extends BulletRecord<Object> {
     /**
      * Constructor.
      *
-     * @param other The AvroBulletRecord to copy.
-     * @throws IOException if failed to serialize the AvroBulletRecord object.
+     * @param other The {@link UntypedAvroBulletRecord} to copy.
+     * @throws IOException if failed to serialize the {@link UntypedAvroBulletRecord} object.
      */
-    public AvroBulletRecord(AvroBulletRecord other) throws IOException {
+    public UntypedAvroBulletRecord(UntypedAvroBulletRecord other) throws IOException {
         serializedData = other.getAsByteArray();
         isDeserialized = false;
     }
@@ -81,21 +81,11 @@ public class AvroBulletRecord extends BulletRecord<Object> {
     }
 
     @Override
-    protected BulletRecord rawSet(String field, Object object) {
+    protected UntypedAvroBulletRecord rawSet(String field, Object object) {
         Objects.requireNonNull(field);
         forceReadData();
         data.put(field, object);
         return this;
-    }
-
-    @Override
-    protected BulletRecord set(String field, Object object) {
-        return rawSet(field, object);
-    }
-
-    @Override
-    protected Object convert(Object object) {
-        return object;
     }
 
     @Override
@@ -124,7 +114,7 @@ public class AvroBulletRecord extends BulletRecord<Object> {
     }
 
     @Override
-    public BulletRecord remove(String field) {
+    public UntypedAvroBulletRecord remove(String field) {
         if (hasField(field)) {
             data.remove(field);
         }
@@ -138,10 +128,10 @@ public class AvroBulletRecord extends BulletRecord<Object> {
 
     @Override
     public boolean equals(Object object) {
-        if (!(object instanceof AvroBulletRecord)) {
+        if (!(object instanceof UntypedAvroBulletRecord)) {
             return false;
         }
-        AvroBulletRecord that = (AvroBulletRecord) object;
+        UntypedAvroBulletRecord that = (UntypedAvroBulletRecord) object;
         // We need to force read the data since writing out data to bytes will give different byte arrays
         // if the content is the same but the order isn't.
         forceReadData();

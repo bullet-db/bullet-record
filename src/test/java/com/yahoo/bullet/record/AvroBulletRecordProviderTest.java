@@ -11,15 +11,15 @@ import org.testng.annotations.Test;
 public class AvroBulletRecordProviderTest {
     @Test
     public void testInstanceNotPassedByReference() {
-        BulletRecord recordA = new AvroBulletRecordProvider().getInstance();
-        BulletRecord recordB = new AvroBulletRecordProvider().getInstance();
-        Assert.assertTrue(recordA instanceof AvroBulletRecord);
-        Assert.assertTrue(recordB instanceof AvroBulletRecord);
+        UntypedAvroBulletRecord recordA = new AvroBulletRecordProvider().getUntypedInstance();
+        UntypedAvroBulletRecord recordB = new AvroBulletRecordProvider().getUntypedInstance();
+        Assert.assertTrue(recordA instanceof UntypedAvroBulletRecord);
+        Assert.assertTrue(recordB instanceof UntypedAvroBulletRecord);
 
         recordA.setString("someField", "someValue");
         Assert.assertNull(recordB.get("someField"));
 
-        BulletRecord recordC = new AvroBulletRecordProvider().getInstance();
+        BulletRecord recordC = new AvroBulletRecordProvider().getUntypedInstance();
         Assert.assertNull(recordC.get("someField"));
     }
 }

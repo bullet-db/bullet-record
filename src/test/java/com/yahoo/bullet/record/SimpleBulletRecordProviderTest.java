@@ -11,15 +11,15 @@ import org.testng.annotations.Test;
 public class SimpleBulletRecordProviderTest {
     @Test
     public void testInstanceNotPassedByReference() {
-        BulletRecord recordA = new SimpleBulletRecordProvider().getInstance();
-        BulletRecord recordB = new SimpleBulletRecordProvider().getInstance();
-        Assert.assertTrue(recordA instanceof SimpleBulletRecord);
-        Assert.assertTrue(recordB instanceof SimpleBulletRecord);
+        UntypedBulletRecord recordA = new SimpleBulletRecordProvider().getUntypedInstance();
+        UntypedBulletRecord recordB = new SimpleBulletRecordProvider().getUntypedInstance();
+        Assert.assertTrue(recordA instanceof UntypedSimpleBulletRecord);
+        Assert.assertTrue(recordB instanceof UntypedSimpleBulletRecord);
 
         recordA.setString("someField", "someValue");
         Assert.assertNull(recordB.get("someField"));
 
-        BulletRecord recordC = new SimpleBulletRecordProvider().getInstance();
+        UntypedBulletRecord recordC = new SimpleBulletRecordProvider().getUntypedInstance();
         Assert.assertNull(recordC.get("someField"));
     }
 }

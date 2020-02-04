@@ -25,9 +25,9 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
 @SuppressWarnings("unchecked")
-public class AvroBulletRecordTest extends BulletRecordTest {
-    private AvroBulletRecord avroRecord;
-    private AvroBulletRecord avroAnother;
+public class UntypedAvroBulletRecordTest extends BulletRecordTest<Object> {
+    private UntypedAvroBulletRecord avroRecord;
+    private UntypedAvroBulletRecord avroAnother;
 
     public static byte[] getAvroBytes(Map<String, Object> data) {
         try {
@@ -45,7 +45,7 @@ public class AvroBulletRecordTest extends BulletRecordTest {
         }
     }
 
-    public static byte[] getRecordBytes(AvroBulletRecord record) {
+    public static byte[] getRecordBytes(UntypedAvroBulletRecord record) {
         try {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
             ObjectOutputStream outputStream = new ObjectOutputStream(byteStream);
@@ -58,10 +58,10 @@ public class AvroBulletRecordTest extends BulletRecordTest {
         }
     }
 
-    public static AvroBulletRecord fromRecordBytes(byte[] data) {
+    public static UntypedAvroBulletRecord fromRecordBytes(byte[] data) {
         try {
             ObjectInputStream stream = new ObjectInputStream(new ByteArrayInputStream(data));
-            return (AvroBulletRecord) stream.readObject();
+            return (UntypedAvroBulletRecord) stream.readObject();
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -69,8 +69,8 @@ public class AvroBulletRecordTest extends BulletRecordTest {
 
     @BeforeMethod
     public void setup() {
-        avroRecord = new AvroBulletRecord();
-        avroAnother = new AvroBulletRecord();
+        avroRecord = new UntypedAvroBulletRecord();
+        avroAnother = new UntypedAvroBulletRecord();
         record = avroRecord;
         another = avroAnother;
     }
@@ -131,7 +131,7 @@ public class AvroBulletRecordTest extends BulletRecordTest {
         Assert.assertTrue(avroRecord.equals(avroAnother));
         Assert.assertEquals(avroRecord.hashCode(), avroAnother.hashCode());
 
-        another = new AvroBulletRecord();
+        another = new UntypedAvroBulletRecord();
         another.setString("foo", "bar");
 
         Assert.assertFalse(record.equals(another));
@@ -149,13 +149,13 @@ public class AvroBulletRecordTest extends BulletRecordTest {
         Assert.assertFalse(avroRecord.forceReadData());
 
         // Set the data to an invalid byte array and force a read
-        avroRecord = new AvroBulletRecord();
+        avroRecord = new UntypedAvroBulletRecord();
         avroRecord.setSerializedData("foo".getBytes());
         avroRecord.setDeserialized(false);
         Assert.assertFalse(avroRecord.forceReadData());
 
         // Set the data to a valid byte array and force a read
-        avroRecord = new AvroBulletRecord();
+        avroRecord = new UntypedAvroBulletRecord();
         Map<String, Object> data = new HashMap<>();
         data.put("foo", singletonMap("bar", "baz"));
         data.put("qux", singletonList(singletonMap("bar", "baz")));
@@ -183,7 +183,7 @@ public class AvroBulletRecordTest extends BulletRecordTest {
         byte[] serialized = getRecordBytes(avroRecord);
         Assert.assertNotNull(serialized);
 
-        AvroBulletRecord reified = fromRecordBytes(serialized);
+        UntypedAvroBulletRecord reified = fromRecordBytes(serialized);
         Assert.assertNotNull(reified);
         Assert.assertEquals(reified.get("2"), 42L);
         Assert.assertTrue((Boolean) reified.get("7", "7.2"));
@@ -196,7 +196,7 @@ public class AvroBulletRecordTest extends BulletRecordTest {
         byte[] serialized = getRecordBytes(avroRecord);
         Assert.assertNotNull(serialized);
 
-        AvroBulletRecord reified = fromRecordBytes(serialized);
+        UntypedAvroBulletRecord reified = fromRecordBytes(serialized);
         Assert.assertNotNull(reified);
 
         byte[] serializedAgain = getRecordBytes(avroRecord);
@@ -206,7 +206,7 @@ public class AvroBulletRecordTest extends BulletRecordTest {
     @Test
     public void testSerializationWithBadStates() {
         byte[] serialized = getRecordBytes(avroRecord);
-        AvroBulletRecord reified = fromRecordBytes(serialized);
+        UntypedAvroBulletRecord reified = fromRecordBytes(serialized);
 
         // This will destroy the byte array and force the record to think it has data in its map (it doesn't)
         reified.setSerializedData(null);
@@ -220,7 +220,7 @@ public class AvroBulletRecordTest extends BulletRecordTest {
     @Test
     public void testDeserializationWithBadStates() {
         byte[] serialized = getRecordBytes(avroRecord);
-        AvroBulletRecord reified = fromRecordBytes(serialized);
+        UntypedAvroBulletRecord reified = fromRecordBytes(serialized);
 
         // This will destroy the byte array, force the record to think it doesn't have data in its map and then
         // force a read
@@ -239,7 +239,7 @@ public class AvroBulletRecordTest extends BulletRecordTest {
 
         byte[] serialized = getRecordBytes(avroRecord);
         Assert.assertNotNull(serialized);
-        AvroBulletRecord reified = fromRecordBytes(serialized);
+        UntypedAvroBulletRecord reified = fromRecordBytes(serialized);
 
         // Read and write without accessing anything
         serialized = getRecordBytes(reified);
@@ -259,7 +259,7 @@ public class AvroBulletRecordTest extends BulletRecordTest {
 
         // SerDe
         byte[] serialized = getRecordBytes(avroRecord);
-        AvroBulletRecord reified = fromRecordBytes(serialized);
+        UntypedAvroBulletRecord reified = fromRecordBytes(serialized);
 
         Assert.assertNotNull(serialized);
         Assert.assertNotNull(reified);
@@ -296,7 +296,7 @@ public class AvroBulletRecordTest extends BulletRecordTest {
     public void testFieldCount() throws Exception {
         super.testFieldCount();
 
-        avroAnother = new AvroBulletRecord(avroRecord);
+        avroAnother = new UntypedAvroBulletRecord(avroRecord);
         Assert.assertEquals(avroAnother.fieldCount(), 1);
     }
 
@@ -316,7 +316,7 @@ public class AvroBulletRecordTest extends BulletRecordTest {
     @Test
     public void testCopyConstructor() throws Exception {
         avroRecord.setString("someField", "someValue");
-        AvroBulletRecord copy = new AvroBulletRecord(avroRecord);
+        UntypedAvroBulletRecord copy = new UntypedAvroBulletRecord(avroRecord);
         Assert.assertEquals(copy.get("someField"), "someValue");
         Assert.assertEquals(copy.fieldCount(), 1);
     }
@@ -324,8 +324,8 @@ public class AvroBulletRecordTest extends BulletRecordTest {
     @Test
     public void testCopyOfCopy() throws Exception {
         avroRecord.setString("someField", "someValue");
-        AvroBulletRecord copy = new AvroBulletRecord(avroRecord);
-        AvroBulletRecord copyOfCopy = new AvroBulletRecord(copy);
+        UntypedAvroBulletRecord copy = new UntypedAvroBulletRecord(avroRecord);
+        UntypedAvroBulletRecord copyOfCopy = new UntypedAvroBulletRecord(copy);
         Assert.assertEquals(copyOfCopy.get("someField"), "someValue");
         Assert.assertEquals(copyOfCopy.fieldCount(), 1);
     }

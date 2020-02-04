@@ -11,16 +11,16 @@ import org.testng.annotations.Test;
 public class BulletRecordProviderTest {
     @Test
     public void testFromMakesNewInstance() {
-        BulletRecord recordA = BulletRecordProvider.from("com.yahoo.bullet.record.AvroBulletRecordProvider").getInstance();
-        BulletRecord recordB = BulletRecordProvider.from("com.yahoo.bullet.record.AvroBulletRecordProvider").getInstance();
-        Assert.assertTrue(recordA instanceof AvroBulletRecord);
-        Assert.assertTrue(recordB instanceof AvroBulletRecord);
+        UntypedBulletRecord recordA = BulletRecordProvider.from("com.yahoo.bullet.record.AvroBulletRecordProvider").getUntypedInstance();
+        UntypedBulletRecord recordB = BulletRecordProvider.from("com.yahoo.bullet.record.AvroBulletRecordProvider").getUntypedInstance();
+        Assert.assertTrue(recordA instanceof UntypedAvroBulletRecord);
+        Assert.assertTrue(recordB instanceof UntypedAvroBulletRecord);
 
         recordB.setString("someField", "someValue");
         Assert.assertEquals(recordB.get("someField"), "someValue");
         Assert.assertNull(recordA.get("someField"));
 
-        BulletRecord recordC = BulletRecordProvider.from("com.yahoo.bullet.record.AvroBulletRecordProvider").getInstance();
+        UntypedBulletRecord recordC = BulletRecordProvider.from("com.yahoo.bullet.record.AvroBulletRecordProvider").getUntypedInstance();
         Assert.assertNull(recordC.get("someField"));
     }
 
