@@ -36,7 +36,7 @@ import java.util.Objects;
  * without modifications. You can force a read by either calling a get/set method or using {@link #forceReadData()}.
  */
 @Slf4j @Setter(AccessLevel.PACKAGE) @NoArgsConstructor
-public class AvroBulletRecord extends BulletRecord {
+public class AvroBulletRecord extends BulletRecord<Object> {
     public static final long serialVersionUID = 926415013785021742L;
 
     @Getter(AccessLevel.PACKAGE)
@@ -81,11 +81,21 @@ public class AvroBulletRecord extends BulletRecord {
     }
 
     @Override
-    protected BulletRecord set(String field, Object object) {
+    protected BulletRecord rawSet(String field, Object object) {
         Objects.requireNonNull(field);
         forceReadData();
         data.put(field, object);
         return this;
+    }
+
+    @Override
+    protected BulletRecord set(String field, Object object) {
+        return rawSet(field, object);
+    }
+
+    @Override
+    protected Object convert(Object object) {
+        return object;
     }
 
     @Override

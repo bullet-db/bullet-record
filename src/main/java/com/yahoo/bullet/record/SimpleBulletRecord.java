@@ -16,7 +16,7 @@ import java.util.Objects;
 /**
  * A simple implementation of {@link BulletRecord}.
  */
-public class SimpleBulletRecord extends BulletRecord {
+public class SimpleBulletRecord extends BulletRecord<Object> {
     private static final long serialVersionUID = -4045166645513428587L;
 
     // Exposed for testing.
@@ -24,10 +24,20 @@ public class SimpleBulletRecord extends BulletRecord {
     private Map<String, Object> data = new HashMap<>();
 
     @Override
-    protected BulletRecord set(String field, Object object) {
+    protected BulletRecord rawSet(String field, Object object) {
         Objects.requireNonNull(field);
         data.put(field, object);
         return this;
+    }
+
+    @Override
+    protected BulletRecord set(String field, Object object) {
+        return rawSet(field, object);
+    }
+
+    @Override
+    protected Object convert(Object object) {
+        return object;
     }
 
     @Override

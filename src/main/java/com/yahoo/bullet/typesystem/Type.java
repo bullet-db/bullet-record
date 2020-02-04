@@ -7,6 +7,7 @@ package com.yahoo.bullet.typesystem;
 
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -85,7 +86,10 @@ public enum Type {
 
     /**
      * Tries to get the type of a given object. If the object is a complex or composite type, then it must contain
-     * at least one value.
+     * at least one value. Note that if the object is a composite type that contains multiple different types of
+     * values, any one of them maybe used to determine the type leading to undefined behavior. It might be possible to
+     * create such a composite object and then use {@link #forceCast(Type, Type, Object)} to force this object to a
+     * desired type if the cast can be done (even with loss of precision).
      *
      * @param object The object whose type is to be determined.
      * @return {@link Type} for this object, the {@link Type#NULL} if the object was null or {@link Type#UNKNOWN}
@@ -114,6 +118,31 @@ public enum Type {
     }
 
     /**
+     * Takes an object and casts it to this type. Follows widening conventions for primitive numeric data. For all other
+     * data, if the cast cannot be done safely, this will throw an instance {@link RuntimeException}. See
+     * {@link #forceCast(Type, Object)} to force type changes when the cast cannot be done naturally.
+     *
+     * @param object The object that is being cast.
+     * @return The casted object.
+     * @throws RuntimeException if the cast cannot be done safely.
+     */
+    public Object castObject(Object object) {
+        // Any null object can be casted to anything
+        if (object == null) {
+            return null;
+        }
+        // object isn't null and this is the UNKNOWN or the NULL type: the cast cannot be done
+        if (this == UNKNOWN || this == NULL) {
+            throw new ClassCastException("Cannot cast non-null object " + object + " to " + this);
+        }
+        Type objectType = getType(object);
+        if (canSafeCast(this, objectType)) {
+            return forceCast(this, objectType, object);
+        }
+        throw new ClassCastException("Cannot safely cast non-null object " + object + " to " + this);
+    }
+
+    /**
      * Takes a String value and casts it to this type. Only works for {@link #PRIMITIVES} {@link Type} String
      * representations. Additionally, can cast {@link #NULL_EXPRESSION} strings to objects as well. If the cast cannot
      * be done safely, an instance of {@link RuntimeException} will be thrown.
@@ -122,14 +151,13 @@ public enum Type {
      * @return The casted object.
      * @throws RuntimeException if the cast cannot be done safely.
      */
-    public Object castString(String value) {
+    public Object forceCastString(String value) {
         switch (this) {
             case BOOLEAN:
                 return Boolean.valueOf(value);
             case INTEGER:
                 return Integer.valueOf(value);
             case LONG:
-                // If we want to allow decimals to be casted as longs, do Double.valueOf(value).longValue() instead
                 return Long.valueOf(value);
             case FLOAT:
                 return Float.valueOf(value);
@@ -145,35 +173,13 @@ public enum Type {
     }
 
     /**
-     * Takes an object and casts it to this type. Follows widening conventions for primitive numeric data. For all other
-     * data, if the cast cannot be done safely, this will throw an instance {@link RuntimeException}. See
-     * {@link #forceCast(Type, Object)} to force type changes when the cast cannot be done naturally.
-     *
-     * @param object The object that is being cast.
-     * @return The casted object.
-     * @throws RuntimeException if the cast cannot be done safely.
-     */
-    public Object castObject(Object object) {
-        // Any null object can be casted to anything
-        if (object == null) {
-            return null;
-        }
-        // If object isn't null and this doesn't have a type or a NULL type, the cast can't be done
-        if (this == UNKNOWN || this == NULL) {
-            throw new ClassCastException("Cannot cast non-null object " + object + " to " + this);
-        }
-        Type objectType = getType(object);
-        if (canSafeCast(this, objectType)) {
-            return forceCast(this, objectType, object);
-        }
-        throw new ClassCastException("Cannot safely cast non-null object " + object + " to " + this);
-    }
-
-    /**
      * Attempt to force cast the Object of this {@link Type} type to the given {@link Type} castedType. Follows widening
      * conventions for primitive numeric data, including within maps and lists. However, types will be forced with
-     * possible loss of precision or data in other cases, if possible. See {@link #castObject(Object)} to only perform
-     * safe casts.
+     * possible loss of precision or data in other cases that can be done. Otherwise, the cast will fail with a
+     * {@link RuntimeException} when it is not possible to cast at all. See {@link #castObject(Object)} if you are only
+     * interested in performing safe casts.
+     *
+     * Note that maps will be casted to {@link HashMap} and lists will be casted to {@link ArrayList}.
      *
      * @param castedType The {@link Type} to be casted to.
      * @param object The object to be casted.
@@ -189,6 +195,9 @@ public enum Type {
     private static Object forceCast(Type targetType, Type sourceType, Object object) {
         if (object == null) {
             return null;
+        }
+        if (!canCast(targetType, sourceType)) {
+            throw new ClassCastException("Cannot cast to " + targetType + " from " + sourceType);
         }
         switch (targetType) {
             case INTEGER:
@@ -215,7 +224,7 @@ public enum Type {
             case LONG_MAP_MAP:
             case FLOAT_MAP_MAP:
             case DOUBLE_MAP_MAP:
-                return castToMap(object);
+                return castToMap(targetType, sourceType, object);
             case STRING_LIST:
             case BOOLEAN_LIST:
             case INTEGER_LIST:
@@ -228,11 +237,11 @@ public enum Type {
             case LONG_MAP_LIST:
             case FLOAT_MAP_LIST:
             case DOUBLE_MAP_LIST:
-                return castToList(object);
+                return castToList(targetType, sourceType, object);
             default:
-                throw new ClassCastException("Unsupported type cannot be casted: " + sourceType);
+                // Unreachable because canCast will cover these other enums
+                throw new UnsupportedOperationException("Nothing can be casted to " + targetType);
         }
-
     }
 
     private static Integer castToInteger(Type type, Object object) {
@@ -330,82 +339,45 @@ public enum Type {
         }
     }
 
-    private static Map castToMap(Object object) {
-        if (!(object instanceof Map)) {
+    private static Map castToMap(Type targetMapType, Type sourceType, Object object) {
+        if (!MAPS.contains(sourceType)) {
             throw new ClassCastException("Cannot cast non-map" + object + " to a Map");
         }
+        // sourceType is in MAPS, i.e. object is a map
         Map asMap = (Map) object;
-        return castToMap(asMap, findSubType(asMap));
+        Map map = new HashMap();
+        for (Object entryObject : asMap.entrySet()) {
+            Map.Entry entry = (Map.Entry) entryObject;
+            // We'll cast keys to strings just in case as well
+            Object key = entry.getKey();
+            String keyString = key == null ? null : key.toString();
+            map.put(keyString, forceCast(targetMapType.subType, sourceType.subType, entry.getValue()));
+        }
+        return map;
     }
 
-    private static Map castToMap(Map map, Type mapSubType) {
-        if (mapSubType == UNKNOWN) {
-            throw new ClassCastException("Could not cast the inner type of the map " + map + " to " + mapSubType);
+    private static List castToList(Type targetListType, Type sourceType, Object object) {
+        if (!LISTS.contains(sourceType)) {
+            throw new ClassCastException("Cannot cast non-list" + object + " to a List");
         }
-        if (PRIMITIVE_MAPS.contains(mapSubType)) {
-            return castToPrimitiveMap(map, mapSubType);
-        } else {
-            return castToMapOfMaps(map, mapSubType);
-        }
-    }
-
-    private static Map castToPrimitiveMap(Object maybeMap, Type mapPrimitiveType) {
-        switch (this) {
-            case STRING_MAP:
-            case BOOLEAN_MAP:
-            case INTEGER_MAP:
-            case LONG_MAP:
-            case FLOAT_MAP:
-            case DOUBLE_MAP:
-        }
-        return null;
-    }
-
-    private static Map castToStringMap(Map map, Type mapSubType) {
-        switch (mapSubType) {
-            case STRING_MAP:
-                return map;
-            case BOOLEAN_MAP:
-            case INTEGER_MAP:
-            case LONG_MAP:
-            case FLOAT_MAP:
-            case DOUBLE_MAP:
-                Map<String, String> stringMap = new HashMap<>();
-                for (Object object : map.entrySet()) {
-                    Map.Entry entry = (Map.Entry) object;
-                    stringMap.put(entry.getKey().toString(), entry.getValue().toString());
-                }
-                return stringMap;
-            default:
-                throw new ClassCastException("Can not cast to a String map from map type: " + mapSubType);
-        }
-    }
-
-    private static Map castToMapOfMaps(Map map, Type mapSubType) {
-        switch (this) {
-            case STRING_MAP_MAP:
-            case BOOLEAN_MAP_MAP:
-            case INTEGER_MAP_MAP:
-            case LONG_MAP_MAP:
-            case FLOAT_MAP_MAP:
-            case DOUBLE_MAP_MAP:
-        }
-        return null;
-    }
-
-    private static List castToList(Object object) {
-        if (!(object instanceof Map)) {
-            throw new ClassCastException("Cannot cast non-map" + object + " to maps");
-        }
+        // sourceType is in LISTS, i.e. object is a list
         List asList = (List) object;
-        return castToList(asList, findSubType(asList));
+        List list = new ArrayList();
+        for (Object member : asList) {
+            list.add(forceCast(targetListType.subType, sourceType.subType, member));
+        }
+        return list;
     }
 
-    private static List castToList(List list, Type listSubType) {
-        if (listSubType == UNKNOWN) {
-            throw new ClassCastException("Could not cast the inner type of the list " + list + " to " + listSubType);
+
+    private static boolean canCast(Type finalType, Type initialType) {
+        if (finalType == initialType) {
+            return true;
         }
-        return null;
+        // Only going across nesting levels we can't do
+        return areBothIn(initialType, finalType, PRIMITIVES) ||
+               areBothIn(initialType, finalType, PRIMITIVE_MAPS) || areBothIn(initialType, finalType, COMPLEX_MAPS) ||
+               areBothIn(initialType, finalType, PRIMITIVE_LISTS) || areBothIn(initialType, finalType, COMPLEX_LISTS);
     }
 
     private static boolean canSafeCast(Type finalType, Type initialType) {
@@ -413,6 +385,9 @@ public enum Type {
             return true;
         }
         switch (finalType) {
+            case STRING:
+                // Only let primitives be converted to Strings since we do support primitives from Strings
+                return PRIMITIVES.contains(initialType);
             case LONG:
                 return initialType == INTEGER;
             case LONG_MAP:
@@ -432,6 +407,10 @@ public enum Type {
             default:
                 return false;
         }
+    }
+
+    private static boolean areBothIn(Type a, Type b, Set<Type> set) {
+        return set.contains(a) && set.contains(b);
     }
 
     // *************************************** Type finding helpers ***************************************

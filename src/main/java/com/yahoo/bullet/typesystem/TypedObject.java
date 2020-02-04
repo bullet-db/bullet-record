@@ -15,8 +15,6 @@ import java.util.function.Predicate;
 @Getter
 public class TypedObject implements Comparable<TypedObject> {
     private final Type type;
-    // The nested primitive type for a List or Map. This field is only used for LIST or MAP.
-    private final Type primitiveType;
     // value is undefined if type is Type.UNKNOWN
     private final Object value;
 
@@ -43,91 +41,123 @@ public class TypedObject implements Comparable<TypedObject> {
         Objects.requireNonNull(type);
         this.type = type;
         this.value = value;
-        primitiveType = extractPrimitiveType(type, value);
     }
 
     /**
-     * Takes a String value and returns a casted TypedObject according to this type.
+     * Takes a String value and returns a casted TypedObject according to this type. Note that this only casts to
+     * {@link Type#PRIMITIVES} and will also handle null string representations (converted to an actual null). The cast
+     * will only be done if the String can actually be parsed as the target primitive type.
      *
      * @param value The string value that is being cast.
-     * @return The casted TypedObject with the type set to the appropriate {@link Type} or
-     * {@link TypedObject#GENERIC_UNKNOWN} if it cannot.
+     * @return The casted TypedObject with this {@link Type} or {@link TypedObject#GENERIC_UNKNOWN} if the cast failed.
      */
-    public TypedObject typeCast(String value) {
-        return typeCast(type, value);
+    public TypedObject forceCastFromString(String value) {
+        return forceCastFromString(type, value);
     }
 
     /**
-     * Takes an object and returns a casted TypedObject according to this type.
+     * Takes an object and returns a casted TypedObject according to this type. Note that this only casts safely. It can
+     * widen numeric types if loss of precision does not occur. It will not handle null representation of Strings and
+     * convert them to nulls.
      *
      * @param object The Object that is being cast.
-     * @return The casted TypedObject with the type set to the appropriate {@link Type} or
-     *         {@link TypedObject#GENERIC_UNKNOWN} if it cannot.
+     * @return The casted TypedObject with this {@link Type} or {@link TypedObject#GENERIC_UNKNOWN} if the cast failed.
      */
-    public TypedObject typeCastFromObject(Object object) {
-        return typeCastFromObject(type, object);
+    public TypedObject safeCastFromObject(Object object) {
+        return safeCastFromObject(type, object);
     }
 
     /**
-     * Takes a String value and returns a casted TypedObject according to the given type.
+     * Force cast to the {@link TypedObject} with given {@link Type} castedType.
      *
-     * @param type The {@link Type} to cast the values to.
-     * @param value The string value that is being cast.
-     * @return The casted TypedObject with the type set to the appropriate {@link Type} or
-     * {@link TypedObject#GENERIC_UNKNOWN} if it cannot.
+     * @param castedType The {@link Type} to be casted to
+     * @return The casted {@link TypedObject}
      */
-    public static TypedObject typeCast(Type type, String value) {
-        try {
-            return new TypedObject(type, type.castString(value));
-        } catch (RuntimeException e) {
-            return GENERIC_UNKNOWN;
-        }
+    public TypedObject forceCast(Type castedType) {
+        return new TypedObject(castedType, type.forceCast(castedType, value));
     }
 
     /**
-     * Takes an object and returns a casted TypedObject according to this type.
+     * Get the size of the value. Currently only {@link Type#LISTS}, {@link Type#MAPS} and {@link Type#STRING} support
+     * getting a size.
      *
-     * @param type The {@link Type} to cast the values to.
-     * @param object The Object that is being cast.
-     * @return The casted TypedObject with the type set to the appropriate {@link Type} or
-     * {@link TypedObject#GENERIC_UNKNOWN} if it cannot.
+     * @return The size of the value.
+     * @throws UnsupportedOperationException if not supported.
      */
-    public static TypedObject typeCastFromObject(Type type, Object object) {
-        if (object == null) {
-            return GENERIC_UNKNOWN;
+    public int size() {
+        if (Type.LISTS.contains(type)) {
+            return ((List) value).size();
+        } else if (Type.MAPS.contains(type)) {
+            return ((Map) value).size();
+        } else if (type == Type.STRING) {
+            return ((String) value).length();
         }
-        try {
-            return new TypedObject(type, type.castObject(object));
-        } catch (RuntimeException e) {
-            return GENERIC_UNKNOWN;
-        }
+        throw new UnsupportedOperationException("This type does not support getting a size: " + type);
     }
 
     /**
-     * Takes a non-null value and returns a numeric TypedObject - it has a type in {@link Type#NUMERICS}. The value
-     * is then a {@link Number}. It uses the String representation of the object to cast it.
+     * Returns true if the value or its underlying values contain a mapping for the specified key. Only
+     * {@link Type#COMPLEX_LISTS} and {@link Type#MAPS} support getting a mapping.
      *
-     * @param value The Object value that is being cast to a numeric.
-     * @return The casted TypedObject with the type set to numeric or {@link TypedObject#GENERIC_UNKNOWN} if not.
+     * @param key The key to be tested.
+     * @return A Boolean to indicate if the value or its underlying values contain a mapping for the specified key.
+     * @throws UnsupportedOperationException if not supported.
      */
-    public static TypedObject makeNumber(Object value) {
-        if (value == null) {
-            return GENERIC_UNKNOWN;
+    @SuppressWarnings("unchecked")
+    public boolean containsKey(String key) {
+        if (Type.COMPLEX_LISTS.contains(type)) {
+            return ((List) value).stream().anyMatch(e -> ((Map) e).containsKey(key));
+        } else if (Type.MAPS.contains(type)) {
+            Map map = (Map) value;
+            return map.containsKey(key) || map.values().stream().anyMatch(e -> ((Map) e).containsKey(key));
         }
-        try {
-            return new TypedObject(Type.DOUBLE, Type.DOUBLE.castString(value.toString()));
-        } catch (RuntimeException e) {
-            return GENERIC_UNKNOWN;
-        }
+        throw new UnsupportedOperationException("This type does not support mappings: " + type);
     }
 
     /**
-     * Compares this TypedObject to another. If the value is null and the other isn't,
-     * returns Integer.MIN_VALUE. If this TypedObject is unknown, returns Integer.MIN_VALUE.
+     * Returns true if the value or its underlying values contain the specified value. Only LIST and MAP are supported.
+     *
+     * @param target The target {@link TypedObject} to be tested.
+     * @return A Boolean to indicate if the value or its underlying values contain the specified value.
+     * @throws UnsupportedOperationException if not supported.
+     */
+    @SuppressWarnings("unchecked")
+    public boolean containsValue(TypedObject target) {
+        if (Type.PRIMITIVE_LISTS.contains(type)) {
+            return ((List) value).stream().anyMatch(target::equalTo);
+        } else if (Type.COMPLEX_LISTS.contains(type)) {
+            return ((List) value).stream().anyMatch(e -> containsValueInPrimitiveMap((Map) e, target));
+        } else if (Type.PRIMITIVE_MAPS.contains(type)) {
+            return ((Map) value).values().stream().anyMatch(target::equalTo);
+        } else if (Type.COMPLEX_MAPS.contains(type)) {
+            return ((Map) value).values().stream().anyMatch(e -> containsValueInPrimitiveMap((Map) e, target));
+
+        }
+        throw new UnsupportedOperationException("This type of field does not support contains value: " + type);
+    }
+
+    /**
+     * Returns true if this equals the specified object. The object can be a {@link TypedObject} or be constructed as
+     * a {@link TypedObject}.
+     *
+     * @param object The object to compare to.
+     * @return A boolean to indicate if this equals the specified object.
+     */
+    public boolean equalTo(Object object) {
+        TypedObject target = object instanceof TypedObject ? (TypedObject) object : new TypedObject(object);
+        return compareTo(target) == 0;
+    }
+
+    /**
+     * Compares this TypedObject to another. If this object has a null value and the other does not, returns a
+     * {@link Integer#MIN_VALUE}. If this has an {@link Type#UNKNOWN} type, returns {@link Integer#MIN_VALUE}. Only
+     * works on objects that have a type in {@link Type#PRIMITIVES}. Note that this will not cast at all and forcefully
+     * interpret the other value as an object of the same type, which might result in a {@link RuntimeException}.
      * {@inheritDoc}
      *
-     * @param o The other non-null TypedObject
+     * @param o The other non-null TypedObject.
      * @return {@inheritDoc}
+     * @throws RuntimeException if the other object could not compared to this.
      */
     @Override
     public int compareTo(TypedObject o) {
@@ -156,14 +186,58 @@ public class TypedObject implements Comparable<TypedObject> {
         }
     }
 
+    @Override
+    public String toString() {
+        return type == Type.NULL ? Type.NULL_EXPRESSION : value.toString();
+    }
+
     /**
-     * Force cast to the {@link TypedObject} with given {@link Type} castedType.
+     * Takes a String value and returns a casted TypedObject according to the given type.
      *
-     * @param castedType The {@link Type} to be casted to
-     * @return The casted {@link TypedObject}
+     * @param type The {@link Type} to cast the values to.
+     * @param value The string value that is being cast.
+     * @return The casted TypedObject with the {@link Type} or {@link TypedObject#GENERIC_UNKNOWN} if the cast failed.
      */
-    public TypedObject forceCast(Type castedType) {
-        return new TypedObject(castedType, type.forceCast(castedType, value));
+    public static TypedObject forceCastFromString(Type type, String value) {
+        try {
+            return new TypedObject(type, type.forceCastString(value));
+        } catch (RuntimeException e) {
+            return GENERIC_UNKNOWN;
+        }
+    }
+
+    /**
+     * Takes an object and returns a casted TypedObject according to this type.
+     *
+     * @param type The {@link Type} to cast the values to.
+     * @param object The Object that is being cast.
+     * @return The casted TypedObject with the {@link Type} or {@link TypedObject#GENERIC_UNKNOWN} if the cast failed.
+     */
+    public static TypedObject safeCastFromObject(Type type, Object object) {
+        // No longer makes a GENERIC_UNKNOWN object if object was null
+        try {
+            return new TypedObject(type, type.castObject(object));
+        } catch (RuntimeException e) {
+            return GENERIC_UNKNOWN;
+        }
+    }
+
+    /**
+     * Takes a non-null value and returns a numeric TypedObject - it has a type in {@link Type#NUMERICS}. The value
+     * is then a {@link Number}. It uses the String representation of the object to cast it.
+     *
+     * @param value The Object value that is being cast to a numeric.
+     * @return The casted TypedObject with the type set to numeric or {@link TypedObject#GENERIC_UNKNOWN} if not.
+     */
+    public static TypedObject forceCastAsNumber(Object value) {
+        if (value == null) {
+            return GENERIC_UNKNOWN;
+        }
+        try {
+            return new TypedObject(Type.DOUBLE, Type.DOUBLE.forceCastString(value.toString()));
+        } catch (RuntimeException e) {
+            return GENERIC_UNKNOWN;
+        }
     }
 
     /**
@@ -177,116 +251,7 @@ public class TypedObject implements Comparable<TypedObject> {
         return new TypedObject(castedType, Type.STRING.forceCast(castedType, value));
     }
 
-    /**
-     * Get the size of the value. Currently only LIST, MAP and STRING are supported.
-     *
-     * @return the size of the value.
-     * @throws UnsupportedOperationException if not supported.
-     */
-    public int size() {
-        switch (type) {
-            case LIST:
-                return List.class.cast(value).size();
-            case MAP:
-                return Map.class.cast(value).size();
-            case STRING:
-                return String.class.cast(value).length();
-            default:
-                throw new UnsupportedOperationException("This type of field does not support size of: " + type);
-        }
-    }
-
-    /**
-     * Returns true if the value or its underlying values contain a mapping for the specified key. Only LIST and MAP are supported.
-     *
-     * @param key The key to be tested.
-     * @return A Boolean to indicate if the value or its underlying values contain a mapping for the specified key.
-     * @throws UnsupportedOperationException if not supported.
-     */
-    @SuppressWarnings("unchecked")
-    public boolean containsKey(String key) {
-        switch (type) {
-            case LIST:
-                return ((List) value).stream().anyMatch(e -> e instanceof Map && ((Map) e).containsKey(key));
-            case MAP:
-                Map map = (Map) value;
-                return map.containsKey(key) || map.values().stream().anyMatch(e -> e instanceof Map && ((Map) e).containsKey(key));
-            default:
-                throw new UnsupportedOperationException("This type of field does not support contains key: " + type);
-        }
-    }
-
-    /**
-     * Returns true if the value or its underlying values contain the specified value. Only LIST and MAP are supported.
-     *
-     * @param target The target {@link TypedObject} to be tested.
-     * @return A Boolean to indicate if the value or its underlying values contain the specified value.
-     * @throws UnsupportedOperationException if not supported.
-     */
-    @SuppressWarnings("unchecked")
-    public boolean containsValue(TypedObject target) {
-        switch (type) {
-            case LIST:
-                return ((List) value).stream().anyMatch(e -> e instanceof Map ? containsValueInPrimitiveMap((Map) e, target) : target.equalTo(e));
-            case MAP:
-                Map map = (Map) value;
-                return map.values().stream().anyMatch(e -> e instanceof Map ? containsValueInPrimitiveMap((Map) e, target) : target.equalTo(e));
-            default:
-                throw new UnsupportedOperationException("This type of field does not support contains value: " + type);
-        }
-    }
-
-    @Override
-    public String toString() {
-        return type == Type.NULL ? Type.NULL_EXPRESSION : value.toString();
-    }
-
-    /**
-     * Returns true if this equals the specified object. The object can be a {@link TypedObject} or be constructed to a {@link TypedObject}.
-     *
-     * @param object The object to compare to.
-     * @return A boolean to indicate if this equals the specified object.
-     */
-    public boolean equalTo(Object object) {
-        TypedObject target = object instanceof TypedObject ? (TypedObject) object : new TypedObject(object);
-        return compareTo(target) == 0;
-    }
-
     private static boolean containsValueInPrimitiveMap(Map<?, ?> map, TypedObject target) {
         return map.values().stream().anyMatch(target::equalTo);
-    }
-
-    private static Type extractPrimitiveType(Type type, Object target) {
-        switch (type) {
-            case LIST:
-                return extractPrimitiveTypeFromList((List) target);
-            case MAP:
-                return extractPrimitiveTypeFromMap((Map) target);
-            default:
-                return Type.UNKNOWN;
-        }
-    }
-
-    private static Type extractPrimitiveTypeFromList(List list) {
-        if (list.isEmpty()) {
-            return Type.UNKNOWN;
-        }
-        Object firstElement = list.get(0);
-        if (firstElement instanceof Map) {
-            return extractPrimitiveTypeFromMap((Map) firstElement);
-        }
-        return Type.getType(firstElement);
-    }
-
-    private static Type extractPrimitiveTypeFromMap(Map map) {
-        if (map.isEmpty()) {
-            return Type.UNKNOWN;
-        }
-        Object firstValue = map.values().stream().findAny().get();
-        if (firstValue instanceof Map) {
-            Map innerMap = (Map) firstValue;
-            return innerMap.isEmpty() ? Type.UNKNOWN : Type.getType(innerMap.values().stream().findAny().get());
-        }
-        return Type.getType(firstValue);
     }
 }

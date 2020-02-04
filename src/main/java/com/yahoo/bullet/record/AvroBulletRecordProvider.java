@@ -16,4 +16,9 @@ public class AvroBulletRecordProvider implements BulletRecordProvider {
     public BulletRecord getInstance() {
         return new AvroBulletRecord();
     }
+
+    @Override
+    public TypedBulletRecord getTypedInstance() {
+        throw new UnsupportedOperationException("Not supported yet!");
+    }
 }

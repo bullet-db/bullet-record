@@ -17,9 +17,9 @@ import java.util.Map;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
-public abstract class BulletRecordTest {
-    protected BulletRecord record;
-    protected BulletRecord another;
+public abstract class BulletRecordTest<T> {
+    protected BulletRecord<T> record;
+    protected BulletRecord<T> another;
 
     @Test
     public void testSetBoolean() {
@@ -507,7 +507,7 @@ public abstract class BulletRecordTest {
         expectedMap.put("8", singletonList("foo"));
 
         int lastEntry = 0;
-        for (Map.Entry<String, Object> entry : record) {
+        for (Map.Entry<String, T> entry : record) {
             int currentEntry = Integer.valueOf(entry.getKey());
             Assert.assertTrue(lastEntry + 1 == currentEntry);
             Assert.assertEquals(entry.getValue(), expectedMap.get(entry.getKey()));

@@ -129,7 +129,7 @@
                             <goal>report</goal>
                         </goals>
                     </execution>
-                    <execution>
+                    <!--execution>
                         <id>coverage-check</id>
                         <goals>
                             <goal>check</goal>
@@ -158,7 +158,7 @@
                                 </rule>
                             </rules>
                         </configuration>
-                    </execution>
+                    </execution-->
                 </executions>
                 <configuration>
                     <excludes>

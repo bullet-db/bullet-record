@@ -16,4 +16,9 @@ public class SimpleBulletRecordProvider implements BulletRecordProvider {
     public BulletRecord getInstance() {
         return new SimpleBulletRecord();
     }
+
+    @Override
+    public TypedBulletRecord getTypedInstance() {
+        throw new UnsupportedOperationException("Not supported yet!");
+    }
 }
