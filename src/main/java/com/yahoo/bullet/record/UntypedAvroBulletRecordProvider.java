@@ -8,16 +8,11 @@ package com.yahoo.bullet.record;
 /**
  * Factory for Avro based BulletRecords.
  */
-public class AvroBulletRecordProvider implements BulletRecordProvider {
+public class UntypedAvroBulletRecordProvider implements BulletRecordProvider {
     private static final long serialVersionUID = 8064632505561405799L;
 
     @Override
-    public UntypedAvroBulletRecord getUntypedInstance() {
+    public BulletRecord getInstance() {
         return new UntypedAvroBulletRecord();
-    }
-
-    @Override
-    public TypedAvroBulletRecord getTypedInstance() {
-        throw new UnsupportedOperationException("Not supported yet!");
     }
 }

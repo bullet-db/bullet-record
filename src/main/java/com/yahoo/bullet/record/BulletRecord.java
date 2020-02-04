@@ -5,6 +5,8 @@
  */
 package com.yahoo.bullet.record;
 
+import com.yahoo.bullet.typesystem.TypedObject;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,13 +18,16 @@ import java.util.Objects;
  * Data sent to Bullet should be wrapped in a class that extends this abstract class. It is
  * {@link Serializable} and {@link Iterable} so records can be used in for-each loops. The various
  * set methods can be used to insert fields into the record. They are implemented by default to use
- * the base {@link #set(String, Object)} method which should be overridden in child classes. Field
- * names are to be provided as Strings and must be unique, otherwise the duplicate takes precedence
+ * the {@link #set(String, Object)} method which should be overridden in child classes. This method
+ * delegates to the {@link #rawSet(String, Object)} method after calling {@link #convert(Object)} on
+ * it. Field names are to be provided as Strings and must be unique, otherwise the duplicate takes precedence
  * over the first by default.
  *
  * When inserting into the Record, methods are explicitly provided for each type supported (listed
- * below). When reading from the Record, which may not be something needed by users of this very
- * frequently (as it is the entry point into Bullet), a generic Object is returned instead. Casting
+ * below). You may also use {@link #typedSet(String, TypedObject)} to set a {@link TypedObject} into
+ * the record and use the various {@link #typedGet(String)} methods to read data out as {@link TypedObject}
+ * When reading raw data from the Record, which may not be something needed by users of this very
+ * frequently (as it is the entry point into Bullet), you may use {@link #get(String)}. Casting
  * it is left to the user. See {@link TypedBulletRecord} for an alternative.
  *
  * For the types supported by this records, see {@link com.yahoo.bullet.typesystem.Type}.
@@ -36,16 +41,12 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
     private static final String KEY_DELIMITER = "\\.";
 
     /**
-     * Insert a field into this BulletRecord. This is the glue method used by the other set methods and should remain
-     * protected to not expose this to to the outside. It will call {@link #convert(Object)} first.
+     * Convert the given object into a the format stored in this record.
      *
-     * @param field The non-null name of the field.
-     * @param object The object to be set.
-     * @return This object for chaining.
+     * @param object The object to convert.
+     * @return The converted object.
      */
-    protected BulletRecord<T> set(String field,  Object object) {
-        return rawSet(field, convert(object));
-    }
+    protected abstract T convert(Object object);
 
     /**
      * Insert a field into this BulletRecord. This is the core method used by the other set methods and should remain
@@ -56,14 +57,6 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @return This object for chaining.
      */
     protected abstract BulletRecord<T> rawSet(String field, T object);
-
-    /**
-     * Convert the given object into a the format stored in this record.
-     *
-     * @param object The object to convert.
-     * @return The converted object.
-     */
-    protected abstract T convert(Object object);
 
     /**
      * Gets a field stored in the record.
@@ -104,23 +97,37 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      */
     public abstract BulletRecord<T> remove(String field);
 
-    // ******************************************** GETTERS ********************************************
+    /**
+     * Gets a field stored in the record as a {@link TypedObject}. This is intended to be the primary way to get fields
+     * out of the record.
+     *
+     * @param field The non-null name of the field.
+     * @return The value of the field as a {@link TypedObject} or {@link TypedObject#NULL} if it does not exist.
+     */
+    public abstract TypedObject typedGet(String field);
+
+    // ****************************************** TypedObject Nested Getters ******************************************
 
     /**
-     * Gets an object from a {@link Map} stored in the record.
+     * Gets a {@link TypedObject} from a {@link Map} stored in the record.
      *
      * @param field The field name in the record that is a {@link Map}.
      * @param subKey The subfield in the {@link Map} that is desired.
-     * @return The value of the subfield in the {@link Map} or null if the field does not exist.
+     * @return The value of the subfield in the {@link Map} as a {@link TypedObject} or {@link TypedObject#NULL} if the field does not exist.
      * @throws ClassCastException if the field is not a {@link Map}.
      */
     @SuppressWarnings("unchecked")
-    public T get(String field, String subKey) {
-        Map<String, T> value = (Map<String, T>) get(field);
-        if (value == null) {
-            return null;
+    public TypedObject typedGet(String field, String subKey) {
+        TypedObject value = typedGet(field);
+        if (value.isNull()) {
+            return TypedObject.NULL;
         }
-        return value.get(subKey);
+        if (!value.isMap()) {
+            throw new ClassCastException(field + " is not a map. It has type " + value.getType());
+        }
+        Map<String, Object> map = (Map<String, Object>) value.getValue();
+        Object fieldValue = map.get(field);
+        return fieldValue == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType(), fieldValue);
     }
 
     /**
@@ -129,17 +136,24 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @param field The field name in the record that is a {@link Map}.
      * @param subKey The subfield map in the {@link Map} that is desired.
      * @param subSubKey The subfield in the subfield {@link Map} that is desired.
-     * @return The value of the subfield in the subfield {@link Map} or null if the field does not exist.
+     * @return The value of the subfield in the map {@link Map} as a {@link TypedObject} or {@link TypedObject#NULL} if the field does not exist.
      * @throws ClassCastException if the field or subfield is not a {@link Map}.
      */
     @SuppressWarnings("unchecked")
-    public T get(String field, String subKey, String subSubKey) {
-        Map<String, Map<String, T>> first = (Map<String, Map<String, T>>) get(field);
-        if (first == null) {
-            return null;
+    public TypedObject typedGet(String field, String subKey, String subSubKey) {
+        TypedObject value = typedGet(field);
+        if (value.isNull()) {
+            return TypedObject.NULL;
         }
-        Map<String, T> second = first.get(subKey);
-        return second == null ? null : second.get(subSubKey);
+        if (!value.isComplexMap()) {
+            throw new ClassCastException(field + " is not a map of maps. It has type " + value.getType());
+        }
+        Map<String, Map<String, Object>> first = (Map<String, Map<String, Object>>) value.getValue();
+        if (first == null) {
+            return TypedObject.NULL;
+        }
+        Map<String, Object> second = first.get(subKey);
+        return second == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType().getSubType(), second.get(subSubKey));
     }
 
     /**
@@ -147,17 +161,22 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      *
      * @param field The field name in the record that is a {@link List}.
      * @param index The position in the {@link List} that is desired.
-     * @return The object at the index or null if the field does not exist.
+     * @return The object at the index as a {@link TypedObject} or {@link TypedObject#NULL} if the field does not exist.
      * @throws IndexOutOfBoundsException for invalid indices.
      * @throws ClassCastException if the field is not a {@link List}.
      */
     @SuppressWarnings("unchecked")
-    public T get(String field, int index) {
-        List<T> value = (List<T>) get(field);
-        if (value == null) {
-            return null;
+    public TypedObject typedGet(String field, int index) {
+        TypedObject value = typedGet(field);
+        if (value.isNull()) {
+            return TypedObject.NULL;
         }
-        return value.get(index);
+        if (!value.isList()) {
+            throw new ClassCastException(field + " is not a list. It has type " + value.getType());
+        }
+        List<Object> list = (List<Object>) value.getValue();
+        Object listValue = list.get(index);
+        return listValue == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType(), listValue);
     }
 
     /**
@@ -166,59 +185,57 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @param field The field name in the record that is a {@link List}.
      * @param index The position in the {@link List} that is desired.
      * @param subKey The subfield of the {@link List} element that is desired.
-     * @return The object at the index or null if the field does not exist.
+     * @return The object at the index as a {@link TypedObject} or {@link TypedObject#NULL} if the field does not exist.
      * @throws IndexOutOfBoundsException for invalid indices.
-     * @throws ClassCastException if the field is not a {@link List} or the indexed element is not a {@link Map}
+     * @throws ClassCastException if the field is not a {@link List} or the indexed element is not a {@link Map}.
      */
     @SuppressWarnings("unchecked")
-    public T get(String field, int index, String subKey) {
-        List<Map<String, T>> first = (List<Map<String, T>>) get(field);
-        if (first == null) {
-            return null;
+    public TypedObject typedGet(String field, int index, String subKey) {
+        TypedObject value = typedGet(field);
+        if (value.isNull()) {
+            return TypedObject.NULL;
         }
+        if (!value.isComplexList()) {
+            throw new ClassCastException(field + " is not a list of maps. It has type " + value.getType());
+        }
+        List<Map<String, T>> first = (List<Map<String, T>>) value.getValue();
         Map<String, T> second = first.get(index);
-        return second.get(subKey);
+        if (second == null) {
+            return TypedObject.NULL;
+        }
+        Object mapValue = second.get(subKey);
+        return mapValue == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType().getSubType(), mapValue);
+    }
+
+    // ******************************************** Setters ********************************************
+
+    /**
+     * Sets a field in the record as a {@link TypedObject}. This is intended to be the primary way to set fields into
+     * the record.
+     *
+     * @param field The non-null name of the field.
+     * @param object The non-null {@link TypedObject} to set.
+     * @return The value of the field or null if it does not exist.
+     * @throws RuntimeException if the set cannot be done.
+     */
+    public BulletRecord<T> typedSet(String field, TypedObject object) {
+        if (object.isUnknown()) {
+            throw new UnsupportedOperationException("Cannot set an object with invalid type");
+        }
+        return set(field, object.getValue());
     }
 
     /**
-     * A helper to gets a field from the record by a custom identifier format.<br>
-     * <br>
-     * For example, suppose a record has a map of boolean maps called "aaa". Then <br>
-     * - "aaa" identifies that map of maps <br>
-     * - "aaa.bbb" identifies the inner map that "aaa" maps "bbb" to (if it exists) <br>
-     * - "aaa.bbb.ccc" identifies the boolean that "aaa.bbb" (if it exists) maps "ccc" to (if it exists) <br>
-     * <br>
-     * For a list element, the index is the key, e.g. "my_list.0" or "my_list.0.some_key"
+     * Insert a field into this BulletRecord. This is the glue method used by the other set methods and should remain
+     * protected to not expose this to the outside. It will call {@link #convert(Object)} first.
      *
-     * @param identifier The non-null identifier of the field to get.
-     * @return The value of the field or null if it does not exist.
+     * @param field The non-null name of the field.
+     * @param object The object to be set.
+     * @return This object for chaining.
      */
-    @SuppressWarnings("unchecked")
-    public T extractField(String identifier) {
-        try {
-            String[] keys = identifier.split(KEY_DELIMITER, 3);
-            T first = get(keys[0]);
-            if (keys.length == 1) {
-                return first;
-            }
-            T second;
-            if (first instanceof Map) {
-                second = ((Map<String, T>) first).get(keys[1]);
-            } else if (first instanceof List) {
-                second = ((List<T>) first).get(Integer.parseInt(keys[1]));
-            } else {
-                return null;
-            }
-            if (keys.length == 2) {
-                return second;
-            }
-            return ((Map<String, T>) second).get(keys[2]);
-        } catch (Exception e) {
-            return null;
-        }
+    protected BulletRecord<T> set(String field,  Object object) {
+        return rawSet(field, convert(object));
     }
-
-    // ******************************************** SETTERS ********************************************
 
     /**
      * Insert a Boolean field.
@@ -559,7 +576,7 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @return This object for chaining.
      */
     public BulletRecord<T> set(String field, BulletRecord that, String thatField) {
-        return forceSet(field, that.get(thatField));
+        return set(field, that.get(thatField));
     }
 
     /**
@@ -572,7 +589,8 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @return This object for chaining.
      */
     public BulletRecord<T> set(String field, BulletRecord that, String thatMapField, String thatMapKey) {
-        return forceSet(field, that.get(thatMapField, thatMapKey));
+        TypedObject thatField = that.typedGet(thatMapField, thatMapKey);
+        return set(field, thatField.getValue());
     }
 
     /**
@@ -586,7 +604,8 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @return This object for chaining.
      */
     public BulletRecord<T> set(String field, BulletRecord that, String thatMapOfMapField, String thatMapOfMapKey, String thatMapKey) {
-        return forceSet(field, that.get(thatMapOfMapField, thatMapOfMapKey, thatMapKey));
+        TypedObject thatField = that.typedGet(thatMapOfMapField, thatMapOfMapKey, thatMapKey);
+        return set(field, thatField.getValue());
     }
 
     /**
@@ -599,7 +618,8 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @return This object for chaining.
      */
     public BulletRecord<T> set(String field, BulletRecord that, String thatListField, int thatListIndex) {
-        return forceSet(field, that.get(thatListField, thatListIndex));
+        TypedObject thatField = that.typedGet(thatListField, thatListIndex);
+        return set(field, thatField.getValue());
     }
 
     /**
@@ -613,21 +633,8 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @return This object for chaining.
      */
     public BulletRecord<T> set(String field, BulletRecord that, String thatListField, int thatListIndex, String thatListMapKey) {
-        return forceSet(field, that.get(thatListField, thatListIndex, thatListMapKey));
-    }
-
-    /**
-     * Try to forcibly set an arbitrary object as a top-level field in this record. This might be unsafe and your record
-     * may no longer serialize properly! Use the appropriate set method if you know the type of your field. Only use
-     * this method if you are sure of the type of the object and just do not want to bother casting or checking it. You
-     * can also use it to temporarily store something in the record as long as you remove it before serializing it.
-     *
-     * @param field The name in this record to insert the object as.
-     * @param object The object to be set.
-     * @return This object for chaining.
-     */
-    public BulletRecord<T> forceSet(String field, Object object) {
-        return set(field, object);
+        TypedObject thatField = that.typedGet(thatListField, thatListIndex, thatListMapKey);
+        return set(field, thatField.getValue());
     }
 
     /**
@@ -639,7 +646,7 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      */
     public BulletRecord<T> rename(String field, String newName) {
         if (hasField(field)) {
-            forceSet(newName, getAndRemove(field));
+            set(newName, getAndRemove(field));
         }
         return this;
     }
@@ -653,6 +660,46 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
             prefix = ", ";
         }
         return builder.append("}").toString();
+    }
+
+    /**
+     * For testing.
+     *
+     * A helper to get a field from the record by a custom identifier format.
+     * <br>
+     * For example, suppose a record has a map of boolean maps called "aaa". Then <br>
+     * - "aaa" identifies that map of maps <br>
+     * - "aaa.bbb" identifies the inner map that "aaa" maps "bbb" to (if it exists) <br>
+     * - "aaa.bbb.ccc" identifies the boolean that "aaa.bbb" (if it exists) maps "ccc" to (if it exists) <br>
+     * <br>
+     * For a list element, the index is the key, e.g. "my_list.0" or "my_list.0.some_key"
+     *
+     * @param identifier The non-null identifier of the field to get.
+     * @return The value of the field or null if it does not exist.
+     */
+    @SuppressWarnings("unchecked")
+    T extractField(String identifier) {
+        try {
+            String[] keys = identifier.split(KEY_DELIMITER, 3);
+            T first = get(keys[0]);
+            if (keys.length == 1) {
+                return first;
+            }
+            T second;
+            if (first instanceof Map) {
+                second = ((Map<String, T>) first).get(keys[1]);
+            } else if (first instanceof List) {
+                second = ((List<T>) first).get(Integer.parseInt(keys[1]));
+            } else {
+                return null;
+            }
+            if (keys.length == 2) {
+                return second;
+            }
+            return ((Map<String, T>) second).get(keys[2]);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**

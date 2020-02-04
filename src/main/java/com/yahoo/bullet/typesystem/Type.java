@@ -20,6 +20,8 @@ import java.util.Set;
 
 @Getter
 public enum Type {
+    // Doesn't matter what underlyingClass is for NULL, just need something that isn't encountered
+    NULL(Type.class),
     // Primitives
     STRING(String.class),
     BOOLEAN(Boolean.class),
@@ -55,11 +57,8 @@ public enum Type {
     LONG_MAP_LIST(List.class, Type.LONG_MAP),
     FLOAT_MAP_LIST(List.class, Type.FLOAT_MAP),
     DOUBLE_MAP_LIST(List.class, Type.DOUBLE_MAP),
-    // Doesn't matter what underlyingClass is for NULL and UNKNOWN, just need something that isn't encountered
-    NULL(Type.class),
+    // Doesn't matter what underlyingClass is for UNKNOWN, just need something that isn't encountered
     UNKNOWN(Type.class);
-
-    public static final String NULL_EXPRESSION = "null";
 
     public static Set<Type> PRIMITIVES = set(BOOLEAN, INTEGER, LONG, FLOAT, DOUBLE, STRING);
     public static Set<Type> NUMERICS = set(INTEGER, LONG, FLOAT, DOUBLE);
@@ -69,7 +68,7 @@ public enum Type {
     public static Set<Type> PRIMITIVE_LISTS = set(STRING_LIST, BOOLEAN_LIST, INTEGER_LIST, LONG_LIST, FLOAT_LIST, DOUBLE_LIST);
     public static Set<Type> COMPLEX_LISTS = set(STRING_MAP_LIST, BOOLEAN_MAP_LIST, INTEGER_MAP_LIST, LONG_MAP_LIST, FLOAT_MAP_LIST, DOUBLE_MAP_LIST);
     public static Set<Type> LISTS = set(PRIMITIVE_LISTS, COMPLEX_LISTS);
-    public static Set<Type> ACTUAL_TYPES = set(PRIMITIVES, MAPS, LISTS);
+    public static Set<Type> ACTUAL_TYPES = set(set(NULL), PRIMITIVES, MAPS, LISTS);
 
     private final Class underlyingClass;
     private final Type subType;
@@ -108,16 +107,6 @@ public enum Type {
     }
 
     /**
-     * Checks to see if a given string is the {@link #NULL_EXPRESSION}.
-     *
-     * @param string The string to check if it is null.
-     * @return A boolean denoting whether the given string represented a null.
-     */
-    public static boolean isNullExpression(String string) {
-        return NULL_EXPRESSION.compareToIgnoreCase(string) == 0;
-    }
-
-    /**
      * Takes an object and casts it to this type. Follows widening conventions for primitive numeric data. For all other
      * data, if the cast cannot be done safely, this will throw an instance {@link RuntimeException}. See
      * {@link #forceCast(Type, Object)} to force type changes when the cast cannot be done naturally.
@@ -143,36 +132,6 @@ public enum Type {
     }
 
     /**
-     * Takes a String value and casts it to this type. Only works for {@link #PRIMITIVES} {@link Type} String
-     * representations. Additionally, can cast {@link #NULL_EXPRESSION} strings to objects as well. If the cast cannot
-     * be done safely, an instance of {@link RuntimeException} will be thrown.
-     *
-     * @param value The string value that is being cast.
-     * @return The casted object.
-     * @throws RuntimeException if the cast cannot be done safely.
-     */
-    public Object forceCastString(String value) {
-        switch (this) {
-            case BOOLEAN:
-                return Boolean.valueOf(value);
-            case INTEGER:
-                return Integer.valueOf(value);
-            case LONG:
-                return Long.valueOf(value);
-            case FLOAT:
-                return Float.valueOf(value);
-            case DOUBLE:
-                return Double.valueOf(value);
-            case STRING:
-                return value;
-            case NULL:
-                return value == null || isNullExpression(value) ? null : value;
-            default:
-                throw new ClassCastException("Cannot safely cast the string" + value + " to type " + this);
-        }
-    }
-
-    /**
      * Attempt to force cast the Object of this {@link Type} type to the given {@link Type} castedType. Follows widening
      * conventions for primitive numeric data, including within maps and lists. However, types will be forced with
      * possible loss of precision or data in other cases that can be done. Otherwise, the cast will fail with a
@@ -188,6 +147,108 @@ public enum Type {
      */
     public Object forceCast(Type castedType, Object object) {
         return forceCast(castedType, this, object);
+    }
+
+    // *************************************** Type classification methods ***************************************
+
+    /**
+     * Returns true if the given type has an unknown type.
+     *
+     * @param type The type.
+     * @return A boolean denoting if the type is {@link Type#UNKNOWN}.
+     */
+    public static boolean isUnknown(Type type) {
+        return type == Type.UNKNOWN;
+    }
+
+    /**
+     * Returns true if the given type is the {@link Type#NULL} type.
+     *
+     * @param type The type.
+     * @return A boolean denoting if the type is {@link Type#NULL}.
+     */
+    public static boolean isNull(Type type) {
+        return type == Type.NULL;
+    }
+
+    /**
+     * Returns true if the given type is in {@link Type#PRIMITIVES}.
+     *
+     * @param type The type.
+     * @return A boolean denoting if the type is primitive.
+     */
+    public static boolean isPrimitive(Type type) {
+        return PRIMITIVES.contains(type);
+    }
+
+    /**
+     * Returns true if the given type is a numeric primitive type. See {@link Type#NUMERICS}.
+     *
+     * @param type The type.
+     * @return A boolean denoting if the type is a numeric primitive.
+     */
+    public static boolean isNumeric(Type type) {
+        return NUMERICS.contains(type);
+    }
+
+    /**
+     * Returns true if the given type is in {@link Type#PRIMITIVE_MAPS}.
+     *
+     * @param type The type.
+     * @return A boolean denoting if the type is a primitive map.
+     */
+    public static boolean isPrimitiveMap(Type type) {
+        return PRIMITIVE_MAPS.contains(type);
+    }
+
+    /**
+     * Returns true if the given type is in {@link Type#COMPLEX_MAPS}.
+     *
+     * @param type The type.
+     * @return A boolean denoting if the type is a complex map.
+     */
+    public static boolean isComplexMap(Type type) {
+        return COMPLEX_MAPS.contains(type);
+    }
+
+    /**
+     * Returns true if the given type is in {@link Type#MAPS}.
+     *
+     * @param type The type.
+     * @return A boolean denoting if the type is a map.
+     */
+    public static boolean isMap(Type type) {
+        return MAPS.contains(type);
+    }
+
+    /**
+     * Returns true if the given type is in {@link Type#PRIMITIVE_LISTS}.
+     *
+     * @param type The type.
+     * @return A boolean denoting if the type is a primitive list.
+     */
+    public static boolean isPrimitiveList(Type type) {
+        return PRIMITIVE_LISTS.contains(type);
+    }
+
+    /**
+     * Returns true if the given type is in {@link Type#COMPLEX_LISTS}.
+     *
+     * @param type The type.
+     * @return A boolean denoting if the type is a complex list.
+     */
+    public static boolean isComplexList(Type type) {
+        return COMPLEX_LISTS.contains(type);
+    }
+
+    /**
+     * Returns true if the given type is in {@link Type#LISTS}.
+     *
+     * @param type The type.
+     * @return A boolean denoting if the type is a list.
+     */
+    public static boolean isList(Type type) {
+        return LISTS.contains(type);
     }
 
     // *************************************** Type casting helpers ***************************************
@@ -325,11 +386,11 @@ public enum Type {
             case INTEGER:
                 return (Integer) object != 0;
             case LONG:
-                return ((Long) object) != 0;
+                return (Long) object != 0;
             case FLOAT:
-                return ((Float) object) != 0;
+                return (Float) object != 0;
             case DOUBLE:
-                return ((Double) object) != 0;
+                return (Double) object != 0;
             case STRING:
                 return Boolean.parseBoolean((String) object);
             case BOOLEAN:

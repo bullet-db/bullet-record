@@ -20,7 +20,10 @@ public class TypedObject implements Comparable<TypedObject> {
 
     public static final Predicate<TypedObject> IS_PRIMITIVE_OR_NULL = (t) -> t.getType() == Type.NULL || Type.PRIMITIVES.contains(t.getType());
     public static final Predicate<TypedObject> IS_NOT_NULL = (t) -> t.getType() != Type.NULL;
-    public static final TypedObject GENERIC_UNKNOWN = new TypedObject(Type.UNKNOWN, null);
+    public static final TypedObject UNKNOWN = new TypedObject(Type.UNKNOWN, null);
+    public static final TypedObject NULL = new TypedObject(Type.NULL, null);
+
+    private static final String NULL_EXPRESSION = "null";
 
     /**
      * Constructor that wraps an Object into a type.
@@ -44,15 +47,84 @@ public class TypedObject implements Comparable<TypedObject> {
     }
 
     /**
-     * Takes a String value and returns a casted TypedObject according to this type. Note that this only casts to
-     * {@link Type#PRIMITIVES} and will also handle null string representations (converted to an actual null). The cast
-     * will only be done if the String can actually be parsed as the target primitive type.
+     * Returns true if this does not have an actual type (type is {@link Type#UNKNOWN}).
      *
-     * @param value The string value that is being cast.
-     * @return The casted TypedObject with this {@link Type} or {@link TypedObject#GENERIC_UNKNOWN} if the cast failed.
+     * @return A boolean denoting if the type is {@link Type#UNKNOWN}.
      */
-    public TypedObject forceCastFromString(String value) {
-        return forceCastFromString(type, value);
+    public boolean isUnknown() {
+        return Type.isUnknown(type);
+    }
+
+    /**
+     * Returns true if the given type is the {@link Type#NULL} type.
+     *
+     * @return A boolean denoting if the type is {@link Type#NULL}.
+     */
+    public boolean isNull() {
+        return Type.isNull(type);
+    }
+
+    /**
+     * Returns true if the given type is in {@link Type#PRIMITIVES}.
+     *
+     * @return A boolean denoting if the type is primitive.
+     */
+    public boolean isPrimitive() {
+        return Type.isPrimitive(type);
+    }
+
+    /**
+     * Returns true if the type is in {@link Type#PRIMITIVE_MAPS}.
+     *
+     * @return A boolean denoting if the type is a primitive map.
+     */
+    public boolean isPrimitiveMap() {
+        return Type.isPrimitiveMap(type);
+    }
+
+    /**
+     * Returns true if the type is in {@link Type#COMPLEX_MAPS}.
+     *
+     * @return A boolean denoting if the type is a complex map.
+     */
+    public boolean isComplexMap() {
+        return Type.isComplexMap(type);
+    }
+
+    /**
+     * Returns true if the type is in {@link Type#MAPS}.
+     *
+     * @return A boolean denoting if the type is a map.
+     */
+    public boolean isMap() {
+        return Type.isMap(type);
+    }
+
+    /**
+     * Returns true if the type is in {@link Type#PRIMITIVE_LISTS}.
+     *
+     * @return A boolean denoting if the type is a primitive list.
+     */
+    public boolean isPrimitiveList() {
+        return Type.isPrimitiveList(type);
+    }
+
+    /**
+     * Returns true if the type is in {@link Type#COMPLEX_LISTS}.
+     *
+     * @return A boolean denoting if the type is a complex list.
+     */
+    public boolean isComplexList() {
+        return Type.isComplexList(type);
+    }
+
+    /**
+     * Returns true if the type is in {@link Type#LISTS}.
+     *
+     * @return A boolean denoting if the type is a list.
+     */
+    public boolean isList() {
+        return Type.isList(type);
     }
 
     /**
@@ -61,7 +133,7 @@ public class TypedObject implements Comparable<TypedObject> {
      * convert them to nulls.
      *
      * @param object The Object that is being cast.
-     * @return The casted TypedObject with this {@link Type} or {@link TypedObject#GENERIC_UNKNOWN} if the cast failed.
+     * @return The casted TypedObject with this {@link Type} or {@link TypedObject#UNKNOWN} if the cast failed.
      */
     public TypedObject safeCastFromObject(Object object) {
         return safeCastFromObject(type, object);
@@ -85,9 +157,9 @@ public class TypedObject implements Comparable<TypedObject> {
      * @throws UnsupportedOperationException if not supported.
      */
     public int size() {
-        if (Type.LISTS.contains(type)) {
+        if (isList()) {
             return ((List) value).size();
-        } else if (Type.MAPS.contains(type)) {
+        } else if (isMap()) {
             return ((Map) value).size();
         } else if (type == Type.STRING) {
             return ((String) value).length();
@@ -105,11 +177,14 @@ public class TypedObject implements Comparable<TypedObject> {
      */
     @SuppressWarnings("unchecked")
     public boolean containsKey(String key) {
-        if (Type.COMPLEX_LISTS.contains(type)) {
+        if (isComplexList()) {
             return ((List) value).stream().anyMatch(e -> ((Map) e).containsKey(key));
-        } else if (Type.MAPS.contains(type)) {
+        } else if (isComplexMap()) {
             Map map = (Map) value;
             return map.containsKey(key) || map.values().stream().anyMatch(e -> ((Map) e).containsKey(key));
+        } else if (isPrimitiveMap()) {
+            Map map = (Map) value;
+            return map.containsKey(key);
         }
         throw new UnsupportedOperationException("This type does not support mappings: " + type);
     }
@@ -123,13 +198,13 @@ public class TypedObject implements Comparable<TypedObject> {
      */
     @SuppressWarnings("unchecked")
     public boolean containsValue(TypedObject target) {
-        if (Type.PRIMITIVE_LISTS.contains(type)) {
+        if (isPrimitiveList()) {
             return ((List) value).stream().anyMatch(target::equalTo);
-        } else if (Type.COMPLEX_LISTS.contains(type)) {
+        } else if (isComplexList()) {
             return ((List) value).stream().anyMatch(e -> containsValueInPrimitiveMap((Map) e, target));
-        } else if (Type.PRIMITIVE_MAPS.contains(type)) {
+        } else if (isPrimitiveMap()) {
             return ((Map) value).values().stream().anyMatch(target::equalTo);
-        } else if (Type.COMPLEX_MAPS.contains(type)) {
+        } else if (isComplexMap()) {
             return ((Map) value).values().stream().anyMatch(e -> containsValueInPrimitiveMap((Map) e, target));
 
         }
@@ -188,22 +263,7 @@ public class TypedObject implements Comparable<TypedObject> {
 
     @Override
     public String toString() {
-        return type == Type.NULL ? Type.NULL_EXPRESSION : value.toString();
-    }
-
-    /**
-     * Takes a String value and returns a casted TypedObject according to the given type.
-     *
-     * @param type The {@link Type} to cast the values to.
-     * @param value The string value that is being cast.
-     * @return The casted TypedObject with the {@link Type} or {@link TypedObject#GENERIC_UNKNOWN} if the cast failed.
-     */
-    public static TypedObject forceCastFromString(Type type, String value) {
-        try {
-            return new TypedObject(type, type.forceCastString(value));
-        } catch (RuntimeException e) {
-            return GENERIC_UNKNOWN;
-        }
+        return type == Type.NULL ? NULL_EXPRESSION : value.toString();
     }
 
     /**
@@ -211,14 +271,14 @@ public class TypedObject implements Comparable<TypedObject> {
      *
      * @param type The {@link Type} to cast the values to.
      * @param object The Object that is being cast.
-     * @return The casted TypedObject with the {@link Type} or {@link TypedObject#GENERIC_UNKNOWN} if the cast failed.
+     * @return The casted TypedObject with the {@link Type} or {@link TypedObject#UNKNOWN} if the cast failed.
      */
     public static TypedObject safeCastFromObject(Type type, Object object) {
-        // No longer makes a GENERIC_UNKNOWN object if object was null
+        // No longer makes a UNKNOWN object if object was null
         try {
             return new TypedObject(type, type.castObject(object));
         } catch (RuntimeException e) {
-            return GENERIC_UNKNOWN;
+            return UNKNOWN;
         }
     }
 
@@ -227,16 +287,16 @@ public class TypedObject implements Comparable<TypedObject> {
      * is then a {@link Number}. It uses the String representation of the object to cast it.
      *
      * @param value The Object value that is being cast to a numeric.
-     * @return The casted TypedObject with the type set to numeric or {@link TypedObject#GENERIC_UNKNOWN} if not.
+     * @return The casted TypedObject with the type set to numeric or {@link TypedObject#UNKNOWN} if not.
      */
     public static TypedObject forceCastAsNumber(Object value) {
         if (value == null) {
-            return GENERIC_UNKNOWN;
+            return UNKNOWN;
         }
         try {
-            return new TypedObject(Type.DOUBLE, Type.DOUBLE.forceCastString(value.toString()));
+            return TypedObject.forceCast(Type.DOUBLE, value.toString());
         } catch (RuntimeException e) {
-            return GENERIC_UNKNOWN;
+            return UNKNOWN;
         }
     }
 

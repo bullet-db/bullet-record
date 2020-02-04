@@ -13,21 +13,11 @@ import java.lang.reflect.Constructor;
  */
 public interface BulletRecordProvider extends Serializable {
     /**
-     * Get an instance of an {@link UntypedBulletRecord}.
+     * Get an instance of an {@link BulletRecord}.
      *
-     * @return A {@link UntypedBulletRecord} instance.
+     * @return A {@link BulletRecord} instance.
      */
-    UntypedBulletRecord getUntypedInstance();
-
-    /**
-     * Get an instance of a {@link TypedBulletRecord}. Using this kind of {@link BulletRecord} can provide a higher
-     * degree of type safety and may improve runtime performance of Bullet since all the fields retrieved from this
-     * record would already be a {@link com.yahoo.bullet.typesystem.TypedObject}. This would come at the upfront cost of
-     * creating a {@link com.yahoo.bullet.typesystem.TypedObject} when inserting into the record.
-     *
-     * @return A {@link TypedBulletRecord} instance.
-     */
-    TypedBulletRecord getTypedInstance();
+    BulletRecord getInstance();
 
     /**
      * Create a BulletRecordProvider instance using the specified class.

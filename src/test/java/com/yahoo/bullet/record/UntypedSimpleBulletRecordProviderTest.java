@@ -8,18 +8,18 @@ package com.yahoo.bullet.record;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class SimpleBulletRecordProviderTest {
+public class UntypedSimpleBulletRecordProviderTest {
     @Test
     public void testInstanceNotPassedByReference() {
-        UntypedBulletRecord recordA = new SimpleBulletRecordProvider().getUntypedInstance();
-        UntypedBulletRecord recordB = new SimpleBulletRecordProvider().getUntypedInstance();
+        BulletRecord recordA = new UntypedSimpleBulletRecordProvider().getInstance();
+        BulletRecord recordB = new UntypedSimpleBulletRecordProvider().getInstance();
         Assert.assertTrue(recordA instanceof UntypedSimpleBulletRecord);
         Assert.assertTrue(recordB instanceof UntypedSimpleBulletRecord);
 
         recordA.setString("someField", "someValue");
         Assert.assertNull(recordB.get("someField"));
 
-        UntypedBulletRecord recordC = new SimpleBulletRecordProvider().getUntypedInstance();
+        BulletRecord recordC = new UntypedSimpleBulletRecordProvider().getInstance();
         Assert.assertNull(recordC.get("someField"));
     }
 }

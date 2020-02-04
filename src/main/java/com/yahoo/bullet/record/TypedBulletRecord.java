@@ -20,6 +20,7 @@ public abstract class TypedBulletRecord extends BulletRecord<TypedObject> {
 
     /**
      * Set a {@link TypedObject} field directly into this record.
+     * {@inheritDoc}
      *
      * @param field The name of the field.
      * @param object The non-null {@link TypedObject} with a valid type.
@@ -27,7 +28,8 @@ public abstract class TypedBulletRecord extends BulletRecord<TypedObject> {
      * @throws NullPointerException if {@link TypedObject} is null. Just avoid setting it instead.
      * @throws UnsupportedOperationException if the {@link TypedObject} has {@link Type#NULL} or {@link Type#UNKNOWN}.
      */
-    public BulletRecord<TypedObject> setTypedObject(String field, TypedObject object) {
+    @Override
+    public BulletRecord<TypedObject> typedSet(String field, TypedObject object) {
         Objects.requireNonNull(object);
         Type type = object.getType();
         if (type == Type.NULL || type == Type.UNKNOWN) {
@@ -36,16 +38,8 @@ public abstract class TypedBulletRecord extends BulletRecord<TypedObject> {
         return rawSet(field, object);
     }
 
-    /**
-     * Not supported. Will throw {@link UnsupportedOperationException}. You must use the appropriate set methods.
-     *
-     * @param field The name in this record to insert the object as.
-     * @param object The object to be set.
-     * @return Not relevant as this method always throws.
-     * @throws UnsupportedOperationException all the time.
-     */
     @Override
-    public BulletRecord<TypedObject> forceSet(String field, Object object) {
-        throw new UnsupportedOperationException("The Typed Bullet Record does not support force setting!");
+    public TypedObject typedGet(String field) {
+        return get(field);
     }
 }
