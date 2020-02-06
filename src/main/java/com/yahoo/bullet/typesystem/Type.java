@@ -10,8 +10,8 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -85,7 +85,9 @@ public enum Type {
 
     /**
      * Tries to get the type of a given object. If the object is a complex or composite type, then it must contain
-     * at least one value. Note that if the object is a composite type that contains multiple different types of
+     * at least one value that also satisfies this property if it too is a complex type. If not, the whole type is
+     * derived to be {@link Type#UNKNOWN} and not {@link Type#LISTS} of {@link Type#UNKNOWN} or {@link Type#MAPS} of
+     * {@link Type#UNKNOWN}. Note that if the object is a composite type that contains multiple different types of
      * values, any one of them maybe used to determine the type leading to undefined behavior. It might be possible to
      * create such a composite object and then use {@link #forceCast(Type, Type, Object)} to force this object to a
      * desired type if the cast can be done (even with loss of precision).
@@ -531,14 +533,14 @@ public enum Type {
     // *************************************** Type collection builders ***************************************
 
     private static Set<Type> set(Type... types) {
-        return new HashSet<>(Arrays.asList(types));
+        return EnumSet.copyOf(Arrays.asList(types));
     }
 
     @SafeVarargs
     private static Set<Type> set(Set<Type>... types) {
-        Set<Type> result = new HashSet<>();
-        for (Set<Type> typeSet : types) {
-            result.addAll(typeSet);
+        Set<Type> result = EnumSet.copyOf(types[0]);
+        for (int i = 1; i < types.length; ++i) {
+            result.addAll(types[i]);
         }
         return result;
     }

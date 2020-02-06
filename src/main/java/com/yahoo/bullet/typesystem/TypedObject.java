@@ -26,7 +26,8 @@ public class TypedObject implements Comparable<TypedObject> {
     private static final String NULL_EXPRESSION = "null";
 
     /**
-     * Constructor that wraps an Object into a type.
+     * Constructor that wraps an Object into a type. See {@link Type#getType(Object)} to see how the type of the
+     * corresponding object will be determined.
      *
      * @param value The value who is being wrapped.
      */

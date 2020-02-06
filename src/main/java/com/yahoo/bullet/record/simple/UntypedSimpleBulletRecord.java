@@ -31,7 +31,6 @@ public class UntypedSimpleBulletRecord extends UntypedBulletRecord {
         return this;
     }
 
-
     @Override
     protected Object convert(Object object) {
         return object;
@@ -61,6 +60,13 @@ public class UntypedSimpleBulletRecord extends UntypedBulletRecord {
     public UntypedSimpleBulletRecord remove(String field) {
         data.remove(field);
         return this;
+    }
+
+    @Override
+    public UntypedSimpleBulletRecord copy() {
+        UntypedSimpleBulletRecord copy = new UntypedSimpleBulletRecord();
+        copy.data.putAll(this.data);
+        return copy;
     }
 
     @Override

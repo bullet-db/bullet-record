@@ -24,6 +24,6 @@ public abstract class UntypedBulletRecord extends BulletRecord<Object> {
      */
     @Override
     public TypedObject typedGet(String field) {
-        return hasField(field) ? new TypedObject(get(field)) : null;
+        return hasField(field) ? new TypedObject(get(field)) : TypedObject.NULL;
     }
 }

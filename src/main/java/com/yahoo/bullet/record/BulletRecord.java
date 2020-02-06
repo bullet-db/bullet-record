@@ -106,6 +106,13 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      */
     public abstract TypedObject typedGet(String field);
 
+    /**
+     * Creates a shallow copy of this record.
+     *
+     * @return A copy of this record.
+     */
+    public abstract BulletRecord<T> copy();
+
     // ****************************************** TypedObject Nested Getters ******************************************
 
     /**
@@ -126,7 +133,7 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
             throw new ClassCastException(field + " is not a map. It has type " + value.getType());
         }
         Map<String, Object> map = (Map<String, Object>) value.getValue();
-        Object fieldValue = map.get(field);
+        Object fieldValue = map.get(subKey);
         return fieldValue == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType(), fieldValue);
     }
 
@@ -226,8 +233,8 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
     }
 
     /**
-     * Insert a field into this BulletRecord. This is the glue method used by the other set methods and should remain
-     * protected to not expose this to the outside. It will call {@link #convert(Object)} first.
+     * Insert a field into this BulletRecord. This is the glue method used by the other set methods and is protected to
+     * not expose this to the outside, preserving type safety. It will call {@link #convert(Object)} first.
      *
      * @param field The non-null name of the field.
      * @param object The object to be set.
