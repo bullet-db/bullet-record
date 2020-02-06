@@ -9,13 +9,13 @@ import com.yahoo.bullet.record.BulletRecord;
 import com.yahoo.bullet.record.BulletRecordProvider;
 
 /**
- * Factory for Avro based UntypedBulletRecords.
+ * Factory for Avro based TypedBulletRecords.
  */
-public class UntypedAvroBulletRecordProvider implements BulletRecordProvider {
+public class TypedAvroBulletRecordProvider implements BulletRecordProvider {
     private static final long serialVersionUID = 8064632505561405799L;
 
     @Override
     public BulletRecord getInstance() {
-        return new UntypedAvroBulletRecord();
+        return new TypedAvroBulletRecord();
     }
 }
