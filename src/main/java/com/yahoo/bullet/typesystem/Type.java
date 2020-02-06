@@ -253,6 +253,60 @@ public enum Type {
         return LISTS.contains(type);
     }
 
+    /**
+     * Check if it is possible to cast to the given {@link Type} from the given {@link Type}. This cast does not make
+     * sure that information is not lost. If it is possible to do the cast, this will return true.
+     *
+     * @param finalType The result type of the cast.
+     * @param initialType The source type to cast from.
+     * @return A boolean denoting if the cast can be done at all.
+     */
+    public static boolean canCast(Type finalType, Type initialType) {
+        if (finalType == initialType) {
+            return true;
+        }
+        // Only going across nesting levels we can't do
+        return areBothIn(initialType, finalType, PRIMITIVES) ||
+               areBothIn(initialType, finalType, PRIMITIVE_MAPS) || areBothIn(initialType, finalType, COMPLEX_MAPS) ||
+               areBothIn(initialType, finalType, PRIMITIVE_LISTS) || areBothIn(initialType, finalType, COMPLEX_LISTS);
+    }
+
+    /**
+     * Checks if it possible to cast to the given {@link Type} from the given {@link Type} safely. This follows the
+     * widening convention for {@link Type#NUMERICS}.
+     *
+     * @param finalType The result type of the cast.
+     * @param initialType The source type to cast from.
+     * @return A boolean denoting if the cast can be done safely.
+     */
+    public static boolean canSafeCast(Type finalType, Type initialType) {
+        if (finalType == initialType) {
+            return true;
+        }
+        switch (finalType) {
+            case STRING:
+                return PRIMITIVES.contains(initialType);
+            case LONG:
+                return initialType == INTEGER;
+            case LONG_MAP:
+                return initialType == INTEGER_MAP;
+            case LONG_MAP_MAP:
+                return initialType == INTEGER_MAP_MAP;
+            case LONG_MAP_LIST:
+                return initialType == INTEGER_MAP_LIST;
+            case DOUBLE:
+                return initialType == FLOAT;
+            case DOUBLE_MAP:
+                return initialType == FLOAT_MAP;
+            case DOUBLE_LIST:
+                return initialType == FLOAT_LIST;
+            case DOUBLE_MAP_LIST:
+                return initialType == FLOAT_MAP_LIST;
+            default:
+                return false;
+        }
+    }
+
     // *************************************** Type casting helpers ***************************************
 
     private static Object forceCast(Type targetType, Type sourceType, Object object) {
@@ -430,46 +484,6 @@ public enum Type {
             list.add(forceCast(targetListType.subType, sourceType.subType, member));
         }
         return list;
-    }
-
-
-    private static boolean canCast(Type finalType, Type initialType) {
-        if (finalType == initialType) {
-            return true;
-        }
-        // Only going across nesting levels we can't do
-        return areBothIn(initialType, finalType, PRIMITIVES) ||
-               areBothIn(initialType, finalType, PRIMITIVE_MAPS) || areBothIn(initialType, finalType, COMPLEX_MAPS) ||
-               areBothIn(initialType, finalType, PRIMITIVE_LISTS) || areBothIn(initialType, finalType, COMPLEX_LISTS);
-    }
-
-    private static boolean canSafeCast(Type finalType, Type initialType) {
-        if (finalType == initialType) {
-            return true;
-        }
-        switch (finalType) {
-            case STRING:
-                // Only let primitives be converted to Strings since we do support primitives from Strings
-                return PRIMITIVES.contains(initialType);
-            case LONG:
-                return initialType == INTEGER;
-            case LONG_MAP:
-                return initialType == INTEGER_MAP;
-            case LONG_MAP_MAP:
-                return initialType == INTEGER_MAP_MAP;
-            case LONG_MAP_LIST:
-                return initialType == INTEGER_MAP_LIST;
-            case DOUBLE:
-                return initialType == FLOAT;
-            case DOUBLE_MAP:
-                return initialType == FLOAT_MAP;
-            case DOUBLE_LIST:
-                return initialType == FLOAT_LIST;
-            case DOUBLE_MAP_LIST:
-                return initialType == FLOAT_MAP_LIST;
-            default:
-                return false;
-        }
     }
 
     private static boolean areBothIn(Type a, Type b, Set<Type> set) {
