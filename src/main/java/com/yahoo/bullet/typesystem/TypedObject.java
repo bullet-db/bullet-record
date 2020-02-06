@@ -48,7 +48,7 @@ public class TypedObject implements Comparable<TypedObject> {
     }
 
     /**
-     * Returns true if this does not have an actual type (type is {@link Type#UNKNOWN}).
+     * Returns true if this does not have an actual type, i.e. type is {@link Type#UNKNOWN}.
      *
      * @return A boolean denoting if the type is {@link Type#UNKNOWN}.
      */
