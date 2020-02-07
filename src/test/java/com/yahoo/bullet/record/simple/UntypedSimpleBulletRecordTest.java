@@ -15,6 +15,11 @@ public class UntypedSimpleBulletRecordTest extends BulletRecordTest<Object> {
     private UntypedSimpleBulletRecord simpleRecord;
     private UntypedSimpleBulletRecord simpleAnother;
 
+    @Override
+    protected Object revert(Object data) {
+        return data;
+    }
+
     @BeforeMethod
     public void setup() {
         simpleRecord = new UntypedSimpleBulletRecord();

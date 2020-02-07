@@ -253,6 +253,8 @@ public enum Type {
         return LISTS.contains(type);
     }
 
+    // *************************************** Type casting helpers ***************************************
+
     /**
      * Check if it is possible to cast to the given {@link Type} from the given {@link Type}. This cast does not make
      * sure that information is not lost. If it is possible to do the cast, this will return true.
@@ -306,8 +308,6 @@ public enum Type {
                 return false;
         }
     }
-
-    // *************************************** Type casting helpers ***************************************
 
     private static Object forceCast(Type targetType, Type sourceType, Object object) {
         if (object == null) {

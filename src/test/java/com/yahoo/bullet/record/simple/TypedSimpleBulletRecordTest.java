@@ -6,6 +6,7 @@
 package com.yahoo.bullet.record.simple;
 
 import com.yahoo.bullet.record.BulletRecordTest;
+import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -15,6 +16,11 @@ import org.testng.annotations.Test;
 public class TypedSimpleBulletRecordTest extends BulletRecordTest<TypedObject> {
     private TypedSimpleBulletRecord simpleRecord;
     private TypedSimpleBulletRecord simpleAnother;
+
+    @Override
+    protected Object revert(TypedObject data) {
+        return data.getType() == Type.NULL ? null : data.getValue();
+    }
 
     @BeforeMethod
     public void setup() {

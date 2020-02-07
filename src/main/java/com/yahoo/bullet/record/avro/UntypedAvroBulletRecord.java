@@ -7,6 +7,8 @@ package com.yahoo.bullet.record.avro;
 
 import com.yahoo.bullet.record.BulletRecord;
 import com.yahoo.bullet.record.UntypedBulletRecord;
+import lombok.AccessLevel;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Iterator;
@@ -22,6 +24,7 @@ import java.util.Map;
 @Slf4j
 public class UntypedAvroBulletRecord extends UntypedBulletRecord {
     private static final long serialVersionUID = 926415013785021742L;
+    @Setter(AccessLevel.PACKAGE)
     private LazyBulletAvro data = new LazyBulletAvro();
 
     @Override

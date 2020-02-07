@@ -38,7 +38,6 @@ import java.util.Objects;
  */
 public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>, Serializable {
     private static final long serialVersionUID = 3319286957467020672L;
-    private static final String KEY_DELIMITER = "\\.";
 
     /**
      * Convert the given object into a the format stored in this record.
@@ -667,83 +666,5 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
             prefix = ", ";
         }
         return builder.append("}").toString();
-    }
-
-    /**
-     * For testing.
-     *
-     * A helper to get a field from the record by a custom identifier format.
-     * <br>
-     * For example, suppose a record has a map of boolean maps called "aaa". Then <br>
-     * - "aaa" identifies that map of maps <br>
-     * - "aaa.bbb" identifies the inner map that "aaa" maps "bbb" to (if it exists) <br>
-     * - "aaa.bbb.ccc" identifies the boolean that "aaa.bbb" (if it exists) maps "ccc" to (if it exists) <br>
-     * <br>
-     * For a list element, the index is the key, e.g. "my_list.0" or "my_list.0.some_key"
-     *
-     * @param identifier The non-null identifier of the field to get.
-     * @return The value of the field or null if it does not exist.
-     */
-    @SuppressWarnings("unchecked")
-    protected T extractField(String identifier) {
-        try {
-            String[] keys = identifier.split(KEY_DELIMITER, 3);
-            T first = get(keys[0]);
-            if (keys.length == 1) {
-                return first;
-            }
-            T second;
-            if (first instanceof Map) {
-                second = ((Map<String, T>) first).get(keys[1]);
-            } else if (first instanceof List) {
-                second = ((List<T>) first).get(Integer.parseInt(keys[1]));
-            } else {
-                return null;
-            }
-            if (keys.length == 2) {
-                return second;
-            }
-            return ((Map<String, T>) second).get(keys[2]);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    /**
-     * For Testing.
-     *
-     * Insert a map field with values as Pairs or Map.Entry. The value of
-     * the entries must be in "Primitives".
-     *
-     * @param field The non-null name of the field.
-     * @param entries The non-null entries to insert.
-     * @return This object for chaining.
-     */
-    protected BulletRecord<T> setMap(String field, Map.Entry<String, Object>... entries) {
-        Objects.requireNonNull(entries);
-        Map<String, Object> newMap = new HashMap<>(entries.length);
-        for (Map.Entry<String, Object> entry : entries) {
-            newMap.put(entry.getKey(), entry.getValue());
-        }
-        return set(field, newMap);
-    }
-
-    /**
-     * For Testing.
-     *
-     * Insert a list field with values as Pairs or Map.Entry of maps. The value of
-     * the maps must be in "Primitives".
-     *
-     * @param field The non-null name of the field.
-     * @param entries The non-null entries to insert.
-     * @return This object for chaining.
-     */
-    protected BulletRecord<T> setListMap(String field, Map<String, Object>... entries) {
-        Objects.requireNonNull(entries);
-        List<Map<String, Object>> data = new ArrayList<>();
-        for (Map<String, Object> entry : entries) {
-            data.add(entry);
-        }
-        return set(field, data);
     }
 }
