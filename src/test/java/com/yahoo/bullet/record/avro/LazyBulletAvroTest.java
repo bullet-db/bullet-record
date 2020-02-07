@@ -5,6 +5,7 @@
  */
 package com.yahoo.bullet.record.avro;
 
+/*
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
@@ -22,8 +23,10 @@ import java.util.Map;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+*/
 
 public class LazyBulletAvroTest {
+    /*
     private LazyBulletAvro avro;
     private LazyBulletAvro another;
 
@@ -285,4 +288,6 @@ public class LazyBulletAvroTest {
         avro.setDeserialized(false);
         avro.hasField("foo");
     }
+
+    */
 }

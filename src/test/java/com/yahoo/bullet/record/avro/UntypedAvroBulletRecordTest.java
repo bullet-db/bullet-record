@@ -6,6 +6,8 @@
 package com.yahoo.bullet.record.avro;
 
 import com.yahoo.bullet.record.BulletRecordTest;
+import com.yahoo.bullet.typesystem.Type;
+import com.yahoo.bullet.typesystem.TypedObject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -81,29 +83,17 @@ public class UntypedAvroBulletRecordTest extends BulletRecordTest<Object> {
         UntypedAvroBulletRecord reified = fromRecordBytes(serialized);
         Assert.assertNotNull(reified);
         Assert.assertEquals(reified.get("2"), 42L);
-        Assert.assertTrue((Boolean) reified.get("7", "7.2"));
-        Assert.assertNull(reified.get("7", "7.3"));
-        Assert.assertEquals(reified.get("9", 0), singletonMap("9.1", 3L));
-    }
-
-    @Test
-    public void testFieldCount() throws Exception {
-        super.testFieldCount();
-
-        avroAnother = new UntypedAvroBulletRecord(avroRecord);
-        Assert.assertEquals(avroAnother.fieldCount(), 1);
+        assertTypedEquals(reified.typedGet("7", "7.2"), Type.BOOLEAN, true);
+        assertTypedEquals(reified.typedGet("7", "7.3"), TypedObject.NULL);
+        assertTypedEquals(reified.typedGet("9", 0), Type.LONG_MAP, singletonMap("9.1", 3L));
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Cannot read from record.*")
     public void testFailingWhenCannotRead() {
-        avroRecord.setSerializedData("foo".getBytes());
-        avroRecord.setDeserialized(false);
+        LazyBulletAvro bad = new LazyBulletAvro();
+        bad.setSerializedData("foo".getBytes());
+        bad.setDeserialized(false);
+        avroRecord.setData(bad);
         avroRecord.hasField("foo");
-    }
-
-    @Test
-    public void testNoArgsConstructor() {
-        Assert.assertTrue(avroRecord.isDeserialized());
-        Assert.assertNotNull(avroRecord.getData());
     }
 }
