@@ -13,6 +13,7 @@ import lombok.Setter;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 
 public class TypedSimpleBulletRecord extends TypedBulletRecord {
     private static final long serialVersionUID = -4428637875399391902L;
@@ -23,12 +24,15 @@ public class TypedSimpleBulletRecord extends TypedBulletRecord {
 
     @Override
     protected TypedSimpleBulletRecord rawSet(String field, TypedObject object) {
-        return null;
+        Objects.requireNonNull(field);
+        data.put(field, object);
+        return this;
     }
 
     @Override
     public TypedObject get(String field) {
-        return data.get(field);
+        TypedObject object = data.get(field);
+        return object == null ? TypedObject.NULL : object;
     }
 
     @Override

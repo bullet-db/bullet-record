@@ -8,11 +8,8 @@ package com.yahoo.bullet.record;
 import com.yahoo.bullet.typesystem.TypedObject;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Data sent to Bullet should be wrapped in a class that extends this abstract class. It is
@@ -159,7 +156,11 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
             return TypedObject.NULL;
         }
         Map<String, Object> second = first.get(subKey);
-        return second == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType().getSubType(), second.get(subSubKey));
+        if (second == null) {
+            return TypedObject.NULL;
+        }
+        Object fieldValue = second.get(subSubKey);
+        return fieldValue == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType().getSubType(), fieldValue);
     }
 
     /**
@@ -239,7 +240,7 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @param object The object to be set.
      * @return This object for chaining.
      */
-    protected BulletRecord<T> set(String field,  Object object) {
+    protected BulletRecord<T> set(String field, Object object) {
         return rawSet(field, convert(object));
     }
 
@@ -582,7 +583,8 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @return This object for chaining.
      */
     public BulletRecord<T> set(String field, BulletRecord that, String thatField) {
-        return set(field, that.get(thatField));
+        TypedObject thatValue = that.typedGet(thatField);
+        return set(field, thatValue.getValue());
     }
 
     /**
@@ -652,7 +654,7 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      */
     public BulletRecord<T> rename(String field, String newName) {
         if (hasField(field)) {
-            set(newName, getAndRemove(field));
+            rawSet(newName, getAndRemove(field));
         }
         return this;
     }

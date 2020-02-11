@@ -267,6 +267,20 @@ public class TypedObject implements Comparable<TypedObject> {
         return type == Type.NULL ? NULL_EXPRESSION : value.toString();
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof TypedObject)) {
+            return false;
+        }
+        TypedObject o = (TypedObject) other;
+        return o.type == type && (value == null && o.value == null || value != null && value.equals(o.value));
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, value);
+    }
+
     /**
      * Takes an object and returns a casted TypedObject according to this type.
      *

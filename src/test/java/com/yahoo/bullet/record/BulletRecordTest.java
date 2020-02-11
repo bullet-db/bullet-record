@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
@@ -48,25 +49,25 @@ public abstract class BulletRecordTest<T> {
      * @return The value of the field or null if it does not exist.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T extractField(BulletRecord<T> record, String identifier) {
+    public Object extractField(BulletRecord<T> record, String identifier) {
         try {
             String[] keys = identifier.split(KEY_DELIMITER, 3);
-            T first = record.get(keys[0]);
+            Object first = revert(record.get(keys[0]));
             if (keys.length == 1) {
                 return first;
             }
-            T second;
+            Object second;
             if (first instanceof Map) {
-                second = ((Map<String, T>) first).get(keys[1]);
+                second = ((Map<String, ?>) first).get(keys[1]);
             } else if (first instanceof List) {
-                second = ((List<T>) first).get(Integer.parseInt(keys[1]));
+                second = ((List<?>) first).get(Integer.parseInt(keys[1]));
             } else {
                 return null;
             }
             if (keys.length == 2) {
                 return second;
             }
-            return ((Map<String, T>) second).get(keys[2]);
+            return ((Map<String, ?>) second).get(keys[2]);
         } catch (Exception e) {
             return null;
         }
@@ -88,7 +89,7 @@ public abstract class BulletRecordTest<T> {
         for (Map.Entry<String, Object> entry : entries) {
             newMap.put(entry.getKey(), entry.getValue());
         }
-        return record.set(field, newMap);
+        return record.typedSet(field, new TypedObject(newMap));
     }
 
     /**
@@ -107,7 +108,7 @@ public abstract class BulletRecordTest<T> {
         for (Map<String, Object> entry : entries) {
             data.add(entry);
         }
-        return record.set(field, data);
+        return record.typedSet(field, new TypedObject(data));
     }
 
     public static void assertTypedEquals(TypedObject actual, TypedObject object) {
@@ -138,8 +139,8 @@ public abstract class BulletRecordTest<T> {
 
         Assert.assertTrue((Boolean) revert(record.get("bar")));
         Assert.assertFalse((Boolean) revert(record.get("foo")));
-        Assert.assertNull(record.get("baz"));
-        Assert.assertNull(record.get("dne"));
+        Assert.assertNull(revert(record.get("baz")));
+        Assert.assertNull(revert(record.get("dne")));
     }
 
     @Test
@@ -148,7 +149,7 @@ public abstract class BulletRecordTest<T> {
 
         Assert.assertEquals(revert(record.get("foo")), "bar");
         Assert.assertEquals(revert(record.get("bar")), "baz");
-        Assert.assertNull(record.get("dne"));
+        Assert.assertNull(revert(record.get("dne")));
     }
 
     @Test
@@ -157,7 +158,7 @@ public abstract class BulletRecordTest<T> {
 
         Assert.assertEquals(revert(record.get("foo")), 88);
         Assert.assertEquals(revert(record.get("bar")), 51);
-        Assert.assertNull(record.get("dne"));
+        Assert.assertNull(revert(record.get("dne")));
     }
 
     @Test
@@ -166,8 +167,8 @@ public abstract class BulletRecordTest<T> {
 
         Assert.assertEquals(revert(record.get("foo")), 0L);
         Assert.assertEquals(revert(record.get("bar")), -1231231231231231231L);
-        Assert.assertNull(record.get("baz"));
-        Assert.assertNull(record.get("dne"));
+        Assert.assertNull(revert(record.get("baz")));
+        Assert.assertNull(revert(record.get("dne")));
     }
 
     @Test
@@ -176,8 +177,8 @@ public abstract class BulletRecordTest<T> {
 
         Assert.assertEquals(revert(record.get("foo")), 42.1f);
         Assert.assertEquals(revert(record.get("bar")), -1.13f);
-        Assert.assertNull(record.get("baz"));
-        Assert.assertNull(record.get("dne"));
+        Assert.assertNull(revert(record.get("baz")));
+        Assert.assertNull(revert(record.get("dne")));
     }
 
     @Test
@@ -186,8 +187,8 @@ public abstract class BulletRecordTest<T> {
 
         Assert.assertEquals(revert(record.get("foo")), 42.1);
         Assert.assertEquals(revert(record.get("bar")), -1.13);
-        Assert.assertNull(record.get("baz"));
-        Assert.assertNull(record.get("dne"));
+        Assert.assertNull(revert(record.get("baz")));
+        Assert.assertNull(revert(record.get("dne")));
     }
 
     @Test
@@ -305,9 +306,12 @@ public abstract class BulletRecordTest<T> {
         assertTypedEquals(record.typedGet("dne"), TypedObject.NULL);
         assertTypedEquals(record.typedGet("dne", "baz"), TypedObject.NULL);
 
-        record.setStringMap("foo", singletonMap("bar", null));
-        assertTypedEquals(record.typedGet("foo", "bar"), TypedObject.NULL);
+        Map<String, String> data = new HashMap<>();
+        data.put("bar", "baz");
+        data.put("qux", null);
+        record.setStringMap("foo", data);
         assertTypedEquals(record.typedGet("foo", "dne"), TypedObject.NULL);
+        assertTypedEquals(record.typedGet("foo", "qux"), TypedObject.NULL);
     }
 
     @Test(expectedExceptions = ClassCastException.class)
@@ -431,7 +435,7 @@ public abstract class BulletRecordTest<T> {
         assertTypedEquals(record.typedGet("dne", 0), TypedObject.NULL);
         assertTypedEquals(record.typedGet("dne", 1), TypedObject.NULL);
 
-        record.setStringList("foo", singletonList(null));
+        record.setStringList("foo", asList(null, "bar"));
         assertTypedEquals(record.typedGet("foo", 0), TypedObject.NULL);
     }
 
@@ -452,7 +456,7 @@ public abstract class BulletRecordTest<T> {
         Map<String, Map<String, Integer>> data = new HashMap<>();
         data.put("bar", singletonMap("a", 1));
         data.put("baz", singletonMap("b", 2));
-        record.setMapOfIntegerMap("fooA", data);
+        record.setMapOfIntegerMap("foo", data);
 
         Object object = revert(record.get("foo"));
         Assert.assertTrue(object instanceof Map);
@@ -476,7 +480,7 @@ public abstract class BulletRecordTest<T> {
         Map<String, Map<String, Long>> data = new HashMap<>();
         data.put("bar", singletonMap("a", 1L));
         data.put("baz", singletonMap("b", 2L));
-        record.setMapOfLongMap("fooA", data);
+        record.setMapOfLongMap("foo", data);
 
         Object object = revert(record.get("foo"));
         Assert.assertTrue(object instanceof Map);
@@ -500,7 +504,7 @@ public abstract class BulletRecordTest<T> {
         Map<String, Map<String, Float>> data = new HashMap<>();
         data.put("bar", singletonMap("a", 1.1f));
         data.put("baz", singletonMap("b", 2.2f));
-        record.setMapOfFloatMap("fooA", data);
+        record.setMapOfFloatMap("foo", data);
 
         Object object = revert(record.get("foo"));
         Assert.assertTrue(object instanceof Map);
@@ -524,7 +528,7 @@ public abstract class BulletRecordTest<T> {
         Map<String, Map<String, Double>> data = new HashMap<>();
         data.put("bar", singletonMap("a", 1.1));
         data.put("baz", singletonMap("b", 2.2));
-        record.setMapOfDoubleMap("fooA", data);
+        record.setMapOfDoubleMap("foo", data);
 
         Object object = revert(record.get("foo"));
         Assert.assertTrue(object instanceof Map);
@@ -548,7 +552,7 @@ public abstract class BulletRecordTest<T> {
         Map<String, Map<String, Boolean>> data = new HashMap<>();
         data.put("bar", singletonMap("a", false));
         data.put("baz", singletonMap("b", true));
-        record.setMapOfBooleanMap("fooA", data);
+        record.setMapOfBooleanMap("foo", data);
 
         Object object = revert(record.get("foo"));
         Assert.assertTrue(object instanceof Map);
@@ -572,7 +576,7 @@ public abstract class BulletRecordTest<T> {
         Map<String, Map<String, String>> data = new HashMap<>();
         data.put("bar", singletonMap("a", "qux"));
         data.put("baz", singletonMap("b", "norf"));
-        record.setMapOfStringMap("fooA", data);
+        record.setMapOfStringMap("foo", data);
 
         Object object = revert(record.get("foo"));
         Assert.assertTrue(object instanceof Map);
@@ -588,7 +592,7 @@ public abstract class BulletRecordTest<T> {
         assertTypedEquals(record.typedGet("foo", "bar"), Type.STRING_MAP, singletonMap("a", "qux"));
         assertTypedEquals(record.typedGet("foo", "baz"), Type.STRING_MAP, singletonMap("b", "norf"));
         assertTypedEquals(record.typedGet("foo", "bar", "a"), Type.STRING, "qux");
-        assertTypedEquals(record.typedGet("foo", "baz", "b"), Type.STRING, "baz");
+        assertTypedEquals(record.typedGet("foo", "baz", "b"), Type.STRING, "norf");
     }
 
     @Test
@@ -599,8 +603,11 @@ public abstract class BulletRecordTest<T> {
         assertTypedEquals(record.typedGet("dne", "bar"), TypedObject.NULL);
         assertTypedEquals(record.typedGet("dne", "bar", "baz"), TypedObject.NULL);
 
-        record.setMapOfStringMap("foo", singletonMap("bar", null));
-        assertTypedEquals(record.typedGet("foo", "bar"), TypedObject.NULL);
+        Map<String, Map<String, String>> data = new HashMap<>();
+        data.put("bar", singletonMap("baz", "qux"));
+        data.put("qux", null);
+        record.setMapOfStringMap("foo", data);
+        assertTypedEquals(record.typedGet("foo", "qux"), TypedObject.NULL);
         record.setMapOfStringMap("foo", singletonMap("bar", singletonMap("baz", "qux")));
         assertTypedEquals(record.typedGet("foo", "dne"), TypedObject.NULL);
         assertTypedEquals(record.typedGet("foo", "bar", "dne"), TypedObject.NULL);
@@ -632,8 +639,8 @@ public abstract class BulletRecordTest<T> {
         Assert.assertEquals(actualA.get("a"), (Integer) 1);
         Assert.assertEquals(actualB.get("b"), (Integer) 2);
         assertTypedEquals(record.typedGet("foo"), Type.INTEGER_MAP_LIST, data);
-        assertTypedEquals(record.typedGet("foo", "bar"), Type.INTEGER_MAP, singletonMap("a", 1));
-        assertTypedEquals(record.typedGet("foo", "baz"), Type.INTEGER_MAP, singletonMap("b", 2));
+        assertTypedEquals(record.typedGet("foo", 0), Type.INTEGER_MAP, singletonMap("a", 1));
+        assertTypedEquals(record.typedGet("foo", 1), Type.INTEGER_MAP, singletonMap("b", 2));
         assertTypedEquals(record.typedGet("foo", 0, "a"), Type.INTEGER, 1);
         assertTypedEquals(record.typedGet("foo", 1, "b"), Type.INTEGER, 2);
     }
@@ -656,8 +663,8 @@ public abstract class BulletRecordTest<T> {
         Assert.assertEquals(actualA.get("a"), (Long) 1L);
         Assert.assertEquals(actualB.get("b"), (Long) 2L);
         assertTypedEquals(record.typedGet("foo"), Type.LONG_MAP_LIST, data);
-        assertTypedEquals(record.typedGet("foo", "bar"), Type.LONG_MAP, singletonMap("a", 1L));
-        assertTypedEquals(record.typedGet("foo", "baz"), Type.LONG_MAP, singletonMap("b", 2L));
+        assertTypedEquals(record.typedGet("foo", 0), Type.LONG_MAP, singletonMap("a", 1L));
+        assertTypedEquals(record.typedGet("foo", 1), Type.LONG_MAP, singletonMap("b", 2L));
         assertTypedEquals(record.typedGet("foo", 0, "a"), Type.LONG, 1L);
         assertTypedEquals(record.typedGet("foo", 1, "b"), Type.LONG, 2L);
     }
@@ -680,8 +687,8 @@ public abstract class BulletRecordTest<T> {
         Assert.assertEquals(actualA.get("a"), 1.1f);
         Assert.assertEquals(actualB.get("b"), 2.2f);
         assertTypedEquals(record.typedGet("foo"), Type.FLOAT_MAP_LIST, data);
-        assertTypedEquals(record.typedGet("foo", "bar"), Type.FLOAT_MAP, singletonMap("a", 1.1f));
-        assertTypedEquals(record.typedGet("foo", "baz"), Type.FLOAT_MAP, singletonMap("b", 2.2f));
+        assertTypedEquals(record.typedGet("foo", 0), Type.FLOAT_MAP, singletonMap("a", 1.1f));
+        assertTypedEquals(record.typedGet("foo", 1), Type.FLOAT_MAP, singletonMap("b", 2.2f));
         assertTypedEquals(record.typedGet("foo", 0, "a"), Type.FLOAT, 1.1f);
         assertTypedEquals(record.typedGet("foo", 1, "b"), Type.FLOAT, 2.2f);
     }
@@ -704,8 +711,8 @@ public abstract class BulletRecordTest<T> {
         Assert.assertEquals(actualA.get("a"), 1.1);
         Assert.assertEquals(actualB.get("b"), 2.2);
         assertTypedEquals(record.typedGet("foo"), Type.DOUBLE_MAP_LIST, data);
-        assertTypedEquals(record.typedGet("foo", "bar"), Type.DOUBLE_MAP, singletonMap("a", 1.1));
-        assertTypedEquals(record.typedGet("foo", "baz"), Type.DOUBLE_MAP, singletonMap("b", 2.2));
+        assertTypedEquals(record.typedGet("foo", 0), Type.DOUBLE_MAP, singletonMap("a", 1.1));
+        assertTypedEquals(record.typedGet("foo", 1), Type.DOUBLE_MAP, singletonMap("b", 2.2));
         assertTypedEquals(record.typedGet("foo", 0, "a"), Type.DOUBLE, 1.1);
         assertTypedEquals(record.typedGet("foo", 1, "b"), Type.DOUBLE, 2.2);
     }
@@ -728,8 +735,8 @@ public abstract class BulletRecordTest<T> {
         Assert.assertFalse(actualA.get("a"));
         Assert.assertTrue(actualB.get("b"));
         assertTypedEquals(record.typedGet("foo"), Type.BOOLEAN_MAP_LIST, data);
-        assertTypedEquals(record.typedGet("foo", "bar"), Type.BOOLEAN_MAP, singletonMap("a", false));
-        assertTypedEquals(record.typedGet("foo", "baz"), Type.BOOLEAN_MAP, singletonMap("b", true));
+        assertTypedEquals(record.typedGet("foo", 0), Type.BOOLEAN_MAP, singletonMap("a", false));
+        assertTypedEquals(record.typedGet("foo", 1), Type.BOOLEAN_MAP, singletonMap("b", true));
         assertTypedEquals(record.typedGet("foo", 0, "a"), Type.BOOLEAN, false);
         assertTypedEquals(record.typedGet("foo", 1, "b"), Type.BOOLEAN, true);
     }
@@ -752,8 +759,8 @@ public abstract class BulletRecordTest<T> {
         Assert.assertEquals(actualA.get("a"), "qux");
         Assert.assertEquals(actualB.get("b"), "norf");
         assertTypedEquals(record.typedGet("foo"), Type.STRING_MAP_LIST, data);
-        assertTypedEquals(record.typedGet("foo", "bar"), Type.STRING_MAP, singletonMap("a", "qux"));
-        assertTypedEquals(record.typedGet("foo", "baz"), Type.STRING_MAP, singletonMap("b", "norf"));
+        assertTypedEquals(record.typedGet("foo", 0), Type.STRING_MAP, singletonMap("a", "qux"));
+        assertTypedEquals(record.typedGet("foo", 1), Type.STRING_MAP, singletonMap("b", "norf"));
         assertTypedEquals(record.typedGet("foo", 0, "a"), Type.STRING, "qux");
         assertTypedEquals(record.typedGet("foo", 1, "b"), Type.STRING, "norf");
     }
@@ -765,10 +772,8 @@ public abstract class BulletRecordTest<T> {
         assertTypedEquals(record.typedGet("dne"), TypedObject.NULL);
         assertTypedEquals(record.typedGet("dne", 0), TypedObject.NULL);
 
-        record.setListOfStringMap("foo", singletonList(null));
-        assertTypedEquals(record.typedGet("foo", 0, "bar"), TypedObject.NULL);
-        record.setListOfStringMap("foo", singletonList(singletonMap("bar", null)));
-        assertTypedEquals(record.typedGet("foo", 0, "bar"), TypedObject.NULL);
+        record.setListOfStringMap("foo", asList(null, singletonMap("bar", "baz")));
+        assertTypedEquals(record.typedGet("foo", 0), TypedObject.NULL);
         record.setListOfStringMap("foo", singletonList(singletonMap("bar", "baz")));
         assertTypedEquals(record.typedGet("foo", 0, "dne"), TypedObject.NULL);
     }
@@ -805,8 +810,8 @@ public abstract class BulletRecordTest<T> {
         Assert.assertEquals(revert(another.get("newC")), singletonMap("c.1", false));
 
         // The Map isn't copied
-        Map<String, Boolean> anotherC = (Map<String, Boolean>) ((List) revert(record.get("c"))).get(0);
-        anotherC.put("c.1", true);
+        Map<String, Boolean> recordC = (Map<String, Boolean>) ((List) revert(record.get("c"))).get(0);
+        recordC.put("c.1", true);
         Assert.assertEquals(revert(another.get("newC")), singletonMap("c.1", true));
 
         // And not in the first record either
@@ -814,8 +819,8 @@ public abstract class BulletRecordTest<T> {
         Map<String, Boolean> originalC = (Map<String, Boolean>) ((List) revert(record.get("c"))).get(0);
         Assert.assertFalse(originalC.get("c.2"));
         // Reget from another
-        anotherC = (Map<String, Boolean>) ((List) revert(another.get("c"))).get(0);
-        Assert.assertFalse(anotherC.get("c.2"));
+        recordC = (Map<String, Boolean>) revert(another.get("newC"));
+        Assert.assertFalse(recordC.get("c.2"));
 
         another.set("newD", record, "d", 0);
         Assert.assertEquals(revert(another.get("newD")), "norf");
@@ -832,27 +837,27 @@ public abstract class BulletRecordTest<T> {
         record.setListOfStringMap("foo", singletonList(singletonMap("qux", "norf")));
         record.setString("bar", "baz");
 
-        Assert.assertEquals(revert(extractField(record, "bar")), "baz");
-        Assert.assertNull(revert(extractField(record, "bar.baz")));
-        Assert.assertEquals(revert(extractField(record, "foo")), singletonList(singletonMap("qux", "norf")));
-        Assert.assertNull(revert(extractField(record, "foo.bar")));
-        Assert.assertNull(revert(extractField(record, "dne")));
+        Assert.assertEquals(extractField(record, "bar"), "baz");
+        Assert.assertNull(extractField(record, "bar.baz"));
+        Assert.assertEquals(extractField(record, "foo"), singletonList(singletonMap("qux", "norf")));
+        Assert.assertNull(extractField(record, "foo.bar"));
+        Assert.assertNull(extractField(record, "dne"));
     }
 
     @Test
     public void testExtractMapField() {
         setMap(record, "foo", Pair.of("bar", singletonMap("baz", 1L)), Pair.of("baz", singletonMap("qux", 2L)));
 
-        Assert.assertTrue(revert(extractField(record, "foo")) instanceof Map);
-        Assert.assertEquals(revert(extractField(record, "foo.bar")), singletonMap("baz", 1L));
-        Assert.assertEquals(revert(extractField(record, "foo.baz")), singletonMap("qux", 2L));
-        Assert.assertEquals(revert(extractField(record, "foo.bar.baz")), 1L);
-        Assert.assertEquals(revert(extractField(record, "foo.baz.qux")), 2L);
-        Assert.assertNull(revert(extractField(record, "foo.bar.dne")));
+        Assert.assertTrue(extractField(record, "foo") instanceof Map);
+        Assert.assertEquals(extractField(record, "foo.bar"), singletonMap("baz", 1L));
+        Assert.assertEquals(extractField(record, "foo.baz"), singletonMap("qux", 2L));
+        Assert.assertEquals(extractField(record, "foo.bar.baz"), 1L);
+        Assert.assertEquals(extractField(record, "foo.baz.qux"), 2L);
+        Assert.assertNull(extractField(record, "foo.bar.dne"));
 
-        Assert.assertNull(revert(extractField(record, "dne")));
-        Assert.assertNull(revert(extractField(record, "foo.")));
-        Assert.assertNull(revert(extractField(record, "foo.dne")));
+        Assert.assertNull(extractField(record, "dne"));
+        Assert.assertNull(extractField(record, "foo."));
+        Assert.assertNull(extractField(record, "foo.dne"));
     }
 
     @Test
@@ -862,25 +867,25 @@ public abstract class BulletRecordTest<T> {
         data.add("qux");
         data.add("norf");
         record.setStringList("bar", data);
-        Assert.assertTrue(revert(extractField(record, "foo")) instanceof List);
-        Assert.assertEquals(revert(extractField(record, "foo.0")), singletonMap("a", 1L));
-        Assert.assertEquals(revert(extractField(record, "foo.1")), singletonMap("b", 2L));
-        Assert.assertEquals(revert(extractField(record, "foo.0.a")), 1L);
-        Assert.assertEquals(revert(extractField(record, "foo.1.b")), 2L);
-        Assert.assertNull(revert(extractField(record, "foo.0.c")));
-        Assert.assertTrue(revert(extractField(record, "bar")) instanceof List);
-        Assert.assertEquals(revert(extractField(record, "bar.0")), "qux");
-        Assert.assertEquals(revert(extractField(record, "bar.1")), "norf");
+        Assert.assertTrue(extractField(record, "foo") instanceof List);
+        Assert.assertEquals(extractField(record, "foo.0"), singletonMap("a", 1L));
+        Assert.assertEquals(extractField(record, "foo.1"), singletonMap("b", 2L));
+        Assert.assertEquals(extractField(record, "foo.0.a"), 1L);
+        Assert.assertEquals(extractField(record, "foo.1.b"), 2L);
+        Assert.assertNull(extractField(record, "foo.0.c"));
+        Assert.assertTrue(extractField(record, "bar") instanceof List);
+        Assert.assertEquals(extractField(record, "bar.0"), "qux");
+        Assert.assertEquals(extractField(record, "bar.1"), "norf");
 
-        Assert.assertNull(revert(extractField(record, "dne.-1")));
-        Assert.assertNull(revert(extractField(record, "dne.0")));
-        Assert.assertNull(revert(extractField(record, "dne.123123")));
+        Assert.assertNull(extractField(record, "dne.-1"));
+        Assert.assertNull(extractField(record, "dne.0"));
+        Assert.assertNull(extractField(record, "dne.123123"));
     }
 
     @Test
     public void testExtractListBadIndex() {
         setListMap(record, "foo", singletonMap("a", 1L));
-        Assert.assertNull(revert(extractField(record, "foo.1")));
+        Assert.assertNull(extractField(record, "foo.1"));
     }
 
     @Test
@@ -905,7 +910,7 @@ public abstract class BulletRecordTest<T> {
         int size = 0;
         for (Map.Entry<String, T> entry : record) {
             size++;
-            Assert.assertEquals(entry.getValue(), expectedMap.get(entry.getKey()));
+            Assert.assertEquals(revert(entry.getValue()), expectedMap.get(entry.getKey()));
         }
         Assert.assertEquals(size, 8);
         Assert.assertEquals(record.fieldCount(), 8);
@@ -929,7 +934,8 @@ public abstract class BulletRecordTest<T> {
     public void testEqualsDifferentRecord() {
         record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false);
         another.setString("1", "bar");
-        Assert.assertNotEquals(another, record);
+        // Use this or force assertEquals(Object, Object else assertEquals(Iterable, Iterable) is used, which may not work
+        Assert.assertFalse(record.equals(another));
     }
 
     @Test
@@ -942,7 +948,7 @@ public abstract class BulletRecordTest<T> {
         another.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
                .setStringList("6", singletonList("baz"))
                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
-        Assert.assertEquals(another, record);
+        Assert.assertTrue(record.equals(another));
         Assert.assertEquals(record.hashCode(), another.hashCode());
     }
 
@@ -960,7 +966,7 @@ public abstract class BulletRecordTest<T> {
                .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)))
                .setLongList("11", singletonList(4L));
 
-        Assert.assertEquals(record, another);
+        Assert.assertTrue(record.equals(another));
     }
 
     @Test
@@ -989,7 +995,8 @@ public abstract class BulletRecordTest<T> {
 
         setMap(another, "7", Pair.of("4.1", false), Pair.of("7.2", true));
         another.setLong("2", 42L).setDouble("4", 0.34);
-        Assert.assertEquals(record, another);
+        Assert.assertTrue(record.equals(another));
+
     }
 
     @Test
@@ -999,11 +1006,11 @@ public abstract class BulletRecordTest<T> {
               .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)));
 
         Object data;
-        data = record.getAndRemove("1");
+        data = revert(record.getAndRemove("1"));
         Assert.assertTrue(data instanceof String);
         Assert.assertEquals(data, "bar");
 
-        data = record.getAndRemove("3");
+        data = revert(record.getAndRemove("3"));
         Assert.assertTrue(data instanceof Boolean);
         Assert.assertEquals(data, false);
 

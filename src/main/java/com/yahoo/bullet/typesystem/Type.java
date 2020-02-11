@@ -529,7 +529,7 @@ public enum Type {
     }
 
     private static Type findTypeWithSubType(Collection<Type> types, Type subType) {
-        return types.stream().map(Type::getSubType).filter(subType::equals).findFirst().orElse(UNKNOWN);
+        return types.stream().filter(t -> subType.equals(t.getSubType())).findFirst().orElse(UNKNOWN);
     }
 
     private static boolean hasStringKeys(Map map) {
