@@ -152,9 +152,6 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
             throw new ClassCastException(field + " is not a map of maps. It has type " + value.getType());
         }
         Map<String, Map<String, Object>> first = (Map<String, Map<String, Object>>) value.getValue();
-        if (first == null) {
-            return TypedObject.NULL;
-        }
         Map<String, Object> second = first.get(subKey);
         if (second == null) {
             return TypedObject.NULL;

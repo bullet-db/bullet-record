@@ -9,12 +9,15 @@ import com.yahoo.bullet.record.BulletRecord;
 import com.yahoo.bullet.record.TypedBulletRecord;
 import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
+import lombok.AccessLevel;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * An implementation of {@link BulletRecord} using Avro for serialization.
@@ -28,12 +31,14 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
     private static final long serialVersionUID = -2200480102971008734L;
 
     private Map<String, Type> types = new HashMap<>();
+    @Setter(AccessLevel.PACKAGE)
     private LazyBulletAvro data = new LazyBulletAvro();
 
     @Override
     protected TypedAvroBulletRecord rawSet(String field, TypedObject object) {
+        Objects.requireNonNull(field);
         types.put(field, object.getType());
-        data.set(field, object);
+        data.set(field, object.getValue());
         return this;
     }
 

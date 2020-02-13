@@ -15,15 +15,12 @@ import java.util.function.Predicate;
 @Getter
 public class TypedObject implements Comparable<TypedObject> {
     private final Type type;
-    // value is undefined if type is Type.UNKNOWN
     private final Object value;
 
     public static final Predicate<TypedObject> IS_PRIMITIVE_OR_NULL = (t) -> t.getType() == Type.NULL || Type.PRIMITIVES.contains(t.getType());
     public static final Predicate<TypedObject> IS_NOT_NULL = (t) -> t.getType() != Type.NULL;
     public static final TypedObject UNKNOWN = new TypedObject(Type.UNKNOWN, null);
     public static final TypedObject NULL = new TypedObject(Type.NULL, null);
-
-    private static final String NULL_EXPRESSION = "null";
 
     /**
      * Constructor that wraps an Object into a type. See {@link Type#getType(Object)} to see how the type of the
@@ -36,10 +33,12 @@ public class TypedObject implements Comparable<TypedObject> {
     }
 
     /**
-     * Create a TypedObject with the given non-null type.
+     * Create a TypedObject with the given non-null type. Note that the value is not validated to be of that type. If
+     * it is not, all operation results are undefined. You should use {@link Type#cast(Object)} or
+     * {@link Type#forceCast(Type, Object)} to force the value to the desired type if it is not.
      *
      * @param type The type of the value.
-     * @param value The payload.
+     * @param value The value being wrapped.
      */
     public TypedObject(Type type, Object value) {
         Objects.requireNonNull(type);
@@ -129,28 +128,6 @@ public class TypedObject implements Comparable<TypedObject> {
     }
 
     /**
-     * Takes an object and returns a casted TypedObject according to this type. Note that this only casts safely. It can
-     * widen numeric types if loss of precision does not occur. It will not handle null representation of Strings and
-     * convert them to nulls.
-     *
-     * @param object The Object that is being cast.
-     * @return The casted TypedObject with this {@link Type} or {@link TypedObject#UNKNOWN} if the cast failed.
-     */
-    public TypedObject safeCastFromObject(Object object) {
-        return safeCastFromObject(type, object);
-    }
-
-    /**
-     * Force cast to the {@link TypedObject} with given {@link Type} castedType.
-     *
-     * @param castedType The {@link Type} to be casted to
-     * @return The casted {@link TypedObject}
-     */
-    public TypedObject forceCast(Type castedType) {
-        return new TypedObject(castedType, type.forceCast(castedType, value));
-    }
-
-    /**
      * Get the size of the value. Currently only {@link Type#LISTS}, {@link Type#MAPS} and {@link Type#STRING} support
      * getting a size.
      *
@@ -213,58 +190,72 @@ public class TypedObject implements Comparable<TypedObject> {
     }
 
     /**
-     * Returns true if this equals the specified object. The object can be a {@link TypedObject} or be constructed as
-     * a {@link TypedObject}.
+     * Force cast this object to the given {@link Type} castedType. Will return a new {@link TypedObject}.
      *
-     * @param object The object to compare to.
+     * @param castedType The {@link Type} to be casted to.
+     * @return The casted {@link TypedObject}.
+     */
+    public TypedObject forceCast(Type castedType) {
+        return new TypedObject(castedType, type.forceCast(castedType, value));
+    }
+
+    /**
+     * Returns true if this equals the specified object. The object can be a {@link TypedObject} or be constructed as
+     * a {@link TypedObject}. Note that this is not the same as {@link #equals(Object)}. This will do a safe cast to
+     * unify {@link Type#NUMERICS} and compare. This will basically use {@link #compareTo(TypedObject)} and check if the
+     * result is 0.
+     *
+     * @param target The object to compare to.
      * @return A boolean to indicate if this equals the specified object.
      */
-    public boolean equalTo(Object object) {
-        TypedObject target = object instanceof TypedObject ? (TypedObject) object : new TypedObject(object);
+    public boolean equalTo(TypedObject target) {
         return compareTo(target) == 0;
     }
 
     /**
-     * Compares this TypedObject to another. If this object has a null value and the other does not, returns a
-     * {@link Integer#MIN_VALUE}. If this has an {@link Type#UNKNOWN} type, returns {@link Integer#MIN_VALUE}. Only
-     * works on objects that have a type in {@link Type#PRIMITIVES}. Note that this will not cast at all and forcefully
-     * interpret the other value as an object of the same type, which might result in a {@link RuntimeException}.
+     * Compares this TypedObject to another. Only works on objects that have a type in {@link Type#PRIMITIVES}.
+     * An exception will be thrown when comparing objects whose types are not in {@link Type#PRIMITIVES}, excepting
+     * {@link Type#NULL}. This will force {@link Type#NUMERICS} that are not of the same {@link Type} to {@link Double}
+     * instances to compare them.
      * {@inheritDoc}
      *
-     * @param o The other non-null TypedObject.
+     * @param other The other non-null TypedObject.
      * @return {@inheritDoc}
-     * @throws RuntimeException if the other object could not compared to this.
+     * @throws UnsupportedOperationException if the other object could not compared to this.
      */
     @Override
-    public int compareTo(TypedObject o) {
-        Objects.requireNonNull(o);
-        // If type casting/unification needs to happen, it should go here. Assume this.type == o.type for now
+    public int compareTo(TypedObject other) {
+        if (!Type.canCompare(type, other.type)) {
+            throw new UnsupportedOperationException("Types are not comparable for " + this + " with " + other);
+        }
+        // Both are NULL
+        if (type == Type.NULL) {
+            return 0;
+        }
+        // If the types are not the same, not NULL and they can be compared, they must be numeric
+        if (type != other.type) {
+            return Double.compare(((Number) value).doubleValue(), ((Number) other.value).doubleValue());
+        }
+        // Types are the same and are primitive, but they aren't NULL or UNKNOWN
         switch (type) {
-            case STRING:
-                return value.toString().compareTo((String) o.value);
             case BOOLEAN:
-                return ((Boolean) value).compareTo((Boolean) o.value);
+                return ((Boolean) value).compareTo((Boolean) other.value);
             case INTEGER:
-                return ((Integer) value).compareTo((Integer) o.value);
+                return ((Integer) value).compareTo((Integer) other.value);
             case LONG:
-                return ((Long) value).compareTo((Long) o.value);
+                return ((Long) value).compareTo((Long) other.value);
             case FLOAT:
-                return ((Float) value).compareTo((Float) o.value);
+                return ((Float) value).compareTo((Float) other.value);
             case DOUBLE:
-                return ((Double) value).compareTo((Double) o.value);
-            case NULL:
-                // Return Integer.MIN_VALUE if the type isn't null. We could throw an exception instead.
-                return o.value == null ? 0 : Integer.MIN_VALUE;
-            case UNKNOWN:
-                return Integer.MIN_VALUE;
+                return ((Double) value).compareTo((Double) other.value);
             default:
-                throw new RuntimeException("Unsupported type cannot be compared: " + type);
+                return value.toString().compareTo((String) other.value);
         }
     }
 
     @Override
     public String toString() {
-        return type == Type.NULL ? NULL_EXPRESSION : value.toString();
+        return value + "::" + type;
     }
 
     @Override
@@ -282,7 +273,8 @@ public class TypedObject implements Comparable<TypedObject> {
     }
 
     /**
-     * Takes an object and returns a casted TypedObject according to this type.
+     * Takes an object and returns a casted TypedObject according to the given type. Note that this only casts safely.
+     * It can widen numeric types if loss of precision does not occur. See {@link Type#cast(Object)}.
      *
      * @param type The {@link Type} to cast the values to.
      * @param object The Object that is being cast.
@@ -291,7 +283,7 @@ public class TypedObject implements Comparable<TypedObject> {
     public static TypedObject safeCastFromObject(Type type, Object object) {
         // No longer makes a UNKNOWN object if object was null
         try {
-            return new TypedObject(type, type.castObject(object));
+            return new TypedObject(type, type.cast(object));
         } catch (RuntimeException e) {
             return UNKNOWN;
         }
@@ -304,26 +296,19 @@ public class TypedObject implements Comparable<TypedObject> {
      * @param value The Object value that is being cast to a numeric.
      * @return The casted TypedObject with the type set to numeric or {@link TypedObject#UNKNOWN} if not.
      */
-    public static TypedObject forceCastAsNumber(Object value) {
+    public static TypedObject forceCastStringToNumber(Object value) {
         if (value == null) {
             return UNKNOWN;
         }
         try {
-            return TypedObject.forceCast(Type.DOUBLE, value.toString());
+            return new TypedObject(Type.DOUBLE, Type.STRING.forceCast(Type.DOUBLE, value.toString()));
         } catch (RuntimeException e) {
             return UNKNOWN;
         }
     }
 
-    /**
-     * Force cast the value String to the {@link TypedObject} with given {@link Type} castedType.
-     *
-     * @param castedType The {@link Type} to be casted to
-     * @param value The value String to be casted.
-     * @return The casted {@link TypedObject}
-     */
-    public static TypedObject forceCast(Type castedType, String value) {
-        return new TypedObject(castedType, Type.STRING.forceCast(castedType, value));
+    private boolean equalTo(Object object) {
+        return equalTo(new TypedObject(object));
     }
 
     private static boolean containsValueInPrimitiveMap(Map<?, ?> map, TypedObject target) {

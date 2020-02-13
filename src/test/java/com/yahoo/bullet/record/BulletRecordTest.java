@@ -919,8 +919,7 @@ public abstract class BulletRecordTest<T> {
     @Test
     public void testToString() {
         Assert.assertEquals(record.toString(), "{}");
-        record.setString("1", "bar");
-        Assert.assertEquals(record.toString(), "{1:bar}");
+        // Add additional checks in subclasses
     }
 
     @Test
@@ -1014,7 +1013,7 @@ public abstract class BulletRecordTest<T> {
         Assert.assertTrue(data instanceof Boolean);
         Assert.assertEquals(data, false);
 
-        data = record.getAndRemove("7.7.2");
+        data = revert(record.getAndRemove("7.7.2"));
         Assert.assertNull(data);
     }
 

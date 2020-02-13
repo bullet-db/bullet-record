@@ -21,7 +21,7 @@ public class TypedSimpleBulletRecordTest extends BulletRecordTest<TypedObject> {
     protected Object revert(TypedObject data) {
         // If get was used to retrive this, we need to handle nulls
         if (data == null) {
-            return TypedObject.NULL;
+            return null;
         }
         return data.getType() == Type.NULL ? null : data.getValue();
     }
@@ -32,6 +32,14 @@ public class TypedSimpleBulletRecordTest extends BulletRecordTest<TypedObject> {
         simpleAnother = new TypedSimpleBulletRecord();
         record = simpleRecord;
         another = simpleAnother;
+    }
+
+    @Override
+    @Test
+    public void testToString() {
+        Assert.assertEquals(record.toString(), "{}");
+        record.setString("1", "bar");
+        Assert.assertEquals(record.toString(), "{1:bar::STRING}");
     }
 
     @Test

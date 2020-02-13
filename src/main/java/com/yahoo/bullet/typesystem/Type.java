@@ -117,7 +117,7 @@ public enum Type {
      * @return The casted object.
      * @throws RuntimeException if the cast cannot be done safely.
      */
-    public Object castObject(Object object) {
+    public Object cast(Object object) {
         // Any null object can be casted to anything
         if (object == null) {
             return null;
@@ -137,7 +137,7 @@ public enum Type {
      * Attempt to force cast the Object of this {@link Type} type to the given {@link Type} castedType. Follows widening
      * conventions for primitive numeric data, including within maps and lists. However, types will be forced with
      * possible loss of precision or data in other cases that can be done. Otherwise, the cast will fail with a
-     * {@link RuntimeException} when it is not possible to cast at all. See {@link #castObject(Object)} if you are only
+     * {@link RuntimeException} when it is not possible to cast at all. See {@link #cast(Object)} if you are only
      * interested in performing safe casts.
      *
      * Note that maps will be casted to {@link HashMap} and lists will be casted to {@link ArrayList}.
@@ -256,6 +256,30 @@ public enum Type {
     // *************************************** Type casting helpers ***************************************
 
     /**
+     * Check if it is possible to compare the given {@link Type}. It will allow comparing only {@link Type#PRIMITIVES}.
+     *
+     * @param first The first non-null {@link Type}.
+     * @param second The second non-null {@link Type}.
+     * @return A boolean denoting if the comparison can be done.
+     */
+    public static boolean canCompare(Type first, Type second) {
+        // Null Types can
+        if (first == NULL && second == NULL) {
+            return true;
+        }
+        // UNKNOWNS and non-Primitives Types cannot
+        if (!areBothIn(first, second, PRIMITIVES)) {
+            return false;
+        }
+        // Equal Type Primitives can
+        if (first == second) {
+            return true;
+        }
+        // Non-equal Numerics can
+        return areBothIn(first, second, NUMERICS);
+    }
+
+    /**
      * Check if it is possible to cast to the given {@link Type} from the given {@link Type}. This cast does not make
      * sure that information is not lost. If it is possible to do the cast, this will return true.
      *
@@ -263,7 +287,7 @@ public enum Type {
      * @param initialType The source type to cast from.
      * @return A boolean denoting if the cast can be done at all.
      */
-    public static boolean canCast(Type finalType, Type initialType) {
+    public static boolean canForceCast(Type finalType, Type initialType) {
         if (finalType == initialType) {
             return true;
         }
@@ -297,13 +321,15 @@ public enum Type {
             case LONG_MAP_LIST:
                 return initialType == INTEGER_MAP_LIST;
             case DOUBLE:
-                return initialType == FLOAT;
+                return NUMERICS.contains(initialType);
             case DOUBLE_MAP:
-                return initialType == FLOAT_MAP;
+                return PRIMITIVE_MAPS.contains(initialType) && canSafeCast(DOUBLE, initialType.getSubType());
             case DOUBLE_LIST:
-                return initialType == FLOAT_LIST;
+                return PRIMITIVE_LISTS.contains(initialType) && canSafeCast(DOUBLE, initialType.getSubType());
+            case DOUBLE_MAP_MAP:
+                return COMPLEX_MAPS.contains(initialType) && canSafeCast(DOUBLE_MAP, initialType.getSubType());
             case DOUBLE_MAP_LIST:
-                return initialType == FLOAT_MAP_LIST;
+                return COMPLEX_LISTS.contains(initialType) && canSafeCast(DOUBLE_MAP, initialType.getSubType());
             default:
                 return false;
         }
@@ -313,7 +339,7 @@ public enum Type {
         if (object == null) {
             return null;
         }
-        if (!canCast(targetType, sourceType)) {
+        if (!canForceCast(targetType, sourceType)) {
             throw new ClassCastException("Cannot cast to " + targetType + " from " + sourceType);
         }
         switch (targetType) {
