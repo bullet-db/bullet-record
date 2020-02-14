@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017, Yahoo Inc.
+ *  Copyright 2020, Yahoo Inc.
  *  Licensed under the terms of the Apache License, Version 2.0.
  *  See the LICENSE file associated with the project for terms.
  */
@@ -12,10 +12,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 @Getter
@@ -94,7 +93,7 @@ public enum Type {
      *
      * @param object The object whose type is to be determined.
      * @return {@link Type} for this object, the {@link Type#NULL} if the object was null or {@link Type#UNKNOWN}
-     * if the type could not be determined.
+     *         if the type could not be determined.
      */
     public static Type getType(Object object) {
         if (object == null) {
@@ -339,153 +338,177 @@ public enum Type {
         if (object == null) {
             return null;
         }
-        if (!canForceCast(targetType, sourceType)) {
-            throw new ClassCastException("Cannot cast to " + targetType + " from " + sourceType);
+        if (canForceCast(targetType, sourceType)) {
+            switch (targetType) {
+                case INTEGER:
+                    return castToInteger(sourceType, object);
+                case BOOLEAN:
+                    return castToBoolean(sourceType, object);
+                case STRING:
+                    return object.toString();
+                case LONG:
+                    return castToLong(sourceType, object);
+                case FLOAT:
+                    return castToFloat(sourceType, object);
+                case DOUBLE:
+                    return castToDouble(sourceType, object);
+                case STRING_MAP:
+                case BOOLEAN_MAP:
+                case INTEGER_MAP:
+                case LONG_MAP:
+                case FLOAT_MAP:
+                case DOUBLE_MAP:
+                case STRING_MAP_MAP:
+                case BOOLEAN_MAP_MAP:
+                case INTEGER_MAP_MAP:
+                case LONG_MAP_MAP:
+                case FLOAT_MAP_MAP:
+                case DOUBLE_MAP_MAP:
+                    return castToMap(targetType, sourceType, object);
+                case STRING_LIST:
+                case BOOLEAN_LIST:
+                case INTEGER_LIST:
+                case LONG_LIST:
+                case FLOAT_LIST:
+                case DOUBLE_LIST:
+                case STRING_MAP_LIST:
+                case BOOLEAN_MAP_LIST:
+                case INTEGER_MAP_LIST:
+                case LONG_MAP_LIST:
+                case FLOAT_MAP_LIST:
+                case DOUBLE_MAP_LIST:
+                    return castToList(targetType, sourceType, object);
+            }
         }
-        switch (targetType) {
-            case INTEGER:
-                return castToInteger(sourceType, object);
-            case BOOLEAN:
-                return castToBoolean(sourceType, object);
-            case STRING:
-                return object.toString();
-            case LONG:
-                return castToLong(sourceType, object);
-            case FLOAT:
-                return castToFloat(sourceType, object);
-            case DOUBLE:
-                return castToDouble(sourceType, object);
-            case STRING_MAP:
-            case BOOLEAN_MAP:
-            case INTEGER_MAP:
-            case LONG_MAP:
-            case FLOAT_MAP:
-            case DOUBLE_MAP:
-            case STRING_MAP_MAP:
-            case BOOLEAN_MAP_MAP:
-            case INTEGER_MAP_MAP:
-            case LONG_MAP_MAP:
-            case FLOAT_MAP_MAP:
-            case DOUBLE_MAP_MAP:
-                return castToMap(targetType, sourceType, object);
-            case STRING_LIST:
-            case BOOLEAN_LIST:
-            case INTEGER_LIST:
-            case LONG_LIST:
-            case FLOAT_LIST:
-            case DOUBLE_LIST:
-            case STRING_MAP_LIST:
-            case BOOLEAN_MAP_LIST:
-            case INTEGER_MAP_LIST:
-            case LONG_MAP_LIST:
-            case FLOAT_MAP_LIST:
-            case DOUBLE_MAP_LIST:
-                return castToList(targetType, sourceType, object);
-            default:
-                // Unreachable because canCast will cover these other enums
-                throw new UnsupportedOperationException("Nothing can be casted to " + targetType);
-        }
+        throw new ClassCastException("Cannot cast to " + targetType + " from " + sourceType);
     }
 
     private static Integer castToInteger(Type type, Object object) {
+        Integer result = null;
         switch (type) {
             case INTEGER:
-                return (Integer) object;
+                result = (Integer) object;
+                break;
             case LONG:
-                return ((Long) object).intValue();
+                result = ((Long) object).intValue();
+                break;
             case FLOAT:
-                return (int) (((Float) object).floatValue());
+                result = (int) (((Float) object).floatValue());
+                break;
             case DOUBLE:
-                return (int) (((Double) object).doubleValue());
+                result = (int) (((Double) object).doubleValue());
+                break;
             case STRING:
-                return (int) (Double.parseDouble((String) object));
+                result = (int) (Double.parseDouble((String) object));
+                break;
             case BOOLEAN:
-                return ((Boolean) object) ? 1 : 0;
-            default:
-                throw new ClassCastException("Can not cast to Integer from type: " + type);
+                result = ((Boolean) object) ? 1 : 0;
+                break;
         }
+        return result;
     }
 
     private static Long castToLong(Type type, Object object) {
+        Long result = null;
         switch (type) {
             case INTEGER:
-                return ((Integer) object).longValue();
+                result = ((Integer) object).longValue();
+                break;
             case LONG:
-                return (Long) object;
+                result = (Long) object;
+                break;
             case FLOAT:
-                return (long) (((Float) object).floatValue());
+                result = (long) (((Float) object).floatValue());
+                break;
             case DOUBLE:
-                return (long) (((Double) object).doubleValue());
+                result = (long) (((Double) object).doubleValue());
+                break;
             case STRING:
-                return (long) (Double.parseDouble((String) object));
+                result = (long) (Double.parseDouble((String) object));
+                break;
             case BOOLEAN:
-                return ((Boolean) object) ? 1L : 0L;
-            default:
-                throw new ClassCastException("Can not cast to Long from type: " + type);
+                result = ((Boolean) object) ? 1L : 0L;
+                break;
         }
+        return result;
     }
 
     private static Float castToFloat(Type type, Object object) {
+        Float result = null;
         switch (type) {
             case INTEGER:
-                return (float) (Integer) object;
+                result = (float) (Integer) object;
+                break;
             case LONG:
-                return (float) (Long) object;
+                result = (float) (Long) object;
+                break;
             case FLOAT:
-                return (Float) object;
+                result = (Float) object;
+                break;
             case DOUBLE:
-                return ((Double) object).floatValue();
+                result = ((Double) object).floatValue();
+                break;
             case STRING:
-                return (float) (Double.parseDouble((String) object));
+                result = (float) (Double.parseDouble((String) object));
+                break;
             case BOOLEAN:
-                return ((Boolean) object) ? 1.0f : 0.0f;
-            default:
-                throw new ClassCastException("Can not cast to Float from type: " + type);
+                result = ((Boolean) object) ? 1.0f : 0.0f;
+                break;
         }
+        return result;
     }
 
     private static Double castToDouble(Type type, Object object) {
+        Double result = null;
         switch (type) {
             case INTEGER:
-                return (double) (Integer) object;
+                result = (double) (Integer) object;
+                break;
             case LONG:
-                return (double) (Long) object;
+                result = (double) (Long) object;
+                break;
             case FLOAT:
-                return ((Float) object).doubleValue();
+                result = ((Float) object).doubleValue();
+                break;
             case DOUBLE:
-                return (Double) object;
+                result = (Double) object;
+                break;
             case STRING:
-                return Double.parseDouble((String) object);
+                result = Double.parseDouble((String) object);
+                break;
             case BOOLEAN:
-                return ((Boolean) object) ? 1.0 : 0.0;
-            default:
-                throw new ClassCastException("Can not cast to Double from type: " + type);
+                result = ((Boolean) object) ? 1.0 : 0.0;
+                break;
         }
+        return result;
     }
 
     private static Boolean castToBoolean(Type type, Object object) {
+        Boolean result = null;
         switch (type) {
             case INTEGER:
-                return (Integer) object != 0;
+                result = (Integer) object != 0;
+                break;
             case LONG:
-                return (Long) object != 0;
+                result = (Long) object != 0;
+                break;
             case FLOAT:
-                return (Float) object != 0;
+                result = (Float) object != 0;
+                break;
             case DOUBLE:
-                return (Double) object != 0;
+                result = (Double) object != 0;
+                break;
             case STRING:
-                return Boolean.parseBoolean((String) object);
+                result = Boolean.parseBoolean((String) object);
+                break;
             case BOOLEAN:
-                return (Boolean) object;
-            default:
-                throw new ClassCastException("Can not cast to Boolean from type: " + type);
+                result = (Boolean) object;
+                break;
         }
+        return result;
     }
 
     private static Map castToMap(Type targetMapType, Type sourceType, Object object) {
-        if (!MAPS.contains(sourceType)) {
-            throw new ClassCastException("Cannot cast non-map" + object + " to a Map");
-        }
         // sourceType is in MAPS, i.e. object is a map
         Map asMap = (Map) object;
         Map map = new HashMap();
@@ -500,9 +523,6 @@ public enum Type {
     }
 
     private static List castToList(Type targetListType, Type sourceType, Object object) {
-        if (!LISTS.contains(sourceType)) {
-            throw new ClassCastException("Cannot cast non-list" + object + " to a List");
-        }
         // sourceType is in LISTS, i.e. object is a list
         List asList = (List) object;
         List list = new ArrayList();
@@ -531,27 +551,32 @@ public enum Type {
         if (map.isEmpty() || !hasStringKeys(map)) {
             return UNKNOWN;
         }
-        return findNestedValueType(anyNonNullValue(map));
+        return findNestedValueType(map.values());
     }
 
     private static Type findSubType(List list) {
         if (list.isEmpty()) {
             return UNKNOWN;
         }
-        return findNestedValueType(anyNonNullValue(list));
+        return findNestedValueType(list);
     }
 
-    private static Type findNestedValueType(Optional<Object> nestedValue) {
-        if (!nestedValue.isPresent()) {
-            return UNKNOWN;
+    private static Type findNestedValueType(Collection nestedValue) {
+        Type nestedType = UNKNOWN;
+        // Try till a nested type is gotten because we could have objects that are null, empty or have null mappings
+        for (Iterator it = nestedValue.iterator(); it.hasNext() && nestedType == UNKNOWN;) {
+            Object value = it.next();
+            if (value == null) {
+                continue;
+            }
+            if (value instanceof Map) {
+                // Only have Map of Map of Primitives or List of Map of Primitives, so the type has to be in Primitive Maps
+                nestedType = findTypeWithSubType(PRIMITIVE_MAPS, findSubType((Map) value));
+            } else {
+                nestedType = getPrimitiveType(value);
+            }
         }
-        Object value = nestedValue.get();
-        if (value instanceof Map) {
-            // Only have Map of Map of Primitives or List of Map of Primitives, so the type has to be in Primitive Maps
-            return findTypeWithSubType(PRIMITIVE_MAPS, findSubType((Map) value));
-        } else {
-            return getPrimitiveType(value);
-        }
+        return nestedType;
     }
 
     private static Type findTypeWithSubType(Collection<Type> types, Type subType) {
@@ -560,14 +585,6 @@ public enum Type {
 
     private static boolean hasStringKeys(Map map) {
         return map.keySet().stream().allMatch(o -> o instanceof String || o == null);
-    }
-
-    private static Optional<Object> anyNonNullValue(Map map) {
-        return map.values().stream().filter(Objects::nonNull).findAny();
-    }
-
-    private static Optional<Object> anyNonNullValue(List list) {
-        return list.stream().filter(Objects::nonNull).findAny();
     }
 
     // *************************************** Type collection builders ***************************************
