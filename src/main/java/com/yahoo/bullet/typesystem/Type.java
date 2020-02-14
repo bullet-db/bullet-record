@@ -315,6 +315,8 @@ public enum Type {
                 return initialType == INTEGER;
             case LONG_MAP:
                 return initialType == INTEGER_MAP;
+            case LONG_LIST:
+                return initialType == INTEGER_LIST;
             case LONG_MAP_MAP:
                 return initialType == INTEGER_MAP_MAP;
             case LONG_MAP_LIST:

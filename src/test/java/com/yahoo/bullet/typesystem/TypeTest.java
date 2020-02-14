@@ -8,9 +8,11 @@ package com.yahoo.bullet.typesystem;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 
 import static java.util.Arrays.asList;
@@ -49,7 +51,23 @@ public class TypeTest {
     private static final List<Map<String, Double>> SIMPLE_DOUBLE_MAP_LIST = singletonList(SIMPLE_DOUBLE_MAP);
     private static final List<Map<String, String>> SIMPLE_STRING_MAP_LIST = singletonList(SIMPLE_STRING_MAP);
 
-    public static void assertException(Runnable statement, String expectedExceptionRegex) {
+    private static void assertAllSatisfy(Collection<Type> collection, BiPredicate<Type, Type> check) {
+        for (Type typeA : collection) {
+            for (Type typeB : collection) {
+                assertTrue(check.test(typeA, typeB));
+            }
+        }
+    }
+
+    private static void assertAllFail(Collection<Type> collectionA, Collection<Type> collectionB, BiPredicate<Type, Type> check) {
+        for (Type typeA : collectionA) {
+            for (Type typeB : collectionB) {
+                assertFalse(check.test(typeA, typeB));
+            }
+        }
+    }
+
+    private static void assertException(Runnable statement, String expectedExceptionRegex) {
         try {
             statement.run();
         } catch (RuntimeException e) {
@@ -274,38 +292,9 @@ public class TypeTest {
 
     @Test
     public void testFromNullForceCasting() {
-        assertNull(Type.NULL.forceCast(Type.NULL, null));
-        assertNull(Type.UNKNOWN.forceCast(Type.UNKNOWN, null));
-        assertNull(Type.BOOLEAN.forceCast(Type.BOOLEAN, null));
-        assertNull(Type.INTEGER.forceCast(Type.INTEGER, null));
-        assertNull(Type.LONG.forceCast(Type.LONG, null));
-        assertNull(Type.FLOAT.forceCast(Type.FLOAT, null));
-        assertNull(Type.DOUBLE.forceCast(Type.DOUBLE, null));
-        assertNull(Type.STRING.forceCast(Type.STRING, null));
-        assertNull(Type.BOOLEAN_MAP.forceCast(Type.BOOLEAN_MAP, null));
-        assertNull(Type.INTEGER_MAP.forceCast(Type.INTEGER_MAP, null));
-        assertNull(Type.LONG_MAP.forceCast(Type.LONG_MAP, null));
-        assertNull(Type.FLOAT_MAP.forceCast(Type.FLOAT_MAP, null));
-        assertNull(Type.DOUBLE_MAP.forceCast(Type.DOUBLE_MAP, null));
-        assertNull(Type.STRING_MAP.forceCast(Type.STRING_MAP, null));
-        assertNull(Type.BOOLEAN_MAP_MAP.forceCast(Type.BOOLEAN_MAP_MAP, null));
-        assertNull(Type.INTEGER_MAP_MAP.forceCast(Type.INTEGER_MAP_MAP, null));
-        assertNull(Type.LONG_MAP_MAP.forceCast(Type.LONG_MAP_MAP, null));
-        assertNull(Type.FLOAT_MAP_MAP.forceCast(Type.FLOAT_MAP_MAP, null));
-        assertNull(Type.DOUBLE_MAP_MAP.forceCast(Type.DOUBLE_MAP_MAP, null));
-        assertNull(Type.STRING_MAP_MAP.forceCast(Type.STRING_MAP_MAP, null));
-        assertNull(Type.BOOLEAN_LIST.forceCast(Type.BOOLEAN_LIST, null));
-        assertNull(Type.INTEGER_LIST.forceCast(Type.INTEGER_LIST, null));
-        assertNull(Type.LONG_LIST.forceCast(Type.LONG_LIST, null));
-        assertNull(Type.FLOAT_LIST.forceCast(Type.FLOAT_LIST, null));
-        assertNull(Type.DOUBLE_LIST.forceCast(Type.DOUBLE_LIST, null));
-        assertNull(Type.STRING_LIST.forceCast(Type.STRING_LIST, null));
-        assertNull(Type.BOOLEAN_MAP_LIST.forceCast(Type.BOOLEAN_MAP_LIST, null));
-        assertNull(Type.INTEGER_MAP_LIST.forceCast(Type.INTEGER_MAP_LIST, null));
-        assertNull(Type.LONG_MAP_LIST.forceCast(Type.LONG_MAP_LIST, null));
-        assertNull(Type.FLOAT_MAP_LIST.forceCast(Type.FLOAT_MAP_LIST, null));
-        assertNull(Type.DOUBLE_MAP_LIST.forceCast(Type.DOUBLE_MAP_LIST, null));
-        assertNull(Type.STRING_MAP_LIST.forceCast(Type.STRING_MAP_LIST, null));
+        for (Type type : Type.values()) {
+            assertNull(type.forceCast(type, null));
+        }
     }
 
     @Test
@@ -343,7 +332,7 @@ public class TypeTest {
     }
 
     @Test
-    public void testFromIntegerForceCast() {
+    public void testForceCastFromIntegerTypes() {
         assertEquals(Type.INTEGER.forceCast(Type.LONG, 1), 1L);
         assertEquals(Type.INTEGER.forceCast(Type.FLOAT, 3), 3.0f);
         assertEquals(Type.INTEGER.forceCast(Type.DOUBLE, 3), 3.0);
@@ -373,7 +362,7 @@ public class TypeTest {
     }
 
     @Test
-    public void testFromLongForceCast() {
+    public void testForceCastFromLongTypes() {
         assertEquals(Type.LONG.forceCast(Type.INTEGER, Long.MAX_VALUE), -1);
         assertEquals(Type.LONG.forceCast(Type.FLOAT, 3L), 3.0f);
         assertEquals(Type.LONG.forceCast(Type.DOUBLE, 3L), 3.0);
@@ -403,7 +392,7 @@ public class TypeTest {
     }
 
     @Test
-    public void testFromFloatForceCast() {
+    public void testForceCastFromFloatTypes() {
         assertEquals(Type.FLOAT.forceCast(Type.INTEGER, 3.2f), 3);
         assertEquals(Type.FLOAT.forceCast(Type.LONG, 3.2f), 3L);
         Object object = Type.FLOAT.forceCast(Type.DOUBLE, 3.2f);
@@ -434,7 +423,7 @@ public class TypeTest {
     }
 
     @Test
-    public void testFromDoubleForceCast() {
+    public void testForceCastFromDoubleTypes() {
         assertEquals(Type.DOUBLE.forceCast(Type.INTEGER, 3.2), 3);
         assertEquals(Type.DOUBLE.forceCast(Type.LONG, 3.2), 3L);
         Object object = Type.DOUBLE.forceCast(Type.FLOAT, 3.2);
@@ -465,7 +454,7 @@ public class TypeTest {
     }
 
     @Test
-    public void testFromBooleanForceCast() {
+    public void testForceCastFromBooleanTypes() {
         assertEquals(Type.BOOLEAN.forceCast(Type.INTEGER, true), 1);
         assertEquals(Type.BOOLEAN.forceCast(Type.INTEGER, false), 0);
         assertEquals(Type.BOOLEAN.forceCast(Type.FLOAT, true), 1.0f);
@@ -588,5 +577,80 @@ public class TypeTest {
         assertTrue(Type.isList(Type.BOOLEAN_MAP_LIST));
         assertFalse(Type.isPrimitiveList(Type.BOOLEAN_MAP_LIST));
         assertTrue(Type.isComplexList(Type.BOOLEAN_MAP_LIST));
+    }
+
+    @Test
+    public void testCanCompare() {
+        assertTrue(Type.canCompare(Type.NULL, Type.NULL));
+        assertFalse(Type.canCompare(Type.UNKNOWN, Type.NULL));
+        assertFalse(Type.canCompare(Type.NULL, Type.UNKNOWN));
+        assertFalse(Type.canCompare(Type.UNKNOWN, Type.UNKNOWN));
+        assertFalse(Type.canCompare(Type.STRING_MAP, Type.FLOAT_MAP));
+        assertFalse(Type.canCompare(Type.STRING_LIST, Type.INTEGER_LIST));
+        assertFalse(Type.canCompare(Type.STRING_MAP_MAP, Type.DOUBLE_MAP_MAP));
+        assertFalse(Type.canCompare(Type.STRING_MAP_LIST, Type.BOOLEAN_MAP_LIST));
+        for (Type type : Type.PRIMITIVES) {
+            assertTrue(Type.canCompare(type, type));
+        }
+        assertAllSatisfy(Type.NUMERICS, Type::canCompare);
+    }
+
+    @Test
+    public void testCanForceCast() {
+        for (Type type : Type.values()) {
+            assertTrue(Type.canForceCast(type, type));
+        }
+        assertAllSatisfy(Type.PRIMITIVES, Type::canForceCast);
+        assertAllSatisfy(Type.PRIMITIVE_MAPS, Type::canForceCast);
+        assertAllSatisfy(Type.PRIMITIVE_LISTS, Type::canForceCast);
+        assertAllSatisfy(Type.COMPLEX_MAPS, Type::canForceCast);
+        assertAllSatisfy(Type.COMPLEX_LISTS, Type::canForceCast);
+    }
+
+    @Test
+    public void testCanSafeCast() {
+        for (Type type : Type.values()) {
+            assertTrue(Type.canSafeCast(type, type));
+        }
+        for (Type type : Type.PRIMITIVES) {
+            assertTrue(Type.canSafeCast(Type.STRING, type));
+        }
+        assertTrue(Type.canSafeCast(Type.LONG, Type.INTEGER));
+        assertTrue(Type.canSafeCast(Type.LONG_MAP, Type.INTEGER_MAP));
+        assertTrue(Type.canSafeCast(Type.LONG_LIST, Type.INTEGER_LIST));
+        assertTrue(Type.canSafeCast(Type.LONG_MAP_MAP, Type.INTEGER_MAP_MAP));
+        assertTrue(Type.canSafeCast(Type.LONG_MAP_LIST, Type.INTEGER_MAP_LIST));
+        assertFalse(Type.canSafeCast(Type.LONG, Type.FLOAT));
+        assertFalse(Type.canSafeCast(Type.LONG_MAP, Type.FLOAT_MAP));
+        assertFalse(Type.canSafeCast(Type.LONG_LIST, Type.FLOAT_LIST));
+        assertFalse(Type.canSafeCast(Type.LONG_MAP_MAP, Type.FLOAT_MAP_MAP));
+        assertFalse(Type.canSafeCast(Type.LONG_MAP_LIST, Type.FLOAT_MAP_LIST));
+        assertFalse(Type.canSafeCast(Type.LONG, Type.DOUBLE));
+        assertFalse(Type.canSafeCast(Type.LONG_MAP, Type.DOUBLE_MAP));
+        assertFalse(Type.canSafeCast(Type.LONG_LIST, Type.DOUBLE_LIST));
+        assertFalse(Type.canSafeCast(Type.LONG_MAP_MAP, Type.DOUBLE_MAP_MAP));
+        assertFalse(Type.canSafeCast(Type.LONG_MAP_LIST, Type.DOUBLE_MAP_LIST));
+
+        assertTrue(Type.canSafeCast(Type.DOUBLE, Type.INTEGER));
+        assertTrue(Type.canSafeCast(Type.DOUBLE_MAP, Type.INTEGER_MAP));
+        assertTrue(Type.canSafeCast(Type.DOUBLE_LIST, Type.INTEGER_LIST));
+        assertTrue(Type.canSafeCast(Type.DOUBLE_MAP_MAP, Type.INTEGER_MAP_MAP));
+        assertTrue(Type.canSafeCast(Type.DOUBLE_MAP_LIST, Type.INTEGER_MAP_LIST));
+        assertTrue(Type.canSafeCast(Type.DOUBLE, Type.LONG));
+        assertTrue(Type.canSafeCast(Type.DOUBLE_MAP, Type.LONG_MAP));
+        assertTrue(Type.canSafeCast(Type.DOUBLE_LIST, Type.LONG_LIST));
+        assertTrue(Type.canSafeCast(Type.DOUBLE_MAP_MAP, Type.LONG_MAP_MAP));
+        assertTrue(Type.canSafeCast(Type.DOUBLE_MAP_LIST, Type.LONG_MAP_LIST));
+        assertTrue(Type.canSafeCast(Type.DOUBLE, Type.FLOAT));
+        assertTrue(Type.canSafeCast(Type.DOUBLE_MAP, Type.FLOAT_MAP));
+        assertTrue(Type.canSafeCast(Type.DOUBLE_LIST, Type.FLOAT_LIST));
+        assertTrue(Type.canSafeCast(Type.DOUBLE_MAP_MAP, Type.FLOAT_MAP_MAP));
+        assertTrue(Type.canSafeCast(Type.DOUBLE_MAP_LIST, Type.FLOAT_MAP_LIST));
+
+        assertAllFail(Type.PRIMITIVES, Type.LISTS, Type::canSafeCast);
+        assertAllFail(Type.PRIMITIVES, Type.MAPS, Type::canSafeCast);
+        assertAllFail(Type.MAPS, Type.LISTS, Type::canSafeCast);
+        assertAllFail(Type.PRIMITIVE_MAPS, Type.COMPLEX_MAPS, Type::canSafeCast);
+        assertAllFail(Type.PRIMITIVE_LISTS, Type.COMPLEX_LISTS, Type::canSafeCast);
     }
 }
