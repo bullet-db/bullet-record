@@ -5,164 +5,66 @@
  */
 package com.yahoo.bullet.typesystem;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.Serializable;
+import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class Schema implements Serializable {
     private static final long serialVersionUID = 4384778745518403997L;
     private static final Field MISSING = new Field("", Type.NULL);
 
     private final LinkedHashMap<String, Field> fieldMap;
 
-    @Getter @RequiredArgsConstructor
-    public static class Field {
-        @NonNull
-        private final String name;
-        @NonNull
-        private Type type;
-
-        /**
-         * Copies this field.
-         *
-         * @return The copied {@link Field}.
-         */
-        public Field copy() {
-            return new Field(name, type);
-        }
-    }
-
-    // Utility field classes with additional metadata
-
-    @Getter @RequiredArgsConstructor
-    public static class SubField {
-        @NonNull
-        private final String name;
-        @NonNull
-        private String description;
-
-        /**
-         * Copies this sub-field.
-         *
-         * @return The copied {@link SubField}.
-         */
-        public SubField copy() {
-            return new SubField(name, description);
-        }
-    }
-
-    @Getter
-    public static class DetailedField extends Field {
-        @NonNull
-        private String description;
-
-        /**
-         * Constructor.
-         *
-         * @param name The String name of the field.
-         * @param type The {@link Type} of the field.
-         * @param description A String description for this field.
-         */
-        public DetailedField(String name, Type type, String description) {
-            super(name, type);
-            this.description = description;
-        }
-
-        /**
-         * Copies this detailed field.
-         *
-         * @return The copied {@link DetailedField}.
-         */
-        @Override
-        public DetailedField copy() {
-            return new DetailedField(getName(), getType(), description);
-        }
-    }
-
-    @Getter
-    public static class DetailedMapField extends DetailedField {
-        private List<SubField> subFields;
-
-        /**
-         * Constructor.
-         *
-         * @param name The String name of the field.
-         * @param type The {@link Type} of the field.
-         * @param description A String description for this field.
-         * @param subFields A non-null {@link List} of {@link SubField} enumerations for this field.
-         */
-        public DetailedMapField(String name, Type type, String description, List<SubField> subFields) {
-            super(name, type, description);
-            this.subFields = subFields;
-        }
-
-        /**
-         * Copies this detailed map field.
-         *
-         * @return The copied {@link DetailedMapField}.
-         */
-        @Override
-        public DetailedMapField copy() {
-            return new DetailedMapField(getName(), getType(), getDescription(), copy(subFields));
-        }
-
-        /**
-         * Copies the sub-fields.
-         *
-         * @param subFields The {@link List} of {@link SubField} to copy.
-         * @return The copied sub-fields.
-         */
-        static List<SubField> copy(List<SubField> subFields) {
-            return subFields == null ? null : subFields.stream().map(SubField::copy).collect(Collectors.toList());
-        }
-    }
-
-    @Getter
-    public static class DetailedMapMapField extends DetailedMapField {
-        private List<SubField> subSubFields;
-
-        /**
-         * Constructor.
-         *
-         * @param name The String name of the field.
-         * @param type The {@link Type} of the field.
-         * @param description A String description for this field.
-         * @param subFields A {@link List} of {@link SubField} enumerations for this map. Can be null.
-         * @param subSubFields A {@link List} of {@link SubField} enumerations for each map in this map of maps.
-         */
-        public DetailedMapMapField(String name, Type type, String description, List<SubField> subFields, List<SubField> subSubFields) {
-            super(name, type, description, subFields);
-            this.subSubFields = subSubFields;
-        }
-
-        /**
-         * Copies this detailed map of map field.
-         *
-         * @return The copied {@link DetailedMapMapField}.
-         */
-        @Override
-        public DetailedMapMapField copy() {
-            return new DetailedMapMapField(getName(), getType(), getDescription(), copy(getSubFields()), copy(subSubFields));
-        }
+    /**
+     * Creates a schema using fields loaded from a JSON file.
+     *
+     * @param fileName The name of the resource or the path to the file containing the JSON fields to load.
+     * @throws ValidationException if the fields are not valid.
+     */
+    public Schema(String fileName) throws ValidationException {
+        this(Parser.parse(readFile(fileName)));
     }
 
     /**
      * Creates a schema from the provided fields.
      *
-     * @param fields The {@link List} of {@link Field} instances. The order is preserved.
+     * @param fields The non-null {@link List} of {@link Field} instances. The order is preserved.
+     * @throws ValidationException if the fields are not valid.
+     * @throws UnsupportedOperationException if the fields are not provided.
      */
-    public Schema(List<? extends Field> fields) {
-        Objects.requireNonNull(fields);
+    public Schema(List<? extends Field> fields) throws ValidationException {
+        if (fields == null || fields.isEmpty()) {
+            throw new UnsupportedOperationException("Fields must be provided to create a schema");
+        }
         fieldMap = new LinkedHashMap<>();
-        fields.forEach(f -> fieldMap.put(f.getName(), f));
+        for (Field field : fields) {
+            field.validate();
+            fieldMap.put(field.getName(), field);
+        }
     }
 
     /**
@@ -297,7 +199,12 @@ public class Schema implements Serializable {
      * @return The copied {@link Schema}.
      */
     public Schema copy() {
-        return new Schema(fieldMap.values().stream().map(Field::copy).collect(Collectors.toList()));
+        try {
+            return new Schema(fieldMap.values().stream().map(Field::copy).collect(Collectors.toList()));
+        } catch (ValidationException e) {
+            log.error("Copied schema was invalid", e);
+            throw new RuntimeException("Copied schema was not valid", e);
+        }
     }
 
     /**
@@ -359,5 +266,295 @@ public class Schema implements Serializable {
 
     private <T extends DetailedField> List<T> getFields(Class<T> klazz) {
         return fieldMap.values().stream().filter(klazz::isInstance).map(f -> (T) f).collect(Collectors.toList());
+    }
+
+    private static Reader readFile(String file) {
+        if (file == null || file.isEmpty()) {
+            return null;
+        }
+        try (InputStream is = Schema.class.getResourceAsStream("/" + file)) {
+            return is != null ? new InputStreamReader(is) : new FileReader(file);
+        } catch (IOException ioe) {
+            log.error("Unable to load schema file " + file, ioe);
+            return null;
+        }
+    }
+
+    /* ============================================================================================================== */
+    /*                                          Static helper classes                                                 */
+    /* ============================================================================================================== */
+
+    public static class ValidationException extends Exception {
+        private static final long serialVersionUID = 1652975997878467083L;
+        private String cause;
+
+        /**
+         * Constructor.
+         *
+         * @param cause The String cause for the exception.
+         */
+        public ValidationException(String cause) {
+            this.cause = cause;
+        }
+
+        @Override
+        public String toString() {
+            return cause;
+        }
+
+    }
+
+    @Getter(AccessLevel.PACKAGE) @NoArgsConstructor @AllArgsConstructor
+    public static class Field {
+        private String name;
+        private Type type;
+
+        private static final String NAME_FIELD = "name";
+        private static final String TYPE_FIELD = "type";
+
+        /**
+         * Copies this field.
+         *
+         * @return The copied {@link Field}.
+         */
+        public Field copy() {
+            return new Field(name, type);
+        }
+
+        /**
+         * Checks to see if the field is valid.
+         *
+         * @throws ValidationException if the field is not valid.
+         */
+        public void validate() throws ValidationException {
+            checkFieldMembers();
+        }
+
+        /**
+         * Checks to see if this field has valid members.
+         *
+         * @throws ValidationException if the field is not valid.
+         */
+        protected void checkFieldMembers() throws ValidationException {
+            if (isNotPresent(name) || type == null) {
+                throw new ValidationException("The name or the type must be provided for a field");
+            }
+        }
+
+        /**
+         * Checks if the given the String is null or empty.
+         *
+         * @param field The String to check.
+         * @return A boolean denoting if the field is missing.
+         */
+        public static boolean isNotPresent(String field) {
+            return field == null || field.isEmpty();
+        }
+    }
+
+    @Getter @NoArgsConstructor @AllArgsConstructor
+    public static class SubField {
+        private String name;
+        private String description;
+
+        /**
+         * Copies this sub-field.
+         *
+         * @return The copied {@link SubField}.
+         */
+        public SubField copy() {
+            return new SubField(name, description);
+        }
+    }
+
+    @Getter @NoArgsConstructor
+    public static class DetailedField extends Field {
+        private String description;
+
+        private static final String DESCRIPTION_FIELD = "description";
+
+        /**
+         * Constructor.
+         *
+         * @param name The String name of the field.
+         * @param type The {@link Type} of the field.
+         * @param description A String description for this field.
+         */
+        public DetailedField(String name, Type type, String description) {
+            super(name, type);
+            this.description = description;
+        }
+
+        /**
+         * Copies this detailed field.
+         *
+         * @return The copied {@link DetailedField}.
+         */
+        @Override
+        public DetailedField copy() {
+            return new DetailedField(getName(), getType(), description);
+        }
+
+        @Override
+        protected void checkFieldMembers() throws ValidationException {
+            super.checkFieldMembers();
+            if (isNotPresent(description)) {
+                throw new ValidationException("The description must be provided for a detailed field. Use a regular field otherwise");
+            }
+        }
+    }
+
+    @Getter @NoArgsConstructor
+    public static class DetailedMapField extends DetailedField {
+        private List<SubField> subFields;
+
+        private static final String SUBFIELDS_FIELD = "subFields";
+
+        /**
+         * Constructor.
+         *
+         * @param name The String name of the field.
+         * @param type The {@link Type} of the field.
+         * @param description A String description for this field.
+         * @param subFields A non-null {@link List} of {@link SubField} enumerations for this field.
+         */
+        public DetailedMapField(String name, Type type, String description, List<SubField> subFields) {
+            super(name, type, description);
+            this.subFields = subFields;
+        }
+
+        /**
+         * Copies this detailed map field.
+         *
+         * @return The copied {@link DetailedMapField}.
+         */
+        @Override
+        public DetailedMapField copy() {
+            return new DetailedMapField(getName(), getType(), getDescription(), copy(subFields));
+        }
+
+        /**
+         * Copies the sub-fields.
+         *
+         * @param subFields The {@link List} of {@link SubField} to copy.
+         * @return The copied sub-fields.
+         */
+        static List<SubField> copy(List<SubField> subFields) {
+            return subFields == null ? null : subFields.stream().map(SubField::copy).collect(Collectors.toList());
+        }
+
+        /**
+         * Checks if the given the {@link List} of {@link SubField} is null or empty.
+         *
+         * @param fields The sub-fields to check.
+         * @return A boolean denoting if the sub-fields are missing.
+         */
+        public static boolean isNotPresent(List<SubField> fields) {
+            return fields == null || fields.isEmpty();
+        }
+
+        @Override
+        public void validate() throws ValidationException {
+            super.validate();
+            if (isNotPresent(subFields)) {
+                throw new ValidationException("The sub-fields are not provided. It is not optional for map of primitives detailed field");
+            }
+        }
+    }
+
+    @Getter
+    public static class DetailedMapMapField extends DetailedMapField {
+        private List<SubField> subSubFields;
+
+        private static final String SUBSUBFIELDS_FIELD = "subSubFields";
+
+        /**
+         * Constructor.
+         *
+         * @param name The String name of the field.
+         * @param type The {@link Type} of the field.
+         * @param description A String description for this field.
+         * @param subFields A {@link List} of {@link SubField} enumerations for this map. Can be null.
+         * @param subSubFields A {@link List} of {@link SubField} enumerations for each map in this map of maps.
+         */
+        public DetailedMapMapField(String name, Type type, String description, List<SubField> subFields, List<SubField> subSubFields) {
+            super(name, type, description, subFields);
+            this.subSubFields = subSubFields;
+        }
+
+        /**
+         * Copies this detailed map of map field.
+         *
+         * @return The copied {@link DetailedMapMapField}.
+         */
+        @Override
+        public DetailedMapMapField copy() {
+            return new DetailedMapMapField(getName(), getType(), getDescription(), copy(getSubFields()), copy(subSubFields));
+        }
+
+        @Override
+        public void validate() throws ValidationException {
+            // Do not call parent's validate since that will check subFields. That can be null.
+            // Instead call checkFieldMembers, which is not overridden in parent.
+            checkFieldMembers();
+            if (isNotPresent(subSubFields)) {
+                throw new ValidationException("The sub-fields are not provided. It is not optional for map of primitives detailed field");
+            }
+        }
+    }
+
+    public static class Parser {
+        private static final GenericTypeAdapterFactory<Field> FIELD_FACTORY =
+                // Order matters! This is a line hierarchy so the bottom up
+                GenericTypeAdapterFactory.of(Field.class)
+                                         .registerSubType(DetailedMapMapField.class, Parser::isDetailedMapMapField)
+                                         .registerSubType(DetailedMapField.class, Parser::isDetailedMapField)
+                                         .registerSubType(DetailedField.class, Parser::isDetailedField)
+                                         .registerSubType(Field.class, Parser::isField);
+
+        private static final Gson GSON = new GsonBuilder().registerTypeAdapterFactory(FIELD_FACTORY)
+                                                          .setPrettyPrinting().serializeNulls().create();
+
+        private static final Set<String> TYPES = Arrays.stream(Type.values()).map(Type::name).collect(Collectors.toSet());
+
+        private static boolean isField(JsonObject jsonObject) {
+            JsonElement name = jsonObject.get(Field.NAME_FIELD);
+            JsonElement type = jsonObject.get(Field.TYPE_FIELD);
+            return name != null && type != null && TYPES.contains(type.getAsString());
+        }
+
+        private static boolean isDetailedField(JsonObject jsonObject) {
+            return isField(jsonObject) && jsonObject.has(DetailedField.DESCRIPTION_FIELD);
+        }
+
+        private static boolean isDetailedMapField(JsonObject jsonObject) {
+            // Technically the SUBSUBFIELDS_FIELD check isn't needed since this is invoked in order.
+            return isDetailedField(jsonObject) && jsonObject.has(DetailedMapField.SUBFIELDS_FIELD)
+                                               && !jsonObject.has(DetailedMapMapField.SUBSUBFIELDS_FIELD);
+        }
+
+        private static boolean isDetailedMapMapField(JsonObject jsonObject) {
+            return isDetailedField(jsonObject) && jsonObject.has(DetailedMapMapField.SUBSUBFIELDS_FIELD);
+        }
+
+        /**
+         * Parses a JSON String into a {@link List} of {@link Field}.
+         *
+         * @param data The data to parse.
+         * @return A {@link List} of {@link Field} instances.
+         */
+        public static List<Field> parse(String data) {
+            return parse(new StringReader(data));
+        }
+
+        /**
+         * Reads a {@link List} of {@link Field} from a {@link Reader}.
+         *
+         * @param reader The reader to use.
+         * @return A {@link List} of {@link Field} instances.
+         */
+        public static List<Field> parse(Reader reader) {
+            return GSON.fromJson(reader, new TypeToken<List<Field>>() { }.getType());
+        }
     }
 }
