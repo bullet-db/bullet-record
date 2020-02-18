@@ -151,10 +151,13 @@ public class TypedObjectTest {
         assertFalse(objectB.containsKey("1"));
         assertFalse(objectC.containsKey("1"));
         assertTrue(objectD.containsKey("1"));
+        assertFalse(objectD.containsKey("2"));
         assertFalse(objectE.containsKey("1"));
         assertTrue(objectF.containsKey("1"));
         assertFalse(objectF.containsKey("2"));
         assertTrue(objectG.containsKey("1"));
+        assertTrue(objectG.containsKey("11"));
+        assertFalse(objectG.containsKey("2"));
     }
 
     @Test(expectedExceptions = UnsupportedOperationException.class, expectedExceptionsMessageRegExp = ".*This type does not support mappings.*")

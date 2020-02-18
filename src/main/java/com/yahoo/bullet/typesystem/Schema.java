@@ -50,6 +50,7 @@ public class Schema implements Serializable {
      *
      * @param fileName The name of the resource or the path to the file containing the JSON fields to load.
      * @throws ValidationException if the fields are not valid.
+     * @throws RuntimeException if the fields are not valid JSON.
      */
     public Schema(String fileName) throws ValidationException {
         this(Parser.parse(readFile(fileName)));
@@ -380,7 +381,7 @@ public class Schema implements Serializable {
         }
     }
 
-    @Getter @NoArgsConstructor
+    @NoArgsConstructor
     public static class PlainField extends Field {
         /**
          * Constructor.
@@ -608,7 +609,7 @@ public class Schema implements Serializable {
         private static boolean isPlainField(JsonObject jsonObject) {
             JsonElement name = jsonObject.get(Field.NAME_FIELD);
             JsonElement type = jsonObject.get(Field.TYPE_FIELD);
-            return name != null && type != null && TYPES.contains(type.getAsString());
+            return name != null && !name.isJsonNull() && type != null && !type.isJsonNull() && TYPES.contains(type.getAsString());
         }
 
         private static boolean isDetailedField(JsonObject jsonObject) {
@@ -616,9 +617,8 @@ public class Schema implements Serializable {
         }
 
         private static boolean isDetailedMapField(JsonObject jsonObject) {
-            // Technically the SUBSUBFIELDS_FIELD check isn't needed since this is invoked in order.
-            return isDetailedField(jsonObject) && jsonObject.has(DetailedMapField.SUBFIELDS_FIELD)
-                                               && !jsonObject.has(DetailedMapMapField.SUBSUBFIELDS_FIELD);
+            // The SUBSUBFIELDS_FIELD check isn't needed since this is invoked in order.
+            return isDetailedField(jsonObject) && jsonObject.has(DetailedMapField.SUBFIELDS_FIELD);
         }
 
         private static boolean isDetailedMapMapField(JsonObject jsonObject) {

@@ -18,6 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Collections;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -74,7 +75,32 @@ public class TypedAvroBulletRecordTest extends BulletRecordTest<TypedObject> {
     }
 
     @Test
-    public void testHashcodeEdgeCases() {
+    public void testAvroRecordEqualsEdgeCases() {
+        Assert.assertTrue(avroRecord.equals(avroRecord));
+        avroRecord.setString("foo", "bar");
+        Assert.assertFalse(avroRecord.equals(another));
+        avroAnother.setString("foo", "bar");
+        Assert.assertTrue(avroRecord.equals(avroAnother));
+        avroRecord.setTypes(Collections.EMPTY_MAP);
+        avroAnother.setTypes(Collections.EMPTY_MAP);
+        Assert.assertTrue(avroRecord.equals(avroAnother));
+        LazyBulletAvro avro = new LazyBulletAvro();
+        avroRecord.setData(avro);
+        Assert.assertFalse(avroRecord.equals(another));
+        avroAnother.setData(avro);
+        Assert.assertTrue(avroRecord.equals(avroAnother));
+        avroRecord.setData(null);
+        Assert.assertFalse(avroRecord.equals(another));
+        avroAnother.setData(null);
+        Assert.assertTrue(avroRecord.equals(avroAnother));
+        avroRecord.setTypes(null);
+        Assert.assertFalse(avroRecord.equals(another));
+        avroAnother.setTypes(null);
+        Assert.assertTrue(avroRecord.equals(avroAnother));
+    }
+
+    @Test
+    public void testAvroRecordHashcodeEdgeCases() {
         Assert.assertEquals(record.hashCode(), another.hashCode());
         avroRecord.setData(null);
         avroAnother.setData(null);

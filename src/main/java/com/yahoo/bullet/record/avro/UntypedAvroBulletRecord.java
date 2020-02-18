@@ -79,7 +79,7 @@ public class UntypedAvroBulletRecord extends UntypedBulletRecord {
             return false;
         }
         UntypedAvroBulletRecord that = (UntypedAvroBulletRecord) object;
-        return data != null && data.equals(that.data);
+        return data == that.data  || data != null && data.equals(that.data);
     }
 
     @Override

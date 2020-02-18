@@ -30,6 +30,7 @@ import java.util.Objects;
 public class TypedAvroBulletRecord extends TypedBulletRecord {
     private static final long serialVersionUID = -2200480102971008734L;
 
+    @Setter(AccessLevel.PACKAGE)
     private Map<String, Type> types = new HashMap<>();
     @Setter(AccessLevel.PACKAGE)
     private LazyBulletAvro data = new LazyBulletAvro();
@@ -103,7 +104,8 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
             return false;
         }
         TypedAvroBulletRecord that = (TypedAvroBulletRecord) object;
-        return data == that.data  || data != null && data.equals(that.data);
+        return (types == that.types || types != null && types.equals(that.types)) &&
+               (data == that.data  || data != null && data.equals(that.data));
     }
 
     @Override

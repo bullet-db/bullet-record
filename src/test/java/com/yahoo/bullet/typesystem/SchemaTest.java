@@ -10,6 +10,7 @@ import com.yahoo.bullet.typesystem.Schema.DetailedMapField;
 import com.yahoo.bullet.typesystem.Schema.DetailedMapListField;
 import com.yahoo.bullet.typesystem.Schema.DetailedMapMapField;
 import com.yahoo.bullet.typesystem.Schema.Field;
+import com.yahoo.bullet.typesystem.Schema.Parser;
 import com.yahoo.bullet.typesystem.Schema.PlainField;
 import com.yahoo.bullet.typesystem.Schema.SubField;
 import org.testng.Assert;
@@ -216,9 +217,23 @@ public class SchemaTest {
     public void testParsingFromString() throws Exception {
         String data = new String(Files.readAllBytes(Paths.get("src/test/resources/test-schema.json")));
         // For coverage
-        Schema.Parser parser = new Schema.Parser();
+        Parser parser = new Parser();
         List<Field> fields = parser.parse(data);
         assertEquals(fields, ALL);
+    }
+
+    @Test
+    public void testFailParsingFromString() {
+        Assert.assertEquals(Parser.parse("[{}]"), singletonList(null));
+        Assert.assertEquals(Parser.parse("[{'name': null}]"), singletonList(null));
+        Assert.assertEquals(Parser.parse("[{'name': null, 'type': null}]"), singletonList(null));
+        Assert.assertEquals(Parser.parse("[{'name': 'a'}]"), singletonList(null));
+        Assert.assertEquals(Parser.parse("[{'name': 'a', 'type': null}]"), singletonList(null));
+        Assert.assertEquals(Parser.parse("[{'name': 'a', 'type': 'garbage'}]"), singletonList(null));
+        Assert.assertEquals(Parser.parse("[{'name': null, 'type': 'STRING'}]"), singletonList(null));
+        String everything = "[{'name': null, 'type': 'STRING', 'description': 'a', 'subFields': null, " +
+                              "'subSubFields': null, 'subListFields': null}]";
+        Assert.assertEquals(Parser.parse(everything), singletonList(null));
     }
 
     @Test
@@ -299,13 +314,15 @@ public class SchemaTest {
             Field expectedField = expected.get(i);
             String expectedName = expectedField.getName();
             Assert.assertEquals(actualField.getName(), expectedName);
-            // Everything else is the same
+            // Everything else is the same unless they're in excludes
             if (!excludes.contains(expectedName)) {
                 assertEquals(actualField, expectedField);
             }
         }
 
         Field expectedJ = FIELDS.get("j").copy();
+        // For coverage
+        expectedJ.setName("j");
         expectedJ.setType(Type.DOUBLE_MAP_LIST);
         assertEquals(schema.getField("j"), expectedJ);
 

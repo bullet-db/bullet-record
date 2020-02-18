@@ -966,6 +966,7 @@ public abstract class BulletRecordTest<T> {
         another.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
                .setStringList("6", singletonList("baz"))
                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")));
+        Assert.assertTrue(record.equals(record));
         Assert.assertTrue(record.equals(another));
         Assert.assertEquals(record.hashCode(), another.hashCode());
     }

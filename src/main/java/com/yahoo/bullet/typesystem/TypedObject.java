@@ -10,15 +10,12 @@ import lombok.Getter;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 @Getter
 public class TypedObject implements Comparable<TypedObject> {
     private final Type type;
     private final Object value;
 
-    public static final Predicate<TypedObject> IS_PRIMITIVE_OR_NULL = (t) -> t.getType() == Type.NULL || Type.PRIMITIVES.contains(t.getType());
-    public static final Predicate<TypedObject> IS_NOT_NULL = (t) -> t.getType() != Type.NULL;
     public static final TypedObject UNKNOWN = new TypedObject(Type.UNKNOWN, null);
     public static final TypedObject NULL = new TypedObject(Type.NULL, null);
 

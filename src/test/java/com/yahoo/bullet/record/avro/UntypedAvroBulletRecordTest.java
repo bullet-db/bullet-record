@@ -62,7 +62,16 @@ public class UntypedAvroBulletRecordTest extends BulletRecordTest<Object> {
     }
 
     @Test
-    public void testHashcodeEdgeCases() {
+    public void testAvroRecordEqualsEdgeCases() {
+        Assert.assertTrue(avroRecord.equals(avroAnother));
+        avroRecord.setData(null);
+        Assert.assertFalse(avroRecord.equals(another));
+        avroAnother.setData(null);
+        Assert.assertTrue(avroRecord.equals(avroAnother));
+    }
+
+    @Test
+    public void testAvroRecordHashcodeEdgeCases() {
         Assert.assertEquals(record.hashCode(), another.hashCode());
         avroRecord.setData(null);
         avroAnother.setData(null);
