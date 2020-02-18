@@ -595,6 +595,21 @@ public abstract class BulletRecordTest<T> {
         assertTypedEquals(record.typedGet("foo", "baz", "b"), Type.STRING, "norf");
     }
 
+    @Test(expectedExceptions = NullPointerException.class)
+    public void testTypedSettingNullTypedObjects() {
+        record.typedSet("bad", null);
+    }
+
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void testTypedSettingTypedObjectNull() {
+        record.typedSet("bad", TypedObject.NULL);
+    }
+
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void testTypedSettingTypedObjectUnknown() {
+        record.typedSet("bad", TypedObject.UNKNOWN);
+    }
+
     @Test
     public void testGettingMissingMapOfMaps() {
         Object object = revert(record.get("dne"));
@@ -610,6 +625,7 @@ public abstract class BulletRecordTest<T> {
         assertTypedEquals(record.typedGet("foo", "qux"), TypedObject.NULL);
         record.setMapOfStringMap("foo", singletonMap("bar", singletonMap("baz", "qux")));
         assertTypedEquals(record.typedGet("foo", "dne"), TypedObject.NULL);
+        assertTypedEquals(record.typedGet("foo", "dne", "dne"), TypedObject.NULL);
         assertTypedEquals(record.typedGet("foo", "bar", "dne"), TypedObject.NULL);
     }
 
@@ -771,9 +787,11 @@ public abstract class BulletRecordTest<T> {
         Assert.assertNull(object);
         assertTypedEquals(record.typedGet("dne"), TypedObject.NULL);
         assertTypedEquals(record.typedGet("dne", 0), TypedObject.NULL);
+        assertTypedEquals(record.typedGet("dne", 0, "dne"), TypedObject.NULL);
 
         record.setListOfStringMap("foo", asList(null, singletonMap("bar", "baz")));
         assertTypedEquals(record.typedGet("foo", 0), TypedObject.NULL);
+        assertTypedEquals(record.typedGet("foo", 0, "dne"), TypedObject.NULL);
         record.setListOfStringMap("foo", singletonList(singletonMap("bar", "baz")));
         assertTypedEquals(record.typedGet("foo", 0, "dne"), TypedObject.NULL);
     }
@@ -925,8 +943,9 @@ public abstract class BulletRecordTest<T> {
     @Test
     public void testEqualsEdgeCases() {
         record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false);
-        Assert.assertNotEquals(record, null);
-        Assert.assertNotEquals(record, "foo");
+        Assert.assertFalse(record.equals(null));
+        Assert.assertFalse(record.equals("foo"));
+        Assert.assertFalse(record.equals(new HashMap<>()));
     }
 
     @Test
@@ -1026,5 +1045,23 @@ public abstract class BulletRecordTest<T> {
         Assert.assertTrue(record.hasField("7"));
         Assert.assertFalse(record.hasField("7.4.1"));
         Assert.assertFalse(record.hasField("foo"));
+    }
+
+    @Test
+    public void testCopying() {
+        record.setString("a", "foo");
+        record.setStringMap("b", singletonMap("b.1", "bar"));
+        Map<String, Boolean> data = new HashMap<>();
+        data.put("c.1", false);
+        record.setListOfBooleanMap("c", singletonList(data));
+        record.setStringList("d", singletonList("norf"));
+        record.setMapOfStringMap("e", singletonMap("e.f", singletonMap("e.f.g", "baz")));
+
+        BulletRecord<T> copy = record.copy();
+        Assert.assertEquals(record, copy);
+        Assert.assertTrue(record.equals(copy));
+        Assert.assertTrue(copy.equals(record));
+        Assert.assertEquals(record.fieldCount(), copy.fieldCount());
+        Assert.assertEquals(record.hashCode(), copy.hashCode());
     }
 }

@@ -49,7 +49,7 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>
         try {
             serializedData = other.getAsByteArray();
             isDeserialized = false;
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Unable to serialize the other record", e);
             throw new RuntimeException(e);
         }
@@ -83,11 +83,13 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>
      *
      * @param field The name of the field.
      * @param object The value of the field. Must be a supported type in the {@link BulletAvro} data field.
+     * @return This object for chaining.
      */
-    public void set(String field, Object object) {
+    public LazyBulletAvro set(String field, Object object) {
         Objects.requireNonNull(field);
         forceReadData();
         data.put(field, object);
+        return this;
     }
 
     /**
@@ -138,11 +140,13 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>
      * Removes a field.
      *
      * @param field The name of the field.
+     * @return This object for chaining.
      */
-    public void remove(String field) {
+    public LazyBulletAvro remove(String field) {
         if (hasField(field)) {
             data.remove(field);
         }
+        return this;
     }
 
     /**

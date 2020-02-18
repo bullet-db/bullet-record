@@ -11,7 +11,7 @@ import org.testng.annotations.Test;
 
 public class UntypedSimpleBulletRecordProviderTest {
     @Test
-    public void testInstanceNotPassedByReference() {
+    public void testInstance() {
         BulletRecord recordA = new UntypedSimpleBulletRecordProvider().getInstance();
         BulletRecord recordB = new UntypedSimpleBulletRecordProvider().getInstance();
         Assert.assertTrue(recordA instanceof UntypedSimpleBulletRecord);

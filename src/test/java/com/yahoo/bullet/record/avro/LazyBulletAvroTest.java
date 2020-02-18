@@ -5,11 +5,10 @@
  */
 package com.yahoo.bullet.record.avro;
 
-/*
+import com.yahoo.bullet.typesystem.Type;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.commons.lang3.tuple.Pair;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -19,14 +18,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
-*/
 
 public class LazyBulletAvroTest {
-    /*
     private LazyBulletAvro avro;
     private LazyBulletAvro another;
 
@@ -46,11 +45,11 @@ public class LazyBulletAvroTest {
         }
     }
 
-    public static byte[] getRecordBytes(UntypedAvroBulletRecord record) {
+    public static byte[] getAvroBytes(LazyBulletAvro data) {
         try {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
             ObjectOutputStream outputStream = new ObjectOutputStream(byteStream);
-            outputStream.writeObject(record);
+            outputStream.writeObject(data);
             outputStream.close();
             return byteStream.toByteArray();
         } catch (IOException ioe) {
@@ -58,10 +57,10 @@ public class LazyBulletAvroTest {
         }
     }
 
-    public static UntypedAvroBulletRecord fromRecordBytes(byte[] data) {
+    public static LazyBulletAvro fromRecordBytes(byte[] data) {
         try {
             ObjectInputStream stream = new ObjectInputStream(new ByteArrayInputStream(data));
-            return (UntypedAvroBulletRecord) stream.readObject();
+            return (LazyBulletAvro) stream.readObject();
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -72,58 +71,59 @@ public class LazyBulletAvroTest {
         avro = new LazyBulletAvro();
         another = new LazyBulletAvro();
     }
+    
     @Test
     public void testNoArgsConstructor() {
         Assert.assertTrue(avro.isDeserialized());
         Assert.assertNotNull(avro.getData());
     }
 
-    @Test
-    public void testCopyConstructor() throws Exception {
-        avro.setString("someField", "someValue");
-        UntypedAvroBulletRecord copy = new UntypedAvroBulletRecord(avro);
-        Assert.assertEquals(copy.get("someField"), "someValue");
-        Assert.assertEquals(copy.fieldCount(), 1);
+    @Test(expectedExceptions = RuntimeException.class)
+    public void testFailCopying() {
+        avro.set("foo", Type.NULL);
+        new LazyBulletAvro(avro);
     }
 
     @Test
-    public void testCopyOfCopy() throws Exception {
-        avro.setString("someField", "someValue");
-        UntypedAvroBulletRecord copy = new UntypedAvroBulletRecord(avro);
-        UntypedAvroBulletRecord copyOfCopy = new UntypedAvroBulletRecord(copy);
+    public void testCopyOfCopy() {
+        avro.set("someField", "someValue");
+        LazyBulletAvro copy = new LazyBulletAvro(avro);
+        LazyBulletAvro copyOfCopy = new LazyBulletAvro(copy);
         Assert.assertEquals(copyOfCopy.get("someField"), "someValue");
         Assert.assertEquals(copyOfCopy.fieldCount(), 1);
     }
 
     @Test
     public void testEqualsAndHashcodeByteArrays() {
-        avro.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
-                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")))
-                .setStringList("6", singletonList("baz"));
-        another.setMap("4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null))
-                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
-                .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")))
-                .setStringList("6", singletonList("baz"));
+        Map<String, Boolean> data = new HashMap<>();
+        data.put("4.1", false);
+        data.put("4.2", true);
+        data.put("4.3", null);
+        avro.set("1", "bar").set("2", 42L).set("3", false)
+            .set("4", data)
+            .set("5", singletonList(singletonMap("5.1", "foo")))
+            .set("6", singletonList("baz"));
+        another.set("1", "bar").set("2", 42L).set("3", false)
+               .set("4", data)
+               .set("5", singletonList(singletonMap("5.1", "foo")))
+               .set("6", singletonList("baz"));
 
-        avro.setSerializedData(getRecordBytes(avro));
+        avro.setSerializedData(getAvroBytes(avro));
         avro.setDeserialized(false);
-        another.setSerializedData(getRecordBytes(another));
+        another.setSerializedData(getAvroBytes(another));
         another.setDeserialized(false);
 
+        Assert.assertFalse(avro.equals(data));
         Assert.assertTrue(avro.equals(another));
         Assert.assertEquals(avro.hashCode(), another.hashCode());
     }
 
     @Test
-    @Override
     public void testEqualsAndHashcodeSameRecord() {
-        super.testEqualsAndHashcodeSameRecord();
-
         // If you reify the changed order and compare, it still should be equal
-        avro.setSerializedData(getRecordBytes(avro));
+        avro.setSerializedData(getAvroBytes(avro));
         avro.setDeserialized(false);
-        another.setSerializedData(getRecordBytes(another));
+        another.setSerializedData(getAvroBytes(another));
         another.setDeserialized(false);
         Assert.assertTrue(avro.equals(another));
         Assert.assertEquals(avro.hashCode(), another.hashCode());
@@ -140,12 +140,12 @@ public class LazyBulletAvroTest {
         Assert.assertTrue(avro.equals(another));
         Assert.assertEquals(avro.hashCode(), another.hashCode());
 
-        another = new UntypedAvroBulletRecord();
-        another.setString("foo", "bar");
+        another = new LazyBulletAvro();
+        another.set("foo", "bar");
 
-        Assert.assertFalse(record.equals(another));
+        Assert.assertFalse(avro.equals(another));
         // This may or may not be true. Much more likely to be true, so leaving it in
-        Assert.assertNotEquals(record.hashCode(), another.hashCode());
+        Assert.assertNotEquals(avro.hashCode(), another.hashCode());
     }
 
     @Test
@@ -158,13 +158,13 @@ public class LazyBulletAvroTest {
         Assert.assertFalse(avro.forceReadData());
 
         // Set the data to an invalid byte array and force a read
-        avro = new UntypedAvroBulletRecord();
+        avro = new LazyBulletAvro();
         avro.setSerializedData("foo".getBytes());
         avro.setDeserialized(false);
         Assert.assertFalse(avro.forceReadData());
 
         // Set the data to a valid byte array and force a read
-        avro = new UntypedAvroBulletRecord();
+        avro = new LazyBulletAvro();
         Map<String, Object> data = new HashMap<>();
         data.put("foo", singletonMap("bar", "baz"));
         data.put("qux", singletonList(singletonMap("bar", "baz")));
@@ -172,9 +172,6 @@ public class LazyBulletAvroTest {
         avro.setDeserialized(false);
         Assert.assertTrue(avro.forceReadData());
         Assert.assertEquals(avro.get("foo"), singletonMap("bar", "baz"));
-        Assert.assertEquals(avro.get("foo", "bar"), "baz");
-        Assert.assertEquals(avro.get("qux"), singletonList(singletonMap("bar", "baz")));
-        Assert.assertEquals(avro.get("qux", 0), singletonMap("bar", "baz"));
 
         // Further force reads should return true
         Assert.assertTrue(avro.forceReadData());
@@ -183,34 +180,34 @@ public class LazyBulletAvroTest {
 
     @Test
     public void testSerializationDeserializationOfEmptyRecord() {
-        byte[] serialized = getRecordBytes(avroRecord);
+        byte[] serialized = getAvroBytes(avro);
         Assert.assertNotNull(serialized);
 
-        UntypedAvroBulletRecord reified = fromRecordBytes(serialized);
+        LazyBulletAvro reified = fromRecordBytes(serialized);
         Assert.assertNotNull(reified);
 
-        byte[] serializedAgain = getRecordBytes(avroRecord);
+        byte[] serializedAgain = getAvroBytes(avro);
         Assert.assertEquals(serializedAgain, serialized);
     }
 
     @Test
     public void testSerializationWithBadStates() {
-        byte[] serialized = getRecordBytes(avroRecord);
-        UntypedAvroBulletRecord reified = fromRecordBytes(serialized);
+        byte[] serialized = getAvroBytes(avro);
+        LazyBulletAvro reified = fromRecordBytes(serialized);
 
         // This will destroy the byte array and force the record to think it has data in its map (it doesn't)
         reified.setSerializedData(null);
         reified.setDeserialized(true);
 
         // The record should handle this case by pretending to be an empty record
-        byte[] serializedAgain = getRecordBytes(reified);
+        byte[] serializedAgain = getAvroBytes(reified);
         Assert.assertEquals(serializedAgain, serialized);
     }
 
     @Test
     public void testDeserializationWithBadStates() {
-        byte[] serialized = getRecordBytes(avroRecord);
-        UntypedAvroBulletRecord reified = fromRecordBytes(serialized);
+        byte[] serialized = getAvroBytes(avro);
+        LazyBulletAvro reified = fromRecordBytes(serialized);
 
         // This will destroy the byte array, force the record to think it doesn't have data in its map and then
         // force a read
@@ -225,14 +222,14 @@ public class LazyBulletAvroTest {
 
     @Test
     public void testSerializationDeserializationWithoutReading() {
-        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34);
+        avro.set("1", "bar").set("2", 42L).set("3", false).set("4", 0.34);
 
-        byte[] serialized = getRecordBytes(avroRecord);
+        byte[] serialized = getAvroBytes(avro);
         Assert.assertNotNull(serialized);
-        UntypedAvroBulletRecord reified = fromRecordBytes(serialized);
+        LazyBulletAvro reified = fromRecordBytes(serialized);
 
         // Read and write without accessing anything
-        serialized = getRecordBytes(reified);
+        serialized = getAvroBytes(reified);
         reified = fromRecordBytes(serialized);
 
         Assert.assertNotNull(reified);
@@ -240,46 +237,54 @@ public class LazyBulletAvroTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testSerializationDeserializationWithDataInput() {
-        avroRecord.setMap("7", Pair.of("4.1", false), Pair.of("7.2", true), Pair.of("7.3", null))
-                .setMap("8", Pair.of("8.1", "foo"), Pair.of("8.2", "bar"), Pair.of("8.3", "baz"))
-                .setString("1", "bar").setLong("2", 42L).setBoolean("3", false).setDouble("4", 0.34)
-                .setListOfLongMap("9", singletonList(singletonMap("9.1", 3L)))
-                .setListOfBooleanMap("10", singletonList(singletonMap("10.1", true)));
+        Map<String, Boolean> dataA = new HashMap<>();
+        dataA.put("5.1", false);
+        dataA.put("5.2", true);
+        dataA.put("5.3", null);
+        Map<String, String> dataB = new HashMap<>();
+        dataB.put("6.1", "foo");
+        dataB.put("6.2", "bar");
+        dataB.put("6.3", "baz");
+        avro.set("1", "bar").set("2", 42L).set("3", false).set("4", 0.34)
+            .set("5", dataA).set("6", dataB)
+            .set("7", singletonList(singletonMap("7.1", 3L)))
+            .set("8", singletonList(singletonMap("8.1", true)));
 
         // SerDe
-        byte[] serialized = getRecordBytes(avroRecord);
-        UntypedAvroBulletRecord reified = fromRecordBytes(serialized);
+        byte[] serialized = getAvroBytes(avro);
+        LazyBulletAvro reified = fromRecordBytes(serialized);
 
         Assert.assertNotNull(serialized);
         Assert.assertNotNull(reified);
         Assert.assertEquals(reified.get("2"), 42L);
-        Assert.assertTrue((Boolean) reified.get("7", "7.2"));
-        Assert.assertNull(reified.get("7", "4.3"));
-        Assert.assertEquals(reified.get("9", 0), singletonMap("9.1", 3L));
+        Assert.assertTrue(((Map<String, Boolean>) reified.get("5")).get("5.2"));
+        Assert.assertNull(((Map<String, Boolean>) reified.get("5")).get("5.3"));
+        Assert.assertEquals(((List<Map<String, Long>>) reified.get("7")).get(0), singletonMap("7.1", 3L));
 
         // Add new fields and modify fields in the record
-        reified.setMap("2", Pair.of("2.1", 42L));
-        reified.setLong("11", 4L);
-        reified.setMap("12", Pair.of("12.1", "foo"));
+        reified.set("2", singletonMap("2.1", 42L));
+        reified.set("9", 4L);
+        reified.set("10", singletonMap("10.1", "foo"));
 
         // SerDe again
-        serialized = getRecordBytes(reified);
+        serialized = getAvroBytes(reified);
         reified = fromRecordBytes(serialized);
 
         // The old ones that went through the first cycle
         Assert.assertNotNull(reified);
         Assert.assertEquals(reified.get("1"), "bar");
-        Assert.assertEquals(reified.get("2", "2.1"), 42L);
+        Assert.assertEquals(reified.get("2"), singletonMap("2.1", 42L));
         Assert.assertFalse((Boolean) reified.get("3"));
         Assert.assertEquals(reified.get("4"), 0.34);
-        Assert.assertNull(reified.get("7", "7.3"));
-        Assert.assertEquals(reified.get("8", "8.3"), "baz");
-        Assert.assertEquals(reified.get("10", 0), singletonMap("10.1", true));
+        Assert.assertNull(((Map<String, Boolean>) reified.get("5")).get("5.3"));
+        Assert.assertEquals(((Map<String, String>) reified.get("6")).get("6.3"), "baz");
+        Assert.assertEquals(((List<Map<String, Boolean>>) reified.get("8")).get(0), singletonMap("8.1", true));
 
         // New ones added at the last cycle
-        Assert.assertEquals(reified.get("11"), 4L);
-        Assert.assertEquals(reified.get("12", "12.1"), "foo");
+        Assert.assertEquals(reified.get("9"), 4L);
+        Assert.assertEquals(((Map<String, String>) reified.get("10")).get("10.1"), "foo");
     }
 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Cannot read from record.*")
@@ -288,6 +293,4 @@ public class LazyBulletAvroTest {
         avro.setDeserialized(false);
         avro.hasField("foo");
     }
-
-    */
 }

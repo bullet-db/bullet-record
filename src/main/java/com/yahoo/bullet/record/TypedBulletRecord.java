@@ -8,8 +8,6 @@ package com.yahoo.bullet.record;
 import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
 
-import java.util.Objects;
-
 public abstract class TypedBulletRecord extends BulletRecord<TypedObject> {
     private static final long serialVersionUID = 5093501631768714558L;
 
@@ -30,11 +28,7 @@ public abstract class TypedBulletRecord extends BulletRecord<TypedObject> {
      */
     @Override
     public BulletRecord<TypedObject> typedSet(String field, TypedObject object) {
-        Objects.requireNonNull(object);
-        Type type = object.getType();
-        if (type == Type.NULL || type == Type.UNKNOWN) {
-            throw new UnsupportedOperationException("You may not set a NULL or UNKNOWN typed object");
-        }
+        validateObject(object);
         return rawSet(field, object);
     }
 

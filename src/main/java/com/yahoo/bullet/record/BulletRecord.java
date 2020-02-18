@@ -10,6 +10,7 @@ import com.yahoo.bullet.typesystem.TypedObject;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Data sent to Bullet should be wrapped in a class that extends this abstract class. It is
@@ -103,7 +104,8 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
     public abstract TypedObject typedGet(String field);
 
     /**
-     * Creates a shallow copy of this record.
+     * Creates a copy of this record. This might be a shallow copy so the original (i.e. this) is recommended to be
+     * used as a read-only record after.
      *
      * @return A copy of this record.
      */
@@ -213,6 +215,13 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
 
     // ******************************************** Setters ********************************************
 
+    protected void validateObject(TypedObject object) {
+        Objects.requireNonNull(object);
+        if (object.isNull() || object.isUnknown()) {
+            throw new UnsupportedOperationException("You may not set a null or unknown typed object");
+        }
+    }
+
     /**
      * Sets a field in the record as a {@link TypedObject}. This is intended to be the primary way to set fields into
      * the record.
@@ -223,9 +232,7 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      * @throws RuntimeException if the set cannot be done.
      */
     public BulletRecord<T> typedSet(String field, TypedObject object) {
-        if (object.isUnknown()) {
-            throw new UnsupportedOperationException("Cannot set an object with invalid type");
-        }
+        validateObject(object);
         return set(field, object.getValue());
     }
 

@@ -10,13 +10,12 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,9 +34,16 @@ import java.util.stream.Collectors;
 @Slf4j
 public class Schema implements Serializable {
     private static final long serialVersionUID = 4384778745518403997L;
-    private static final Field MISSING = new Field("", Type.NULL);
+    private static final Field MISSING = new PlainField("", Type.NULL);
 
     private final LinkedHashMap<String, Field> fieldMap;
+
+    /**
+     * Empty constructor.
+     */
+    public Schema() {
+        this((List<Field>) null);
+    }
 
     /**
      * Creates a schema using fields loaded from a JSON file.
@@ -52,18 +58,22 @@ public class Schema implements Serializable {
     /**
      * Creates a schema from the provided fields.
      *
-     * @param fields The non-null {@link List} of {@link Field} instances. The order is preserved.
+     * @param fields The {@link List} of {@link Field} instances. The order is preserved.
      * @throws ValidationException if the fields are not valid.
-     * @throws UnsupportedOperationException if the fields are not provided.
      */
     public Schema(List<? extends Field> fields) throws ValidationException {
-        if (fields == null || fields.isEmpty()) {
-            throw new UnsupportedOperationException("Fields must be provided to create a schema");
-        }
         fieldMap = new LinkedHashMap<>();
-        for (Field field : fields) {
-            field.validate();
-            fieldMap.put(field.getName(), field);
+        if (fields != null) {
+            int i = 0;
+            for (Field field : fields) {
+                if (field == null) {
+                    throw new ValidationException("Found a null field at position " + i + " in the list of fields. " +
+                                                  "If parsed from JSON, this might have been an invalid field");
+                }
+                field.validate();
+                fieldMap.put(field.getName(), field);
+                i++;
+            }
         }
     }
 
@@ -116,23 +126,24 @@ public class Schema implements Serializable {
      * @return This schema for chaining.
      */
     public Schema addField(String name, Type type) {
-        return addField(new Field(name, type));
+        return addField(new PlainField(name, type));
     }
 
     /**
-     * Adds a field.
+     * Adds a field after validation.
      *
-     * @param field The {@link Field} to add.
+     * @param field The {@link Field} to add. It will be validated.
      * @return This schema for chaining.
      */
     public Schema addField(Field field) {
+        field.validate();
         fieldMap.put(field.getName(), field);
         return this;
     }
 
     /**
      * Changes the type of a field. The field must exist. This will preserve the order of the field in the schema as
-     * well as other attributes, if it had any.
+     * well as other attributes, if it had any. It will also validate the field after.
      *
      * @param name The name of the field.
      * @param type The non-null {@link Type} of the field.
@@ -147,17 +158,17 @@ public class Schema implements Serializable {
 
     /**
      * Changes the description of a field. The field must exist. This will preserve the order of the field in the
-     * schema as well as other attributes, if it had any.
+     * schema as well as other attributes, if it had any. It will also validate the field after.
      *
      * @param <T> A {@link DetailedField} type.
-     * @param klazz The class of the detailed field.
      * @param name The name of the field.
      * @param description The description to change.
      * @return This schema for chaining.
      */
-    public <T extends DetailedField> Schema changeFieldDescription(Class<T> klazz, String name, String description) {
+    public <T extends DetailedField> Schema changeFieldDescription(String name, String description) {
         DetailedField field = getAsDetailedField(DetailedField.class, name);
         field.description = description;
+        field.validate();
         return this;
     }
 
@@ -166,14 +177,14 @@ public class Schema implements Serializable {
      * other attributes, if it had any.
      *
      * @param <T> A {@link DetailedMapField} type.
-     * @param klazz The class of the detailed field.
      * @param name The name of the field.
      * @param subFields The {@link List} of {@link SubField} for the field.
      * @return This schema for chaining.
      */
-    public <T extends DetailedMapField> Schema changeSubFields(Class<T> klazz, String name, List<SubField> subFields) {
+    public <T extends DetailedMapField> Schema changeSubFields(String name, List<SubField> subFields) {
         DetailedMapField field = getAsDetailedField(DetailedMapField.class, name);
         field.subFields = subFields;
+        field.validate();
         return this;
     }
 
@@ -182,15 +193,40 @@ public class Schema implements Serializable {
      * other attributes, if it had any.
      *
      * @param <T> A {@link DetailedMapMapField} type.
-     * @param klazz The class of the detailed field.
      * @param name The name of the field.
      * @param subFields The {@link List} of {@link SubField} for the field.
      * @return This schema for chaining.
      */
-    public <T extends DetailedMapMapField> Schema changeSubSubFields(Class<T> klazz, String name, List<SubField> subFields) {
+    public <T extends DetailedMapMapField> Schema changeSubSubFields(String name, List<SubField> subFields) {
         DetailedMapMapField field = getAsDetailedField(DetailedMapMapField.class, name);
         field.subSubFields = subFields;
+        field.validate();
         return this;
+    }
+
+    /**
+     * Changes the sub-fields of a list of map field. This will preserve the order of the field in the schema as well as
+     * other attributes, if it had any.
+     *
+     * @param <T> A {@link DetailedMapListField} type.
+     * @param name The name of the field.
+     * @param subFields The {@link List} of {@link SubField} for the field.
+     * @return This schema for chaining.
+     */
+    public <T extends DetailedMapListField> Schema changeSubListFields(String name, List<SubField> subFields) {
+        DetailedMapListField field = getAsDetailedField(DetailedMapListField.class, name);
+        field.subListFields = subFields;
+        field.validate();
+        return this;
+    }
+
+    /**
+     * Returns the number of fields in this schema.
+     *
+     * @return An integer count of the number of fields defined in this schema.
+     */
+    public int size() {
+        return fieldMap.size();
     }
 
     /**
@@ -199,12 +235,7 @@ public class Schema implements Serializable {
      * @return The copied {@link Schema}.
      */
     public Schema copy() {
-        try {
-            return new Schema(fieldMap.values().stream().map(Field::copy).collect(Collectors.toList()));
-        } catch (ValidationException e) {
-            log.error("Copied schema was invalid", e);
-            throw new RuntimeException("Copied schema was not valid", e);
-        }
+        return new Schema(fieldMap.values().stream().map(Field::copy).collect(Collectors.toList()));
     }
 
     /**
@@ -256,6 +287,16 @@ public class Schema implements Serializable {
         return getFields(DetailedMapMapField.class);
     }
 
+    /**
+     * Gets the list of detailed list of map fields in this schema. The order will be order provided initially to create
+     * the schema as well as future additions to the schema.
+     *
+     * @return The {@link List} of {@link DetailedMapMapField} stored in this schema.
+     */
+    public List<DetailedMapListField> getDetailedMapListFields() {
+        return getFields(DetailedMapListField.class);
+    }
+
     private <T extends DetailedField> T getAsDetailedField(Class<T> klazz, String name) {
         Field field = getField(name);
         if (!klazz.isInstance(field)) {
@@ -272,10 +313,12 @@ public class Schema implements Serializable {
         if (file == null || file.isEmpty()) {
             return null;
         }
-        try (InputStream is = Schema.class.getResourceAsStream("/" + file)) {
+        try {
+            InputStream is = Schema.class.getResourceAsStream("/" + file);
             return is != null ? new InputStreamReader(is) : new FileReader(file);
         } catch (IOException ioe) {
-            log.error("Unable to load schema file " + file, ioe);
+            log.error("Unable to load schema file {}", file);
+            log.error("Error: ", ioe);
             return null;
         }
     }
@@ -284,7 +327,7 @@ public class Schema implements Serializable {
     /*                                          Static helper classes                                                 */
     /* ============================================================================================================== */
 
-    public static class ValidationException extends Exception {
+    public static class ValidationException extends RuntimeException {
         private static final long serialVersionUID = 1652975997878467083L;
         private String cause;
 
@@ -304,10 +347,10 @@ public class Schema implements Serializable {
 
     }
 
-    @Getter(AccessLevel.PACKAGE) @NoArgsConstructor @AllArgsConstructor
-    public static class Field {
-        private String name;
-        private Type type;
+    @Getter @Setter
+    public abstract static class Field {
+        protected String name;
+        protected Type type;
 
         private static final String NAME_FIELD = "name";
         private static final String TYPE_FIELD = "type";
@@ -317,8 +360,42 @@ public class Schema implements Serializable {
          *
          * @return The copied {@link Field}.
          */
-        public Field copy() {
-            return new Field(name, type);
+        public abstract Field copy();
+
+        /**
+         * Checks to see if the field is valid.
+         *
+         * @throws ValidationException if the field is not valid.
+         */
+        public abstract void validate() throws ValidationException;
+
+        /**
+         * Checks if the given the String is null or empty.
+         *
+         * @param field The String to check.
+         * @return A boolean denoting if the field is missing.
+         */
+        public static boolean isNotPresent(String field) {
+            return field == null || field.isEmpty();
+        }
+    }
+
+    @Getter @NoArgsConstructor
+    public static class PlainField extends Field {
+        /**
+         * Constructor.
+         *
+         * @param name The String name of this field.
+         * @param type The {@link Type} of this field.
+         */
+        public PlainField(String name, Type type) {
+            this.name = name;
+            this.type = type;
+        }
+
+        @Override
+        public PlainField copy() {
+            return new PlainField(name, type);
         }
 
         /**
@@ -326,6 +403,7 @@ public class Schema implements Serializable {
          *
          * @throws ValidationException if the field is not valid.
          */
+        @Override
         public void validate() throws ValidationException {
             checkFieldMembers();
         }
@@ -339,16 +417,6 @@ public class Schema implements Serializable {
             if (isNotPresent(name) || type == null) {
                 throw new ValidationException("The name or the type must be provided for a field");
             }
-        }
-
-        /**
-         * Checks if the given the String is null or empty.
-         *
-         * @param field The String to check.
-         * @return A boolean denoting if the field is missing.
-         */
-        public static boolean isNotPresent(String field) {
-            return field == null || field.isEmpty();
         }
     }
 
@@ -365,10 +433,30 @@ public class Schema implements Serializable {
         public SubField copy() {
             return new SubField(name, description);
         }
+
+        /**
+         * Copies a {@link List} of sub-fields.
+         *
+         * @param subFields The {@link List} of {@link SubField} to copy.
+         * @return The copied sub-fields.
+         */
+        static List<SubField> copy(List<SubField> subFields) {
+            return subFields == null ? null : subFields.stream().map(SubField::copy).collect(Collectors.toList());
+        }
+
+        /**
+         * Checks if the given the {@link List} of {@link SubField} is null or empty.
+         *
+         * @param fields The sub-fields to check.
+         * @return A boolean denoting if the sub-fields are missing.
+         */
+        public static boolean isNotPresent(List<SubField> fields) {
+            return fields == null || fields.isEmpty();
+        }
     }
 
-    @Getter @NoArgsConstructor
-    public static class DetailedField extends Field {
+    @Getter @Setter @NoArgsConstructor
+    public static class DetailedField extends PlainField {
         private String description;
 
         private static final String DESCRIPTION_FIELD = "description";
@@ -385,11 +473,6 @@ public class Schema implements Serializable {
             this.description = description;
         }
 
-        /**
-         * Copies this detailed field.
-         *
-         * @return The copied {@link DetailedField}.
-         */
         @Override
         public DetailedField copy() {
             return new DetailedField(getName(), getType(), description);
@@ -404,7 +487,7 @@ public class Schema implements Serializable {
         }
     }
 
-    @Getter @NoArgsConstructor
+    @Getter @Setter @NoArgsConstructor
     public static class DetailedMapField extends DetailedField {
         private List<SubField> subFields;
 
@@ -423,46 +506,21 @@ public class Schema implements Serializable {
             this.subFields = subFields;
         }
 
-        /**
-         * Copies this detailed map field.
-         *
-         * @return The copied {@link DetailedMapField}.
-         */
         @Override
         public DetailedMapField copy() {
-            return new DetailedMapField(getName(), getType(), getDescription(), copy(subFields));
-        }
-
-        /**
-         * Copies the sub-fields.
-         *
-         * @param subFields The {@link List} of {@link SubField} to copy.
-         * @return The copied sub-fields.
-         */
-        static List<SubField> copy(List<SubField> subFields) {
-            return subFields == null ? null : subFields.stream().map(SubField::copy).collect(Collectors.toList());
-        }
-
-        /**
-         * Checks if the given the {@link List} of {@link SubField} is null or empty.
-         *
-         * @param fields The sub-fields to check.
-         * @return A boolean denoting if the sub-fields are missing.
-         */
-        public static boolean isNotPresent(List<SubField> fields) {
-            return fields == null || fields.isEmpty();
+            return new DetailedMapField(getName(), getType(), getDescription(), SubField.copy(subFields));
         }
 
         @Override
         public void validate() throws ValidationException {
             super.validate();
-            if (isNotPresent(subFields)) {
-                throw new ValidationException("The sub-fields are not provided. It is not optional for map of primitives detailed field");
+            if (SubField.isNotPresent(subFields)) {
+                throw new ValidationException("The subFields are not provided. It is not optional for detailed map of primitives field");
             }
         }
     }
 
-    @Getter
+    @Getter @Setter @NoArgsConstructor
     public static class DetailedMapMapField extends DetailedMapField {
         private List<SubField> subSubFields;
 
@@ -482,14 +540,9 @@ public class Schema implements Serializable {
             this.subSubFields = subSubFields;
         }
 
-        /**
-         * Copies this detailed map of map field.
-         *
-         * @return The copied {@link DetailedMapMapField}.
-         */
         @Override
         public DetailedMapMapField copy() {
-            return new DetailedMapMapField(getName(), getType(), getDescription(), copy(getSubFields()), copy(subSubFields));
+            return new DetailedMapMapField(getName(), getType(), getDescription(), SubField.copy(getSubFields()), SubField.copy(subSubFields));
         }
 
         @Override
@@ -497,34 +550,69 @@ public class Schema implements Serializable {
             // Do not call parent's validate since that will check subFields. That can be null.
             // Instead call checkFieldMembers, which is not overridden in parent.
             checkFieldMembers();
-            if (isNotPresent(subSubFields)) {
-                throw new ValidationException("The sub-fields are not provided. It is not optional for map of primitives detailed field");
+            if (SubField.isNotPresent(subSubFields)) {
+                throw new ValidationException("The subSubFields are not provided. It is not optional for a detailed map of map of primitives field");
             }
         }
     }
+
+    @Getter @Setter @NoArgsConstructor
+    public static class DetailedMapListField extends DetailedField {
+        private List<SubField> subListFields;
+
+        private static final String SUBLIST_FIELD = "subListFields";
+
+        /**
+         * Constructor.
+         *
+         * @param name The String name of the field.
+         * @param type The {@link Type} of the field.
+         * @param description A String description for this field.
+         * @param subListFields A {@link List} of {@link SubField} enumerations for each map in this list of maps.
+         */
+        public DetailedMapListField(String name, Type type, String description, List<SubField> subListFields) {
+            super(name, type, description);
+            this.subListFields = subListFields;
+        }
+
+        @Override
+        public DetailedMapListField copy() {
+            return new DetailedMapListField(getName(), getType(), getDescription(), SubField.copy(subListFields));
+        }
+
+        @Override
+        public void validate() throws ValidationException {
+            checkFieldMembers();
+            if (SubField.isNotPresent(subListFields)) {
+                throw new ValidationException("The subListFields are not provided. It is not optional for a detailed list of map of primitives field");
+            }
+        }
+    }
+
 
     public static class Parser {
         private static final GenericTypeAdapterFactory<Field> FIELD_FACTORY =
                 // Order matters! This is a line hierarchy so the bottom up
                 GenericTypeAdapterFactory.of(Field.class)
+                                         .registerSubType(DetailedMapListField.class, Parser::isDetailedMapListField)
                                          .registerSubType(DetailedMapMapField.class, Parser::isDetailedMapMapField)
                                          .registerSubType(DetailedMapField.class, Parser::isDetailedMapField)
                                          .registerSubType(DetailedField.class, Parser::isDetailedField)
-                                         .registerSubType(Field.class, Parser::isField);
+                                         .registerSubType(PlainField.class, Parser::isPlainField);
 
         private static final Gson GSON = new GsonBuilder().registerTypeAdapterFactory(FIELD_FACTORY)
                                                           .setPrettyPrinting().serializeNulls().create();
 
         private static final Set<String> TYPES = Arrays.stream(Type.values()).map(Type::name).collect(Collectors.toSet());
 
-        private static boolean isField(JsonObject jsonObject) {
+        private static boolean isPlainField(JsonObject jsonObject) {
             JsonElement name = jsonObject.get(Field.NAME_FIELD);
             JsonElement type = jsonObject.get(Field.TYPE_FIELD);
             return name != null && type != null && TYPES.contains(type.getAsString());
         }
 
         private static boolean isDetailedField(JsonObject jsonObject) {
-            return isField(jsonObject) && jsonObject.has(DetailedField.DESCRIPTION_FIELD);
+            return isPlainField(jsonObject) && jsonObject.has(DetailedField.DESCRIPTION_FIELD);
         }
 
         private static boolean isDetailedMapField(JsonObject jsonObject) {
@@ -535,6 +623,10 @@ public class Schema implements Serializable {
 
         private static boolean isDetailedMapMapField(JsonObject jsonObject) {
             return isDetailedField(jsonObject) && jsonObject.has(DetailedMapMapField.SUBSUBFIELDS_FIELD);
+        }
+
+        private static boolean isDetailedMapListField(JsonObject jsonObject) {
+            return isDetailedField(jsonObject) && jsonObject.has(DetailedMapListField.SUBLIST_FIELD);
         }
 
         /**
@@ -550,10 +642,11 @@ public class Schema implements Serializable {
         /**
          * Reads a {@link List} of {@link Field} from a {@link Reader}.
          *
-         * @param reader The reader to use.
+         * @param reader The non-null reader to use.
          * @return A {@link List} of {@link Field} instances.
          */
         public static List<Field> parse(Reader reader) {
+            Objects.requireNonNull(reader);
             return GSON.fromJson(reader, new TypeToken<List<Field>>() { }.getType());
         }
     }

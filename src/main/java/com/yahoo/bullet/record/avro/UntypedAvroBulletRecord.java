@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * An implementation of {@link BulletRecord} using Avro for serialization. It is an {@link UntypedAvroBulletRecord}.
@@ -29,6 +30,7 @@ public class UntypedAvroBulletRecord extends UntypedBulletRecord {
 
     @Override
     protected UntypedAvroBulletRecord rawSet(String field, Object object) {
+        Objects.requireNonNull(field);
         data.set(field, object);
         return this;
     }

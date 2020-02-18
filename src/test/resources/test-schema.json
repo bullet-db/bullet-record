@@ -1,0 +1,109 @@
+[
+    {
+        "name": "a",
+        "type": "STRING"
+    },
+    {
+        "name": "b",
+        "type": "INTEGER"
+    },
+    {
+        "name": "c",
+        "type": "FLOAT"
+    },
+    {
+        "name": "d",
+        "type": "DOUBLE"
+    },
+    {
+        "name": "e",
+        "type": "LONG"
+    },
+    {
+        "name": "f",
+        "type": "BOOLEAN"
+    },
+    {
+        "name": "g",
+        "type": "STRING_LIST"
+    },
+    {
+        "name": "h",
+        "type": "DOUBLE_MAP",
+        "description": "This is a detailed map of doubles"
+    },
+    {
+        "name": "i",
+        "type": "FLOAT_MAP_MAP"
+    },
+    {
+        "name": "j",
+        "type": "INTEGER_MAP_LIST"
+    },
+    {
+        "name": "k",
+        "type": "BOOLEAN_LIST",
+        "description": "This is a detailed list of booleans"
+    },
+    {
+        "name": "l",
+        "type": "INTEGER_MAP",
+        "description": "This is a detailed map of integers",
+        "subFields": [
+            {
+                "name": "a"
+            },
+            {
+                "name": "b",
+                "description": ""
+            },
+            {
+                "name": "c",
+                "description": "This is an integer sub-field"
+            }
+        ]
+    },
+    {
+        "name": "m",
+        "type": "STRING_MAP_MAP",
+        "description": "This is a detailed map of map of strings",
+        "subFields": [
+            {
+                "name": "A",
+                "description": "This is a map sub-field"
+            },
+            {
+                "name": "B",
+                "description": "This is another map sub-field"
+            }
+        ],
+        "subSubFields": [
+            {
+                "name": "a",
+                "description": "This is a string sub-sub-field"
+            }
+        ]
+    },
+    {
+        "name": "n",
+        "type": "LONG_MAP_MAP",
+        "description": "This is a detailed map of map of longs",
+        "subSubFields": [
+            {
+                "name": "a",
+                "description": "This is a long sub-sub-field"
+            }
+        ]
+    },
+    {
+        "name": "o",
+        "type": "FLOAT_MAP_LIST",
+        "description": "This is a detailed list of map of floats",
+        "subListFields": [
+            {
+                "name": "a",
+                "description": "This is a float sub-list-field"
+            }
+        ]
+    }
+]

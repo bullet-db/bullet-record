@@ -5,7 +5,6 @@
  */
 package com.yahoo.bullet.typesystem;
 
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.Collection;
@@ -13,8 +12,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
-import java.util.regex.Pattern;
 
+import static com.yahoo.bullet.TestHelpers.assertException;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -65,18 +64,6 @@ public class TypeTest {
                 assertFalse(check.test(typeA, typeB));
             }
         }
-    }
-
-    private static void assertException(Runnable statement, String expectedExceptionRegex) {
-        try {
-            statement.run();
-        } catch (RuntimeException e) {
-            if (expectedExceptionRegex != null) {
-                Assert.assertTrue(Pattern.matches(expectedExceptionRegex, e.toString()));
-            }
-            return;
-        }
-        throw new RuntimeException("Expected a RuntimeException with " + expectedExceptionRegex);
     }
 
     @Test
@@ -495,6 +482,7 @@ public class TypeTest {
         assertEquals(Type.STRING_MAP.forceCast(Type.LONG_MAP, SIMPLE_STRING_MAP), SIMPLE_LONG_MAP);
         assertEquals(Type.STRING_MAP.forceCast(Type.FLOAT_MAP, SIMPLE_STRING_MAP), SIMPLE_FLOAT_MAP);
         assertEquals(Type.STRING_MAP.forceCast(Type.DOUBLE_MAP, SIMPLE_STRING_MAP), SIMPLE_DOUBLE_MAP);
+        assertEquals(Type.STRING_MAP.forceCast(Type.DOUBLE_MAP, singletonMap(null, "1")), singletonMap(null, 1.0));
         // Booleans parse only "true" as true. Everything else is false
         assertEquals(Type.STRING_MAP.forceCast(Type.BOOLEAN_MAP, SIMPLE_STRING_MAP), singletonMap("a", false));
         assertEquals(Type.STRING_MAP_MAP.forceCast(Type.INTEGER_MAP_MAP, SIMPLE_STRING_MAP_MAP), SIMPLE_INTEGER_MAP_MAP);
