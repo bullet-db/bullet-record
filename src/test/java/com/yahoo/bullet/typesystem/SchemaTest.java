@@ -215,7 +215,9 @@ public class SchemaTest {
     @Test
     public void testParsingFromString() throws Exception {
         String data = new String(Files.readAllBytes(Paths.get("src/test/resources/test-schema.json")));
-        List<Field> fields = Schema.Parser.parse(data);
+        // For coverage
+        Schema.Parser parser = new Schema.Parser();
+        List<Field> fields = parser.parse(data);
         assertEquals(fields, ALL);
     }
 

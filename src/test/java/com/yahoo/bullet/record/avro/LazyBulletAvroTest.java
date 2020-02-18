@@ -134,6 +134,8 @@ public class LazyBulletAvroTest {
         avro.setSerializedData(null);
         avro.setData(null);
         avro.setDeserialized(false);
+        // For coverage
+        Assert.assertNull(avro.getSerializedData());
         another.setSerializedData(null);
         another.setData(null);
         another.setDeserialized(false);
