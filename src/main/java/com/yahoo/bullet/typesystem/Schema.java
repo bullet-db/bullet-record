@@ -515,8 +515,11 @@ public class Schema implements Serializable {
         @Override
         public void validate() throws ValidationException {
             super.validate();
+            if (!Type.isMap(type)) {
+                throw new ValidationException("A detailed map should have a type that is a map");
+            }
             if (SubField.isNotPresent(subFields)) {
-                throw new ValidationException("The subFields are not provided. It is not optional for detailed map of primitives field");
+                throw new ValidationException("The subFields are not provided. It is not optional for detailed map field");
             }
         }
     }
@@ -551,6 +554,9 @@ public class Schema implements Serializable {
             // Do not call parent's validate since that will check subFields. That can be null.
             // Instead call checkFieldMembers, which is not overridden in parent.
             checkFieldMembers();
+            if (!Type.isComplexMap(type)) {
+                throw new ValidationException("A detailed map of maps should have a type that is a map of map of primitives");
+            }
             if (SubField.isNotPresent(subSubFields)) {
                 throw new ValidationException("The subSubFields are not provided. It is not optional for a detailed map of map of primitives field");
             }
@@ -584,6 +590,9 @@ public class Schema implements Serializable {
         @Override
         public void validate() throws ValidationException {
             checkFieldMembers();
+            if (!Type.isComplexList(type)) {
+                throw new ValidationException("A detailed list of map should have a type that is a list of maps of primitives");
+            }
             if (SubField.isNotPresent(subListFields)) {
                 throw new ValidationException("The subListFields are not provided. It is not optional for a detailed list of map of primitives field");
             }

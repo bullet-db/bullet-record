@@ -65,6 +65,8 @@ public class SchemaTest {
                                                 singletonList(new SubField("a", "This is a long sub-sub-field"))));
         FIELDS.put("o", new DetailedMapListField("o", Type.FLOAT_MAP_LIST, "This is a detailed list of map of floats",
                                                  singletonList(new SubField("a", "This is a float sub-list-field"))));
+        FIELDS.put("p", new DetailedMapField("p", Type.LONG_MAP_MAP, "This is a detailed map of map of longs but enumerates only the first level",
+                                             singletonList(new SubField("a", "This is a map of longs sub-field"))));
 
         ALL.addAll(FIELDS.values());
 
@@ -74,10 +76,12 @@ public class SchemaTest {
         DETAILED_FIELDS.add((DetailedField) FIELDS.get("m"));
         DETAILED_FIELDS.add((DetailedField) FIELDS.get("n"));
         DETAILED_FIELDS.add((DetailedField) FIELDS.get("o"));
+        DETAILED_FIELDS.add((DetailedField) FIELDS.get("p"));
 
         DETAILED_MAP_FIELDS.add((DetailedMapField) FIELDS.get("l"));
         DETAILED_MAP_FIELDS.add((DetailedMapField) FIELDS.get("m"));
         DETAILED_MAP_FIELDS.add((DetailedMapField) FIELDS.get("n"));
+        DETAILED_MAP_FIELDS.add((DetailedMapField) FIELDS.get("p"));
 
         DETAILED_MAP_MAP_FIELDS.add((DetailedMapMapField) FIELDS.get("m"));
         DETAILED_MAP_MAP_FIELDS.add((DetailedMapMapField) FIELDS.get("n"));
@@ -215,6 +219,18 @@ public class SchemaTest {
 
     @Test
     public void testParsingFromString() throws Exception {
+        String boo = "[    {\n" +
+                "        \"name\": \"p\",\n" +
+                "        \"type\": \"LONG_MAP_MAP\",\n" +
+                "        \"description\": \"This is a detailed map of map of longs but enumerates only the first level\",\n" +
+                "        \"subField\": [\n" +
+                "            {\n" +
+                "                \"name\": \"a\",\n" +
+                "                \"description\": \"This is a map of longs sub-field\"\n" +
+                "            }\n" +
+                "        ]\n" +
+                "    }]";
+        List<Field> booer = Schema.Parser.parse(boo);
         String data = new String(Files.readAllBytes(Paths.get("src/test/resources/test-schema.json")));
         // For coverage
         Parser parser = new Parser();
@@ -254,18 +270,26 @@ public class SchemaTest {
                         ".*The description must be provided.*");
         assertException(() -> new Schema(singletonList(new DetailedField("a", Type.FLOAT, ""))),
                         ".*The description must be provided.*");
+        assertException(() -> new Schema(singletonList(new DetailedMapField("a", Type.DOUBLE_MAP_MAP, "desc", null))),
+                        ".*The subFields are not provided.*");
         assertException(() -> new Schema(singletonList(new DetailedMapField("a", Type.FLOAT, "desc", null))),
+                        ".*should have a type that is a map.*");
+        assertException(() -> new Schema(singletonList(new DetailedMapField("a", Type.INTEGER_MAP, "desc", emptyList()))),
                         ".*The subFields are not provided.*");
-        assertException(() -> new Schema(singletonList(new DetailedMapField("a", Type.FLOAT, "desc", emptyList()))),
-                        ".*The subFields are not provided.*");
+        assertException(() -> new Schema(singletonList(new DetailedMapMapField("a", Type.STRING_MAP_MAP, "desc", null, null))),
+                        ".*The subSubFields are not provided.*");
+        assertException(() -> new Schema(singletonList(new DetailedMapMapField("a", Type.STRING_MAP_MAP, "desc", null, emptyList()))),
+                        ".*The subSubFields are not provided.*");
         assertException(() -> new Schema(singletonList(new DetailedMapMapField("a", Type.FLOAT, "desc", null, null))),
-                        ".*The subSubFields are not provided.*");
-        assertException(() -> new Schema(singletonList(new DetailedMapMapField("a", Type.FLOAT, "desc", null, emptyList()))),
-                        ".*The subSubFields are not provided.*");
-        assertException(() -> new Schema(singletonList(new DetailedMapListField("a", Type.FLOAT, "desc", null))),
+                        ".*should have a type that is a map of map.*");
+        assertException(() -> new Schema(singletonList(new DetailedMapMapField("a", Type.STRING_MAP, "desc", null, null))),
+                        ".*should have a type that is a map of map.*");
+        assertException(() -> new Schema(singletonList(new DetailedMapListField("a", Type.STRING_MAP_LIST, "desc", null))),
+                        ".*The subListFields are not provided.*");
+        assertException(() -> new Schema(singletonList(new DetailedMapListField("a", Type.DOUBLE_MAP_LIST, "desc", emptyList()))),
                         ".*The subListFields are not provided.*");
         assertException(() -> new Schema(singletonList(new DetailedMapListField("a", Type.FLOAT, "desc", emptyList()))),
-                        ".*The subListFields are not provided.*");
+                        ".*should have a type that is a list of map.*");
     }
 
     @Test

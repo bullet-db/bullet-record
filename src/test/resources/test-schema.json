@@ -105,5 +105,16 @@
                 "description": "This is a float sub-list-field"
             }
         ]
+    },
+    {
+        "name": "p",
+        "type": "LONG_MAP_MAP",
+        "description": "This is a detailed map of map of longs but enumerates only the first level",
+        "subFields": [
+            {
+                "name": "a",
+                "description": "This is a map of longs sub-field"
+            }
+        ]
     }
 ]
