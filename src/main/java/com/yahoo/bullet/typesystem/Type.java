@@ -59,14 +59,54 @@ public enum Type {
     // Doesn't matter what underlyingClass is for UNKNOWN, just need something that isn't encountered
     UNKNOWN(Type.class);
 
+    /**
+     * A {@link Set} of the {@link #BOOLEAN}, {@link #INTEGER} {@link #LONG}, {@link #FLOAT}, {@link #DOUBLE} and
+     * {@link #STRING} types.
+     */
     public static Set<Type> PRIMITIVES = set(BOOLEAN, INTEGER, LONG, FLOAT, DOUBLE, STRING);
+
+    /**
+     * A {@link Set} of the {@link #INTEGER} {@link #LONG}, {@link #FLOAT} and {@link #DOUBLE} types.
+     */
     public static Set<Type> NUMERICS = set(INTEGER, LONG, FLOAT, DOUBLE);
+
+    /**
+     * A {@link Set} of the {@link #BOOLEAN_MAP}, {@link #INTEGER_MAP} {@link #LONG_MAP}, {@link #FLOAT_MAP},
+     * {@link #DOUBLE_MAP} and {@link #STRING_MAP} types.
+     */
     public static Set<Type> PRIMITIVE_MAPS = set(STRING_MAP, BOOLEAN_MAP, INTEGER_MAP, LONG_MAP, FLOAT_MAP, DOUBLE_MAP);
+
+    /**
+     * A {@link Set} of the {@link #BOOLEAN_MAP_MAP}, {@link #INTEGER_MAP_MAP} {@link #LONG_MAP_MAP},
+     * {@link #FLOAT_MAP_MAP}, {@link #DOUBLE_MAP_MAP} and {@link #STRING_MAP_MAP} types.
+     */
     public static Set<Type> COMPLEX_MAPS = set(STRING_MAP_MAP, BOOLEAN_MAP_MAP, INTEGER_MAP_MAP, LONG_MAP_MAP, FLOAT_MAP_MAP, DOUBLE_MAP_MAP);
+
+    /**
+     * A {@link Set} of the {@link #PRIMITIVE_MAPS}, {@link #COMPLEX_MAPS} types.
+     */
     public static Set<Type> MAPS = set(PRIMITIVE_MAPS, COMPLEX_MAPS);
+
+    /**
+     * A {@link Set} of the {@link #BOOLEAN_LIST}, {@link #INTEGER_LIST} {@link #LONG_LIST}, {@link #FLOAT_LIST},
+     * {@link #DOUBLE_LIST} and {@link #STRING_LIST} types.
+     */
     public static Set<Type> PRIMITIVE_LISTS = set(STRING_LIST, BOOLEAN_LIST, INTEGER_LIST, LONG_LIST, FLOAT_LIST, DOUBLE_LIST);
+
+    /**
+     * A {@link Set} of the {@link #BOOLEAN_MAP_LIST}, {@link #INTEGER_MAP_LIST} {@link #LONG_MAP_LIST},
+     * {@link #FLOAT_MAP_LIST}, {@link #DOUBLE_MAP_LIST} and {@link #STRING_MAP_LIST} types.
+     */
     public static Set<Type> COMPLEX_LISTS = set(STRING_MAP_LIST, BOOLEAN_MAP_LIST, INTEGER_MAP_LIST, LONG_MAP_LIST, FLOAT_MAP_LIST, DOUBLE_MAP_LIST);
+
+    /**
+     * A {@link Set} of the {@link #PRIMITIVE_LISTS} and {@link #COMPLEX_LISTS} types.
+     */
     public static Set<Type> LISTS = set(PRIMITIVE_LISTS, COMPLEX_LISTS);
+
+    /**
+     * A {@link Set} of the {@link #NULL}, {@link #PRIMITIVES}, {@link #MAPS} and {@link #LISTS} types.
+     */
     public static Set<Type> ACTUAL_TYPES = set(set(NULL), PRIMITIVES, MAPS, LISTS);
 
     private final Class underlyingClass;

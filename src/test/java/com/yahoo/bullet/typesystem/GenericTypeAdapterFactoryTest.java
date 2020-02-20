@@ -9,7 +9,6 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import org.testng.Assert;
@@ -42,7 +41,7 @@ public class GenericTypeAdapterFactoryTest {
         return new GsonBuilder().registerTypeAdapterFactory(factory).create();
     }
 
-    private GenericTypeAdapterFactory<Base> getFactory(Predicate<JsonObject> a, Predicate<JsonObject> b) {
+    private GenericTypeAdapterFactory<Base> getFactory(Predicate<JsonElement> a, Predicate<JsonElement> b) {
         return GenericTypeAdapterFactory.of(Base.class)
                 .registerSubType(SubTypeA.class, a)
                 .registerSubType(SubTypeB.class, b) ;
@@ -66,8 +65,9 @@ public class GenericTypeAdapterFactoryTest {
 
     @Test
     public void testDeserialization() {
-        Gson gson = getGSON(getFactory(t -> t.get("bar").getAsString().contains("A"), t -> t.get("bar").getAsString().contains("B")));
-
+        Predicate<JsonElement> a = t -> t.getAsJsonObject().get("bar").getAsString().contains("A");
+        Predicate<JsonElement> b = t -> t.getAsJsonObject().get("bar").getAsString().contains("B");
+        Gson gson = getGSON(getFactory(a, b));
         Base deserializedB = gson.fromJson(makeJSON(1, "B", asList("a", "b")), Base.class);
         SubTypeB castedB = (SubTypeB) deserializedB;
         Assert.assertNotNull(castedB);
@@ -85,7 +85,9 @@ public class GenericTypeAdapterFactoryTest {
 
     @Test
     public void testDeserializationFail() {
-        Gson gson = getGSON(getFactory(t -> t.get("bar").getAsString().contains("A"), t -> t.get("bar").getAsString().contains("B")));
+        Predicate<JsonElement> a = t -> t.getAsJsonObject().get("bar").getAsString().contains("A");
+        Predicate<JsonElement> b = t -> t.getAsJsonObject().get("bar").getAsString().contains("B");
+        Gson gson = getGSON(getFactory(a, b));
         Base deserialized = gson.fromJson(makeJSON(1, "garbage", "a"), Base.class);
         Assert.assertNull(deserialized);
     }

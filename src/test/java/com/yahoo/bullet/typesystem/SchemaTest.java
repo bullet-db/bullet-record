@@ -228,6 +228,7 @@ public class SchemaTest {
 
     @Test
     public void testFailParsingFromString() {
+        Assert.assertEquals(Parser.parse("['foo']"), singletonList(null));
         Assert.assertEquals(Parser.parse("[{}]"), singletonList(null));
         Assert.assertEquals(Parser.parse("[{'name': null}]"), singletonList(null));
         Assert.assertEquals(Parser.parse("[{'name': null, 'type': null}]"), singletonList(null));

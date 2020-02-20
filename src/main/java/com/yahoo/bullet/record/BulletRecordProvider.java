@@ -13,7 +13,7 @@ import java.lang.reflect.Constructor;
  */
 public interface BulletRecordProvider extends Serializable {
     /**
-     * Get an instance of an {@link BulletRecord}.
+     * Get an instance of a {@link BulletRecord}.
      *
      * @return A {@link BulletRecord} instance.
      */

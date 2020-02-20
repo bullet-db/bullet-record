@@ -16,7 +16,13 @@ public class TypedObject implements Comparable<TypedObject> {
     private final Type type;
     private final Object value;
 
+    /**
+     * Represents the {@link Type#UNKNOWN} object. The value is null.
+     */
     public static final TypedObject UNKNOWN = new TypedObject(Type.UNKNOWN, null);
+    /**
+     * Represents the {@link Type#NULL} object. The value is null.
+     */
     public static final TypedObject NULL = new TypedObject(Type.NULL, null);
 
     /**

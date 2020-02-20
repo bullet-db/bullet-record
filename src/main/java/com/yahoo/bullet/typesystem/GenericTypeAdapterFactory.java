@@ -7,7 +7,6 @@ package com.yahoo.bullet.typesystem;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
@@ -23,21 +22,24 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
- * Adapted from Google GSON's RuntimeTypeAdapterFactory to support a generic type adapter. Instead of adding a new
- * field to the top level, this uses a {@link Predicate} on a {@link JsonObject} in order to decide which TypeAdapter to
- * use.
+ * Adapted from Google GSON's
+ * <a href="https://github.com/google/gson/blob/master/extras/src/main/java/com/google/gson/typeadapters/RuntimeTypeAdapterFactory.java">RuntimeTypeAdapterFactory</a>
+ * to support a generic type adapter. Instead of adding a new field to the top level and determining the type based
+ * off of that, this accepts various {@link Predicate} on a {@link JsonElement} for each type in order to decide which
+ * {@link TypeAdapter} to use.
  *
- * When deserializing JSON, the predicate is applied to it and checked to see if it is present in the List of values
- * for a subtype (in order of registry), if it is, the JSON is attempted to be deserialized into that subtype (and
+ * When deserializing JSON, the predicate is applied to the {@link JsonElement} and checked to see if it is true
+ * for a subtype (in order of registry). If it is, the JSON is attempted to be deserialized into that subtype (and
  * returned as an element of the base type {@code T}).
  *
- * Serializing JSON is done as normal without any changes to the output JSON.
+ * Serializing JSON is done as normal without any changes to the output JSON. This avoid the extraneous type field in
+ * the original RuntimeTypeAdapterFactory.
  *
  * @param <T> The base type that this factory handles.
  */
 public class GenericTypeAdapterFactory<T> implements TypeAdapterFactory {
     private final Class<T> base;
-    private final Map<Class<?>, Predicate<JsonObject>> registeredTypes = new LinkedHashMap<>();
+    private final Map<Class<?>, Predicate<JsonElement>> registeredTypes = new LinkedHashMap<>();
 
     private GenericTypeAdapterFactory(Class<T> base) {
         this.base = base;
@@ -61,7 +63,7 @@ public class GenericTypeAdapterFactory<T> implements TypeAdapterFactory {
      * @param condition The {@link Predicate} that will decide this class
      * @return this object for chaining.
      */
-    public GenericTypeAdapterFactory<T> registerSubType(Class<? extends T> subType, Predicate<JsonObject> condition) {
+    public GenericTypeAdapterFactory<T> registerSubType(Class<? extends T> subType, Predicate<JsonElement> condition) {
         Objects.requireNonNull(subType);
         Objects.requireNonNull(condition);
         registeredTypes.put(subType, condition);
@@ -84,15 +86,16 @@ public class GenericTypeAdapterFactory<T> implements TypeAdapterFactory {
     @SuppressWarnings("unchecked")
     private static class GenericTypeAdapter<R> extends TypeAdapter<R> {
         private Map<Class<?>, TypeAdapter<?>> adapters;
-        private Map<Class<?>, Predicate<JsonObject>> types;
+        private Map<Class<?>, Predicate<JsonElement>> types;
 
         /**
          * Constructor for the adapter that takes an extraction mechanism and map of adapters and types.
          *
          * @param adapters A Map of Class to TypeAdapters for that Class.
-         * @param types A Map of Class to the Set of Strings that are to be matched against the output of extractor.
+         * @param types A Map of Class to the {@link Predicate} on {@link JsonElement}that are to be matched against
+         *              the output of extractor.
          */
-        public GenericTypeAdapter(Map<Class<?>, TypeAdapter<?>> adapters, Map<Class<?>, Predicate<JsonObject>> types) {
+        public GenericTypeAdapter(Map<Class<?>, TypeAdapter<?>> adapters, Map<Class<?>, Predicate<JsonElement>> types) {
             this.adapters = adapters;
             this.types = types;
         }
@@ -107,8 +110,8 @@ public class GenericTypeAdapterFactory<T> implements TypeAdapterFactory {
         }
 
         private TypeAdapter<R> getAdapterFor(JsonElement element) {
-            for (Map.Entry<Class<?>, Predicate<JsonObject>> entry : types.entrySet()) {
-                if (entry.getValue().test(element.getAsJsonObject())) {
+            for (Map.Entry<Class<?>, Predicate<JsonElement>> entry : types.entrySet()) {
+                if (entry.getValue().test(element)) {
                     return (TypeAdapter<R>) adapters.get(entry.getKey());
                 }
             }

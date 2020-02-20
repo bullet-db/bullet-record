@@ -615,27 +615,31 @@ public class Schema implements Serializable {
 
         private static final Set<String> TYPES = Arrays.stream(Type.values()).map(Type::name).collect(Collectors.toSet());
 
-        private static boolean isPlainField(JsonObject jsonObject) {
+        private static boolean isPlainField(JsonElement jsonElement) {
+            if (!jsonElement.isJsonObject()) {
+                return false;
+            }
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
             JsonElement name = jsonObject.get(Field.NAME_FIELD);
             JsonElement type = jsonObject.get(Field.TYPE_FIELD);
             return name != null && !name.isJsonNull() && type != null && !type.isJsonNull() && TYPES.contains(type.getAsString());
         }
 
-        private static boolean isDetailedField(JsonObject jsonObject) {
-            return isPlainField(jsonObject) && jsonObject.has(DetailedField.DESCRIPTION_FIELD);
+        private static boolean isDetailedField(JsonElement jsonElement) {
+            return isPlainField(jsonElement) && jsonElement.getAsJsonObject().has(DetailedField.DESCRIPTION_FIELD);
         }
 
-        private static boolean isDetailedMapField(JsonObject jsonObject) {
+        private static boolean isDetailedMapField(JsonElement jsonElement) {
             // The SUBSUBFIELDS_FIELD check isn't needed since this is invoked in order.
-            return isDetailedField(jsonObject) && jsonObject.has(DetailedMapField.SUBFIELDS_FIELD);
+            return isDetailedField(jsonElement) && jsonElement.getAsJsonObject().has(DetailedMapField.SUBFIELDS_FIELD);
         }
 
-        private static boolean isDetailedMapMapField(JsonObject jsonObject) {
-            return isDetailedField(jsonObject) && jsonObject.has(DetailedMapMapField.SUBSUBFIELDS_FIELD);
+        private static boolean isDetailedMapMapField(JsonElement jsonElement) {
+            return isDetailedField(jsonElement) && jsonElement.getAsJsonObject().has(DetailedMapMapField.SUBSUBFIELDS_FIELD);
         }
 
-        private static boolean isDetailedMapListField(JsonObject jsonObject) {
-            return isDetailedField(jsonObject) && jsonObject.has(DetailedMapListField.SUBLIST_FIELD);
+        private static boolean isDetailedMapListField(JsonElement jsonElement) {
+            return isDetailedField(jsonElement) && jsonElement.getAsJsonObject().has(DetailedMapListField.SUBLIST_FIELD);
         }
 
         /**
