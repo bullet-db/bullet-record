@@ -219,18 +219,6 @@ public class SchemaTest {
 
     @Test
     public void testParsingFromString() throws Exception {
-        String boo = "[    {\n" +
-                "        \"name\": \"p\",\n" +
-                "        \"type\": \"LONG_MAP_MAP\",\n" +
-                "        \"description\": \"This is a detailed map of map of longs but enumerates only the first level\",\n" +
-                "        \"subField\": [\n" +
-                "            {\n" +
-                "                \"name\": \"a\",\n" +
-                "                \"description\": \"This is a map of longs sub-field\"\n" +
-                "            }\n" +
-                "        ]\n" +
-                "    }]";
-        List<Field> booer = Schema.Parser.parse(boo);
         String data = new String(Files.readAllBytes(Paths.get("src/test/resources/test-schema.json")));
         // For coverage
         Parser parser = new Parser();
