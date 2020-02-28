@@ -28,7 +28,7 @@ import java.util.Objects;
  * frequently (as it is the entry point into Bullet), you may use {@link #get(String)}. Casting
  * it is left to the user. See {@link TypedBulletRecord} for an alternative.
  *
- * For the types supported by this records, see {@link com.yahoo.bullet.typesystem.Type}.
+ * For the types supported by this record, see {@link com.yahoo.bullet.typesystem.Type}.
  * Primitives: {@link com.yahoo.bullet.typesystem.Type#PRIMITIVES}
  * Complex: {@link com.yahoo.bullet.typesystem.Type#MAPS} and {@link com.yahoo.bullet.typesystem.Type#LISTS}
  *
@@ -38,7 +38,7 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
     private static final long serialVersionUID = 3319286957467020672L;
 
     /**
-     * Convert the given object into a the format stored in this record.
+     * Convert the given object into the format stored in this record.
      *
      * @param object The object to convert.
      * @return The converted object.
@@ -204,8 +204,8 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
         if (!value.isComplexList()) {
             throw new ClassCastException(field + " is not a list of maps. It has type " + value.getType());
         }
-        List<Map<String, T>> first = (List<Map<String, T>>) value.getValue();
-        Map<String, T> second = first.get(index);
+        List<Map<String, Object>> first = (List<Map<String, Object>>) value.getValue();
+        Map<String, Object> second = first.get(index);
         if (second == null) {
             return TypedObject.NULL;
         }
@@ -228,7 +228,7 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
      *
      * @param field The non-null name of the field.
      * @param object The non-null {@link TypedObject} to set.
-     * @return The value of the field or null if it does not exist.
+     * @return This object for chaining.
      * @throws RuntimeException if the set cannot be done.
      */
     public BulletRecord<T> typedSet(String field, TypedObject object) {
