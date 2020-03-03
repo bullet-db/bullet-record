@@ -1,9 +1,9 @@
 /*
- *  Copyright 2018, Oath Inc.
+ *  Copyright 2020, Yahoo Inc.
  *  Licensed under the terms of the Apache License, Version 2.0.
  *  See the LICENSE file associated with the project for terms.
  */
-package com.yahoo.bullet.record;
+package com.yahoo.bullet.record.avro;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -22,39 +22,37 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * An implementation of {@link BulletRecord} using Avro for serialization.
- *
- * By default, after serialization the record deserializes lazily. It will only deserialize when one of
- * the get/set methods are called. This makes the object cheap to send through repeated read-write cycles
- * without modifications. You can force a read by either calling a get/set method or using {@link #forceReadData()}.
- */
-@Slf4j @Setter(AccessLevel.PACKAGE) @NoArgsConstructor
-public class AvroBulletRecord extends BulletRecord {
-    public static final long serialVersionUID = 926415013785021742L;
-
-    @Getter(AccessLevel.PACKAGE)
+@Slf4j @NoArgsConstructor
+@Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE)
+class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>> {
     private boolean isDeserialized = true;
-    @Getter(AccessLevel.PACKAGE)
     private Map<String, Object> data = new HashMap<>();
     private byte[] serializedData;
+
+    private static final long serialVersionUID = -5368363606317600282L;
     private static final SpecificDatumWriter<BulletAvro> WRITER = new SpecificDatumWriter<>(BulletAvro.class);
 
     /**
      * Constructor.
      *
-     * @param other The AvroBulletRecord to copy.
-     * @throws IOException if failed to serialize the AvroBulletRecord object.
+     * @param other The {@link LazyBulletAvro} to copy.
+     * @throws RuntimeException if failed to copy data from the source.
      */
-    public AvroBulletRecord(AvroBulletRecord other) throws IOException {
-        serializedData = other.getAsByteArray();
-        isDeserialized = false;
+    LazyBulletAvro(LazyBulletAvro other) {
+        try {
+            serializedData = other.getAsByteArray();
+            isDeserialized = false;
+        } catch (Exception e) {
+            log.error("Unable to serialize the other record", e);
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -80,15 +78,26 @@ public class AvroBulletRecord extends BulletRecord {
         }
     }
 
-    @Override
-    protected BulletRecord set(String field, Object object) {
+    /**
+     * Sets a field.
+     *
+     * @param field The name of the field.
+     * @param object The value of the field. Must be a supported type in the {@link BulletAvro} data field.
+     * @return This object for chaining.
+     */
+    public LazyBulletAvro set(String field, Object object) {
         Objects.requireNonNull(field);
         forceReadData();
         data.put(field, object);
         return this;
     }
 
-    @Override
+    /**
+     * Retrieves a field.
+     *
+     * @param field The name of the field.
+     * @return The value of field or null if it was not present.
+     */
     public Object get(String field) {
         if (!forceReadData()) {
             return null;
@@ -96,31 +105,56 @@ public class AvroBulletRecord extends BulletRecord {
         return data.get(field);
     }
 
-    @Override
+    /**
+     * Checks to see if a field exists.
+     *
+     * @param field The name of the field.
+     * @return A boolean denoting if the field exists.
+     */
     public boolean hasField(String field) {
         forceFailIfCannotRead();
         return data.containsKey(field);
     }
 
-    @Override
+    /**
+     * Gets the number of fields stored.
+     *
+     * @return The count of the number of fields.
+     */
     public int fieldCount() {
         forceFailIfCannotRead();
         return data.size();
     }
 
-    @Override
+    /**
+     * Removes and returns a field.
+     *
+     * @param field The name of the field.
+     * @return The value in the data or null if it does not exist.
+     */
     public Object getAndRemove(String field) {
         return hasField(field) ? data.remove(field) : null;
     }
 
-    @Override
-    public BulletRecord remove(String field) {
+    /**
+     * Removes a field.
+     *
+     * @param field The name of the field.
+     * @return This object for chaining.
+     */
+    public LazyBulletAvro remove(String field) {
         if (hasField(field)) {
             data.remove(field);
         }
         return this;
     }
 
+    /**
+     * Returns an {@link Iterator} over the data as {@link Map.Entry} pairs of String keys to Objects.
+     * {@inheritDoc}
+     *
+     * @return An iterator over the data stored.
+     */
     @Override
     public Iterator<Map.Entry<String, Object>> iterator() {
         return forceReadData() ? data.entrySet().iterator() : Collections.<String, Object>emptyMap().entrySet().iterator();
@@ -128,10 +162,10 @@ public class AvroBulletRecord extends BulletRecord {
 
     @Override
     public boolean equals(Object object) {
-        if (!(object instanceof AvroBulletRecord)) {
+        if (!(object instanceof LazyBulletAvro)) {
             return false;
         }
-        AvroBulletRecord that = (AvroBulletRecord) object;
+        LazyBulletAvro that = (LazyBulletAvro) object;
         // We need to force read the data since writing out data to bytes will give different byte arrays
         // if the content is the same but the order isn't.
         forceReadData();

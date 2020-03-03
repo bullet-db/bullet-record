@@ -3,17 +3,19 @@
  *  Licensed under the terms of the Apache License, Version 2.0.
  *  See the LICENSE file associated with the project for terms.
  */
+package com.yahoo.bullet.record.avro;
 
-package com.yahoo.bullet.record;
+import com.yahoo.bullet.record.BulletRecord;
+import com.yahoo.bullet.record.BulletRecordProvider;
 
 /**
- * Factory for AvroBulletRecord.
+ * Factory for Avro based UntypedBulletRecords.
  */
-public class AvroBulletRecordProvider implements BulletRecordProvider {
+public class UntypedAvroBulletRecordProvider implements BulletRecordProvider {
     private static final long serialVersionUID = 8064632505561405799L;
 
     @Override
     public BulletRecord getInstance() {
-        return new AvroBulletRecord();
+        return new UntypedAvroBulletRecord();
     }
 }

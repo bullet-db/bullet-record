@@ -1,5 +1,5 @@
 {
-  "namespace": "com.yahoo.bullet.record",
+  "namespace": "com.yahoo.bullet.record.avro",
   "type": "record",
   "name": "BulletAvro",
   "fields": [

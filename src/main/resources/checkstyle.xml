@@ -15,6 +15,14 @@
         <property name="severity" value="error"/>
     </module>
 
+    <!--Checks that all files have a copyright header. -->
+    <module name="Header">
+        <property name="headerFile" value="src/main/resources/copyright.txt"/>
+        <property name="ignoreLines" value="2"/>
+        <property name="fileExtensions" value="java"/>
+    </module>
+
+
     <!-- Check each Java file for violations. -->
     <module name="TreeWalker">
 
@@ -165,15 +173,13 @@
             <property name="scope" value="protected"/>
             <property name="severity" value="ignore"/>
         </module>
-
-        <!-- Checks if a line it too long. -->
-        <module name="LineLength">
-            <property name="max" value="120"/>
-            <property name="severity" value="ignore"/>
-        </module>
-
     </module>
 
+    <!-- Checks if a line it too long. -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <property name="severity" value="ignore"/>
+    </module>
 
     <module name="SuppressionFilter">
         <property name="file" value="src/test/resources/suppressions.xml"/>

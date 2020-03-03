@@ -13,11 +13,11 @@ import java.lang.reflect.Constructor;
  */
 public interface BulletRecordProvider extends Serializable {
     /**
-     * Get an instance of a BulletRecord.
+     * Get an instance of a {@link BulletRecord}.
      *
-     * @return A BulletRecord.
+     * @return A {@link BulletRecord} instance.
      */
-    public BulletRecord getInstance();
+    BulletRecord getInstance();
 
     /**
      * Create a BulletRecordProvider instance using the specified class.
@@ -26,7 +26,7 @@ public interface BulletRecordProvider extends Serializable {
      * @return a new instance of specified BulletRecordProvider class.
      * @throws RuntimeException if BulletRecordProvider creation fails.
      */
-    public static BulletRecordProvider from(String bulletRecordProviderClassName) {
+    static BulletRecordProvider from(String bulletRecordProviderClassName) {
         try {
             Class<BulletRecordProvider> recordProviderClass = (Class<BulletRecordProvider>) Class.forName(bulletRecordProviderClassName);
             Constructor<BulletRecordProvider> constructor = recordProviderClass.getConstructor();

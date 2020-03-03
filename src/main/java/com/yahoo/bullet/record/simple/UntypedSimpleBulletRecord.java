@@ -3,8 +3,9 @@
  *  Licensed under the terms of the Apache License, Version 2.0.
  *  See the LICENSE file associated with the project for terms.
  */
-package com.yahoo.bullet.record;
+package com.yahoo.bullet.record.simple;
 
+import com.yahoo.bullet.record.UntypedBulletRecord;
 import lombok.AccessLevel;
 import lombok.Setter;
 
@@ -14,9 +15,9 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * A simple implementation of {@link BulletRecord}.
+ * A simple implementation of {@link UntypedBulletRecord}.
  */
-public class SimpleBulletRecord extends BulletRecord {
+public class UntypedSimpleBulletRecord extends UntypedBulletRecord {
     private static final long serialVersionUID = -4045166645513428587L;
 
     // Exposed for testing.
@@ -24,10 +25,15 @@ public class SimpleBulletRecord extends BulletRecord {
     private Map<String, Object> data = new HashMap<>();
 
     @Override
-    protected BulletRecord set(String field, Object object) {
+    protected UntypedSimpleBulletRecord rawSet(String field, Object object) {
         Objects.requireNonNull(field);
         data.put(field, object);
         return this;
+    }
+
+    @Override
+    protected Object convert(Object object) {
+        return object;
     }
 
     @Override
@@ -51,9 +57,16 @@ public class SimpleBulletRecord extends BulletRecord {
     }
 
     @Override
-    public BulletRecord remove(String field) {
+    public UntypedSimpleBulletRecord remove(String field) {
         data.remove(field);
         return this;
+    }
+
+    @Override
+    public UntypedSimpleBulletRecord copy() {
+        UntypedSimpleBulletRecord copy = new UntypedSimpleBulletRecord();
+        copy.data.putAll(this.data);
+        return copy;
     }
 
     @Override
@@ -63,10 +76,10 @@ public class SimpleBulletRecord extends BulletRecord {
 
     @Override
     public boolean equals(Object object) {
-        if (!(object instanceof SimpleBulletRecord)) {
+        if (!(object instanceof UntypedSimpleBulletRecord)) {
             return false;
         }
-        SimpleBulletRecord that = (SimpleBulletRecord) object;
+        UntypedSimpleBulletRecord that = (UntypedSimpleBulletRecord) object;
         return data == that.data || (data != null && data.equals(that.data));
     }
 

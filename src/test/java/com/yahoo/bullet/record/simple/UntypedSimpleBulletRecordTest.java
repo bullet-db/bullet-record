@@ -3,21 +3,27 @@
  *  Licensed under the terms of the Apache License, Version 2.0.
  *  See the LICENSE file associated with the project for terms.
  */
-package com.yahoo.bullet.record;
+package com.yahoo.bullet.record.simple;
 
+import com.yahoo.bullet.record.BulletRecordTest;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 @SuppressWarnings("unchecked")
-public class SimpleBulletRecordTest extends BulletRecordTest {
-    private SimpleBulletRecord simpleRecord;
-    private SimpleBulletRecord simpleAnother;
+public class UntypedSimpleBulletRecordTest extends BulletRecordTest<Object> {
+    private UntypedSimpleBulletRecord simpleRecord;
+    private UntypedSimpleBulletRecord simpleAnother;
+
+    @Override
+    protected Object revert(Object data) {
+        return data;
+    }
 
     @BeforeMethod
     public void setup() {
-        simpleRecord = new SimpleBulletRecord();
-        simpleAnother = new SimpleBulletRecord();
+        simpleRecord = new UntypedSimpleBulletRecord();
+        simpleAnother = new UntypedSimpleBulletRecord();
         record = simpleRecord;
         another = simpleAnother;
     }
@@ -38,7 +44,7 @@ public class SimpleBulletRecordTest extends BulletRecordTest {
         Assert.assertTrue(simpleRecord.equals(simpleAnother));
         Assert.assertEquals(simpleRecord.hashCode(), simpleAnother.hashCode());
 
-        simpleAnother = new SimpleBulletRecord();
+        simpleAnother = new UntypedSimpleBulletRecord();
         simpleAnother.setString("foo", "bar");
 
         Assert.assertFalse(simpleRecord.equals(simpleAnother));
