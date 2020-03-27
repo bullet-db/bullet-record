@@ -29,8 +29,6 @@ import static java.util.Collections.singletonMap;
  */
 @SuppressWarnings("unchecked")
 public abstract class BulletRecordTest<T> {
-    private static final String KEY_DELIMITER = "\\.";
-
     protected BulletRecord<T> record;
     protected BulletRecord<T> another;
 
