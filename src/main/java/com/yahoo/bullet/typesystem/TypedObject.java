@@ -7,6 +7,7 @@ package com.yahoo.bullet.typesystem;
 
 import lombok.Getter;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -218,8 +219,8 @@ public class TypedObject implements Comparable<TypedObject> {
     /**
      * Compares this TypedObject to another. Only works on objects that have a type in {@link Type#PRIMITIVES}.
      * An exception will be thrown when comparing objects whose types are not in {@link Type#PRIMITIVES}, excepting
-     * {@link Type#NULL}. This will force {@link Type#NUMERICS} that are not of the same {@link Type} to {@link Double}
-     * instances to compare them.
+     * {@link Type#NULL}, unless both are of {@link Type#NULL}. This will force {@link Type#NUMERICS} that are not of
+     * the same {@link Type} to {@link Double} instances to compare them.
      * {@inheritDoc}
      *
      * @param other The other non-null TypedObject.
@@ -254,6 +255,39 @@ public class TypedObject implements Comparable<TypedObject> {
             default:
                 return value.toString().compareTo((String) other.value);
         }
+    }
+
+    /**
+     * Returns a {@link Comparator} for {@link TypedObject} that, unlike {@link TypedObject#compareTo(TypedObject)},
+     * will work on any one TypedObject being {@link TypedObject#NULL}. In particular, this comparator will place nulls
+     * first when sorting by it. If the first object is {@link TypedObject#NULL}, the comparator will return
+     * {@link Integer#MIN_VALUE}. If the second object is {@link TypedObject#NULL}, the comparator will return
+     * {@link Integer#MIN_VALUE}. Otherwise, the standard {@link TypedObject#compareTo(TypedObject)} will be invoked.
+     *
+     * Note this comparator only works on non-null objects, i.e. the {@link TypedObject} arguments must not be null.
+     *
+     * @return A {@link Comparator} that can places {@link TypedObject#NULL} objects first.
+     */
+    public static Comparator<TypedObject> nullsFirst() {
+        return (o1, o2) -> {
+            boolean firstNull = o1.isNull();
+            boolean secondNull = o2.isNull();
+            // Both null or both non-null
+            if (firstNull == secondNull) {
+                return o1.compareTo(o2);
+            }
+            return firstNull ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+        };
+    }
+
+    /**
+     * This is simply the {@link Comparator#reversed()} on the {@link #nullsFirst()} {@link Comparator}. See docs for
+     * that method. This method places {@link TypedObject#NULL} objects last.
+     *
+     * @return A {@link Comparator} that can places {@link TypedObject#NULL} objects last.
+     */
+    public static Comparator<TypedObject> nullsLast() {
+        return nullsFirst().reversed();
     }
 
     @Override

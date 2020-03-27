@@ -58,7 +58,8 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
     protected abstract BulletRecord<T> rawSet(String field, T object);
 
     /**
-     * Gets a field stored in the record.
+     * Gets a field stored in the record. However, recommend using {@link #typedGet(String)} and other related
+     * typed getters if you are planning to access nested fields.
      *
      * @param field The non-null name of the field.
      * @return The value of the field or null if it does not exist.
