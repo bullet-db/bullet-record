@@ -5,6 +5,7 @@
  */
 package com.yahoo.bullet.record;
 
+import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
 
 import java.io.Serializable;
@@ -36,6 +37,7 @@ import java.util.Objects;
  */
 public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>, Serializable {
     private static final long serialVersionUID = 3319286957467020672L;
+    private static final String KEY_DELIMITER = "\\.";
 
     /**
      * Convert the given object into the format stored in this record.
@@ -211,6 +213,48 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
         }
         Object mapValue = second.get(subKey);
         return mapValue == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType().getSubType(), mapValue);
+    }
+
+    /**
+     * A helper to get a field from the record by a custom identifier format.
+     * <br>
+     * For example, suppose a record has a map of boolean maps called "aaa". Then <br>
+     * - "aaa" identifies that map of maps <br>
+     * - "aaa.bbb" identifies the inner map that "aaa" maps "bbb" to (if it exists) <br>
+     * - "aaa.bbb.ccc" identifies the boolean that "aaa.bbb" (if it exists) maps "ccc" to (if it exists) <br>
+     * <br>
+     * For a list element, the index is the key, e.g. "list.0" or "list.0.some_key"
+     *
+     * @param identifier The non-null identifier of the field to get.
+     * @return The value of the field or null if it does not exist.
+     */
+    @SuppressWarnings("unchecked")
+    public Object extractField(String identifier) {
+        try {
+            String[] keys = identifier.split(KEY_DELIMITER, 3);
+            TypedObject object = typedGet(keys[0]);
+            Object first = object.getValue();
+            if (keys.length == 1) {
+                return first;
+            }
+            Object second;
+            if (object.isMap()) {
+                second = ((Map<String, ?>) first).get(keys[1]);
+            } else if (object.isList()) {
+                second = ((List<?>) first).get(Integer.parseInt(keys[1]));
+            } else {
+                return null;
+            }
+            if (keys.length == 2) {
+                return second;
+            }
+            if (object.isComplexMap() || object.isComplexList()) {
+                return ((Map<String, ?>) second).get(keys[2]);
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     // ******************************************** Setters ********************************************
