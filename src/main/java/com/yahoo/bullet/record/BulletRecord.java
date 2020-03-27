@@ -5,6 +5,7 @@
  */
 package com.yahoo.bullet.record;
 
+import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
 
 import java.io.Serializable;
@@ -36,6 +37,7 @@ import java.util.Objects;
  */
 public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>, Serializable {
     private static final long serialVersionUID = 3319286957467020672L;
+    private static final String KEY_DELIMITER = "\\.";
 
     /**
      * Convert the given object into the format stored in this record.
@@ -56,7 +58,8 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
     protected abstract BulletRecord<T> rawSet(String field, T object);
 
     /**
-     * Gets a field stored in the record.
+     * Gets a field stored in the record. However, recommend using {@link #typedGet(String)} and other related
+     * typed getters if you are planning to access nested fields.
      *
      * @param field The non-null name of the field.
      * @return The value of the field or null if it does not exist.
@@ -211,6 +214,52 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
         }
         Object mapValue = second.get(subKey);
         return mapValue == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType().getSubType(), mapValue);
+    }
+
+    /**
+     * Extracts a field as a {@link TypedObject} from the record in a custom identifier format.
+     * <br>
+     * For example, suppose a record has a map of boolean maps called "aaa". Then specifying for the identifier: <br>
+     * - "aaa" will extract that map of maps <br>
+     * - "aaa.bbb" will extract the inner map that "bbb" in "aaa" to (if it exists) <br>
+     * - "aaa.bbb.ccc" will extract the boolean that "ccc" in "bbb" in "aaa" (if it exists) <br>
+     * <br>
+     * For list fields, replace the key in the identifier format with indices instead, e.g. "list.0" or "list.0.key".
+     * If your maps have string keys that are integers,
+     * This method will also work for extract similarly for primitive maps and lists.
+     *
+     * @param identifier The non-null identifier of the field to get.
+     * @return The field or {@link TypedObject#NULL} if it does not exist or the identifier does not match the type.
+     */
+    @SuppressWarnings("unchecked")
+    public TypedObject typedExtract(String identifier) {
+        try {
+            String[] keys = identifier.split(KEY_DELIMITER, 3);
+            TypedObject object = typedGet(keys[0]);
+            Type type = object.getType();
+            Object first = object.getValue();
+            if (keys.length == 1) {
+                return object;
+            }
+            Object second;
+            Type subType = type.getSubType();
+            if (object.isMap()) {
+                second = ((Map<String, ?>) first).get(keys[1]);
+            } else if (object.isList()) {
+                second = ((List<?>) first).get(Integer.parseInt(keys[1]));
+            } else {
+                return TypedObject.NULL;
+            }
+            if (keys.length == 2) {
+                return wrapAsTyped(subType, second);
+            }
+            if (!Type.isMap(subType)) {
+                return TypedObject.NULL;
+            }
+            return wrapAsTyped(subType.getSubType(), ((Map<String, ?>) second).get(keys[2]));
+        } catch (Exception e) {
+            return TypedObject.NULL;
+        }
     }
 
     // ******************************************** Setters ********************************************
@@ -672,5 +721,12 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
             prefix = ", ";
         }
         return builder.append("}").toString();
+    }
+
+    private TypedObject wrapAsTyped(Type type, Object object) {
+        if (object == null) {
+            return TypedObject.NULL;
+        }
+        return new TypedObject(type, object);
     }
 }

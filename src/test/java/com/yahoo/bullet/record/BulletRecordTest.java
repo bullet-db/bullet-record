@@ -29,49 +29,8 @@ import static java.util.Collections.singletonMap;
  */
 @SuppressWarnings("unchecked")
 public abstract class BulletRecordTest<T> {
-    private static final String KEY_DELIMITER = "\\.";
-
     protected BulletRecord<T> record;
     protected BulletRecord<T> another;
-
-    /**
-     * A helper to get a field from the record by a custom identifier format.
-     * <br>
-     * For example, suppose a record has a map of boolean maps called "aaa". Then <br>
-     * - "aaa" identifies that map of maps <br>
-     * - "aaa.bbb" identifies the inner map that "aaa" maps "bbb" to (if it exists) <br>
-     * - "aaa.bbb.ccc" identifies the boolean that "aaa.bbb" (if it exists) maps "ccc" to (if it exists) <br>
-     * <br>
-     * For a list element, the index is the key, e.g. "my_list.0" or "my_list.0.some_key"
-     *
-     * @param record The record to extract the field from.
-     * @param identifier The non-null identifier of the field to get.
-     * @return The value of the field or null if it does not exist.
-     */
-    @SuppressWarnings("unchecked")
-    public Object extractField(BulletRecord<T> record, String identifier) {
-        try {
-            String[] keys = identifier.split(KEY_DELIMITER, 3);
-            Object first = revert(record.get(keys[0]));
-            if (keys.length == 1) {
-                return first;
-            }
-            Object second;
-            if (first instanceof Map) {
-                second = ((Map<String, ?>) first).get(keys[1]);
-            } else if (first instanceof List) {
-                second = ((List<?>) first).get(Integer.parseInt(keys[1]));
-            } else {
-                return null;
-            }
-            if (keys.length == 2) {
-                return second;
-            }
-            return ((Map<String, ?>) second).get(keys[2]);
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
     /**
      * Insert a primitive map field with values as Pairs or Map.Entry. The value of the entries must be in
@@ -123,6 +82,10 @@ public abstract class BulletRecordTest<T> {
                             "The type did not match. Actual: " + actualType + " Expected: " + expectedType);
         Assert.assertEquals(actualValue, expectedValue,
                             "The value did not match. Actual: " + actualValue + " Expected: " + expectedValue);
+    }
+
+    public static <T> Object extractField(BulletRecord<T> record, String identifier) {
+        return record.typedExtract(identifier).getValue();
     }
 
     /**
@@ -865,6 +828,7 @@ public abstract class BulletRecordTest<T> {
     @Test
     public void testExtractMapField() {
         setMap(record, "foo", Pair.of("bar", singletonMap("baz", 1L)), Pair.of("baz", singletonMap("qux", 2L)));
+        record.setLongMap("quux", singletonMap("norf", 42L));
 
         Assert.assertTrue(extractField(record, "foo") instanceof Map);
         Assert.assertEquals(extractField(record, "foo.bar"), singletonMap("baz", 1L));
@@ -872,6 +836,10 @@ public abstract class BulletRecordTest<T> {
         Assert.assertEquals(extractField(record, "foo.bar.baz"), 1L);
         Assert.assertEquals(extractField(record, "foo.baz.qux"), 2L);
         Assert.assertNull(extractField(record, "foo.bar.dne"));
+
+        Assert.assertTrue(extractField(record, "quux") instanceof Map);
+        Assert.assertEquals(extractField(record, "quux.norf"), 42L);
+        Assert.assertNull(extractField(record, "quux.norf.dne"));
 
         Assert.assertNull(extractField(record, "dne"));
         Assert.assertNull(extractField(record, "foo."));
@@ -885,6 +853,7 @@ public abstract class BulletRecordTest<T> {
         data.add("qux");
         data.add("norf");
         record.setStringList("bar", data);
+        record.setStringList("baz", singletonList("quux"));
         Assert.assertTrue(extractField(record, "foo") instanceof List);
         Assert.assertEquals(extractField(record, "foo.0"), singletonMap("a", 1L));
         Assert.assertEquals(extractField(record, "foo.1"), singletonMap("b", 2L));
@@ -895,8 +864,14 @@ public abstract class BulletRecordTest<T> {
         Assert.assertEquals(extractField(record, "bar.0"), "qux");
         Assert.assertEquals(extractField(record, "bar.1"), "norf");
 
+        Assert.assertTrue(extractField(record, "baz") instanceof List);
+        Assert.assertEquals(extractField(record, "baz.0"), "quux");
+        Assert.assertNull(extractField(record, "baz.1"));
+        Assert.assertNull(extractField(record, "baz.0.dne"));
+
         Assert.assertNull(extractField(record, "dne.-1"));
         Assert.assertNull(extractField(record, "dne.0"));
+        Assert.assertNull(extractField(record, "dne.123123"));
         Assert.assertNull(extractField(record, "dne.123123"));
     }
 
