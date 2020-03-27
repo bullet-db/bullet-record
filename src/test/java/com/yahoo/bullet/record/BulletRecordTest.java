@@ -86,6 +86,10 @@ public abstract class BulletRecordTest<T> {
                             "The value did not match. Actual: " + actualValue + " Expected: " + expectedValue);
     }
 
+    public static <T> Object extractField(BulletRecord<T> record, String identifier) {
+        return record.typedExtract(identifier).getValue();
+    }
+
     /**
      * Override this to convert from the type of the object in the record to an Object.
      *
@@ -816,11 +820,11 @@ public abstract class BulletRecordTest<T> {
         record.setListOfStringMap("foo", singletonList(singletonMap("qux", "norf")));
         record.setString("bar", "baz");
 
-        Assert.assertEquals(record.extractField("bar"), "baz");
-        Assert.assertNull(record.extractField("bar.baz"));
-        Assert.assertEquals(record.extractField("foo"), singletonList(singletonMap("qux", "norf")));
-        Assert.assertNull(record.extractField("foo.bar"));
-        Assert.assertNull(record.extractField("dne"));
+        Assert.assertEquals(extractField(record, "bar"), "baz");
+        Assert.assertNull(extractField(record, "bar.baz"));
+        Assert.assertEquals(extractField(record, "foo"), singletonList(singletonMap("qux", "norf")));
+        Assert.assertNull(extractField(record, "foo.bar"));
+        Assert.assertNull(extractField(record, "dne"));
     }
 
     @Test
@@ -828,20 +832,20 @@ public abstract class BulletRecordTest<T> {
         setMap(record, "foo", Pair.of("bar", singletonMap("baz", 1L)), Pair.of("baz", singletonMap("qux", 2L)));
         record.setLongMap("quux", singletonMap("norf", 42L));
 
-        Assert.assertTrue(record.extractField("foo") instanceof Map);
-        Assert.assertEquals(record.extractField("foo.bar"), singletonMap("baz", 1L));
-        Assert.assertEquals(record.extractField("foo.baz"), singletonMap("qux", 2L));
-        Assert.assertEquals(record.extractField("foo.bar.baz"), 1L);
-        Assert.assertEquals(record.extractField("foo.baz.qux"), 2L);
-        Assert.assertNull(record.extractField("foo.bar.dne"));
+        Assert.assertTrue(extractField(record, "foo") instanceof Map);
+        Assert.assertEquals(extractField(record, "foo.bar"), singletonMap("baz", 1L));
+        Assert.assertEquals(extractField(record, "foo.baz"), singletonMap("qux", 2L));
+        Assert.assertEquals(extractField(record, "foo.bar.baz"), 1L);
+        Assert.assertEquals(extractField(record, "foo.baz.qux"), 2L);
+        Assert.assertNull(extractField(record, "foo.bar.dne"));
 
-        Assert.assertTrue(record.extractField("quux") instanceof Map);
-        Assert.assertEquals(record.extractField("quux.norf"), 42L);
-        Assert.assertNull(record.extractField("quux.norf.dne"));
+        Assert.assertTrue(extractField(record, "quux") instanceof Map);
+        Assert.assertEquals(extractField(record, "quux.norf"), 42L);
+        Assert.assertNull(extractField(record, "quux.norf.dne"));
 
-        Assert.assertNull(record.extractField("dne"));
-        Assert.assertNull(record.extractField("foo."));
-        Assert.assertNull(record.extractField("foo.dne"));
+        Assert.assertNull(extractField(record, "dne"));
+        Assert.assertNull(extractField(record, "foo."));
+        Assert.assertNull(extractField(record, "foo.dne"));
     }
 
     @Test
@@ -852,31 +856,31 @@ public abstract class BulletRecordTest<T> {
         data.add("norf");
         record.setStringList("bar", data);
         record.setStringList("baz", singletonList("quux"));
-        Assert.assertTrue(record.extractField("foo") instanceof List);
-        Assert.assertEquals(record.extractField("foo.0"), singletonMap("a", 1L));
-        Assert.assertEquals(record.extractField("foo.1"), singletonMap("b", 2L));
-        Assert.assertEquals(record.extractField("foo.0.a"), 1L);
-        Assert.assertEquals(record.extractField("foo.1.b"), 2L);
-        Assert.assertNull(record.extractField("foo.0.c"));
-        Assert.assertTrue(record.extractField("bar") instanceof List);
-        Assert.assertEquals(record.extractField("bar.0"), "qux");
-        Assert.assertEquals(record.extractField("bar.1"), "norf");
+        Assert.assertTrue(extractField(record, "foo") instanceof List);
+        Assert.assertEquals(extractField(record, "foo.0"), singletonMap("a", 1L));
+        Assert.assertEquals(extractField(record, "foo.1"), singletonMap("b", 2L));
+        Assert.assertEquals(extractField(record, "foo.0.a"), 1L);
+        Assert.assertEquals(extractField(record, "foo.1.b"), 2L);
+        Assert.assertNull(extractField(record, "foo.0.c"));
+        Assert.assertTrue(extractField(record, "bar") instanceof List);
+        Assert.assertEquals(extractField(record, "bar.0"), "qux");
+        Assert.assertEquals(extractField(record, "bar.1"), "norf");
 
-        Assert.assertTrue(record.extractField("baz") instanceof List);
-        Assert.assertEquals(record.extractField("baz.0"), "quux");
-        Assert.assertNull(record.extractField("baz.1"));
-        Assert.assertNull(record.extractField("baz.0.dne"));
+        Assert.assertTrue(extractField(record, "baz") instanceof List);
+        Assert.assertEquals(extractField(record, "baz.0"), "quux");
+        Assert.assertNull(extractField(record, "baz.1"));
+        Assert.assertNull(extractField(record, "baz.0.dne"));
 
-        Assert.assertNull(record.extractField("dne.-1"));
-        Assert.assertNull(record.extractField("dne.0"));
-        Assert.assertNull(record.extractField("dne.123123"));
-        Assert.assertNull(record.extractField("dne.123123"));
+        Assert.assertNull(extractField(record, "dne.-1"));
+        Assert.assertNull(extractField(record, "dne.0"));
+        Assert.assertNull(extractField(record, "dne.123123"));
+        Assert.assertNull(extractField(record, "dne.123123"));
     }
 
     @Test
     public void testExtractListBadIndex() {
         setListMap(record, "foo", singletonMap("a", 1L));
-        Assert.assertNull(record.extractField("foo.1"));
+        Assert.assertNull(extractField(record, "foo.1"));
     }
 
     @Test

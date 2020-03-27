@@ -216,44 +216,48 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
     }
 
     /**
-     * A helper to get a field from the record by a custom identifier format.
+     * Extracts a field as a {@link TypedObject} from the record in a custom identifier format.
      * <br>
-     * For example, suppose a record has a map of boolean maps called "aaa". Then <br>
-     * - "aaa" identifies that map of maps <br>
-     * - "aaa.bbb" identifies the inner map that "aaa" maps "bbb" to (if it exists) <br>
-     * - "aaa.bbb.ccc" identifies the boolean that "aaa.bbb" (if it exists) maps "ccc" to (if it exists) <br>
+     * For example, suppose a record has a map of boolean maps called "aaa". Then specifying for the identifier: <br>
+     * - "aaa" will extract that map of maps <br>
+     * - "aaa.bbb" will extract the inner map that "bbb" in "aaa" to (if it exists) <br>
+     * - "aaa.bbb.ccc" will extract the boolean that "ccc" in "bbb" in "aaa" (if it exists) <br>
      * <br>
-     * For a list element, the index is the key, e.g. "list.0" or "list.0.some_key"
+     * For list fields, replace the key in the identifier format with indices instead, e.g. "list.0" or "list.0.key".
+     * If your maps have string keys that are integers,
+     * This method will also work for extract similarly for primitive maps and lists.
      *
      * @param identifier The non-null identifier of the field to get.
-     * @return The value of the field or null if it does not exist.
+     * @return The field or {@link TypedObject#NULL} if it does not exist or the identifier does not match the type.
      */
     @SuppressWarnings("unchecked")
-    public Object extractField(String identifier) {
+    public TypedObject typedExtract(String identifier) {
         try {
             String[] keys = identifier.split(KEY_DELIMITER, 3);
             TypedObject object = typedGet(keys[0]);
+            Type type = object.getType();
             Object first = object.getValue();
             if (keys.length == 1) {
-                return first;
+                return object;
             }
             Object second;
+            Type subType = type.getSubType();
             if (object.isMap()) {
                 second = ((Map<String, ?>) first).get(keys[1]);
             } else if (object.isList()) {
                 second = ((List<?>) first).get(Integer.parseInt(keys[1]));
             } else {
-                return null;
+                return TypedObject.NULL;
             }
             if (keys.length == 2) {
-                return second;
+                return new TypedObject(subType, second);
             }
-            if (object.isComplexMap() || object.isComplexList()) {
-                return ((Map<String, ?>) second).get(keys[2]);
+            if (!Type.isMap(subType)) {
+                return TypedObject.NULL;
             }
-            return null;
+            return new TypedObject(subType.getSubType(), ((Map<String, ?>) second).get(keys[2]));
         } catch (Exception e) {
-            return null;
+            return TypedObject.NULL;
         }
     }
 
