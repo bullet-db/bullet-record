@@ -251,12 +251,12 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
                 return TypedObject.NULL;
             }
             if (keys.length == 2) {
-                return new TypedObject(subType, second);
+                return wrapAsTyped(subType, second);
             }
             if (!Type.isMap(subType)) {
                 return TypedObject.NULL;
             }
-            return new TypedObject(subType.getSubType(), ((Map<String, ?>) second).get(keys[2]));
+            return wrapAsTyped(subType.getSubType(), ((Map<String, ?>) second).get(keys[2]));
         } catch (Exception e) {
             return TypedObject.NULL;
         }
@@ -721,5 +721,12 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
             prefix = ", ";
         }
         return builder.append("}").toString();
+    }
+
+    private TypedObject wrapAsTyped(Type type, Object object) {
+        if (object == null) {
+            return TypedObject.NULL;
+        }
+        return new TypedObject(type, object);
     }
 }

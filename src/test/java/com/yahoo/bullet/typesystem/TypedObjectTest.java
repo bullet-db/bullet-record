@@ -507,6 +507,15 @@ public class TypedObjectTest {
         assertEquals(objects.get(4), new TypedObject(INTEGER, 42));
         assertEquals(objects.get(5), new TypedObject(DOUBLE, 42.1));
         assertEquals(objects.get(6), new TypedObject(FLOAT, 100.3f));
+
+        objects.sort(TypedObject.nullsFirst().reversed());
+        assertEquals(objects.get(0), new TypedObject(FLOAT, 100.3f));
+        assertEquals(objects.get(1), new TypedObject(DOUBLE, 42.1));
+        assertEquals(objects.get(2), new TypedObject(INTEGER, 42));
+        assertEquals(objects.get(3), new TypedObject(LONG, 1L));
+        assertEquals(objects.get(4), TypedObject.NULL);
+        assertEquals(objects.get(5), TypedObject.NULL);
+        assertEquals(objects.get(6), TypedObject.NULL);
     }
 
     @Test
@@ -515,13 +524,22 @@ public class TypedObjectTest {
                                            new TypedObject(INTEGER, 42), TypedObject.NULL, new TypedObject(NULL, null),
                                            new TypedObject(FLOAT, 100.3f), new TypedObject(LONG, 1L));
         objects.sort(TypedObject.nullsLast());
-        assertEquals(objects.get(0), new TypedObject(FLOAT, 100.3f));
-        assertEquals(objects.get(1), new TypedObject(DOUBLE, 42.1));
-        assertEquals(objects.get(2), new TypedObject(INTEGER, 42));
-        assertEquals(objects.get(3), new TypedObject(LONG, 1L));
+        assertEquals(objects.get(0), new TypedObject(LONG, 1L));
+        assertEquals(objects.get(1), new TypedObject(INTEGER, 42));
+        assertEquals(objects.get(2), new TypedObject(DOUBLE, 42.1));
+        assertEquals(objects.get(3), new TypedObject(FLOAT, 100.3f));
         assertEquals(objects.get(4), TypedObject.NULL);
         assertEquals(objects.get(5), TypedObject.NULL);
         assertEquals(objects.get(6), TypedObject.NULL);
+
+        objects.sort(TypedObject.nullsLast().reversed());
+        assertEquals(objects.get(0), TypedObject.NULL);
+        assertEquals(objects.get(1), TypedObject.NULL);
+        assertEquals(objects.get(2), TypedObject.NULL);
+        assertEquals(objects.get(3), new TypedObject(FLOAT, 100.3f));
+        assertEquals(objects.get(4), new TypedObject(DOUBLE, 42.1));
+        assertEquals(objects.get(5), new TypedObject(INTEGER, 42));
+        assertEquals(objects.get(6), new TypedObject(LONG, 1L));
     }
 
     @Test

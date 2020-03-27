@@ -271,12 +271,11 @@ public class TypedObject implements Comparable<TypedObject> {
     public static Comparator<TypedObject> nullsFirst() {
         return (o1, o2) -> {
             boolean firstNull = o1.isNull();
-            boolean secondNull = o2.isNull();
-            // Both null or both non-null
-            if (firstNull == secondNull) {
-                return o1.compareTo(o2);
+            // One is null
+            if (firstNull ^ o2.isNull()) {
+                return firstNull ? Integer.MIN_VALUE : Integer.MAX_VALUE;
             }
-            return firstNull ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+            return o1.compareTo(o2);
         };
     }
 
@@ -287,7 +286,14 @@ public class TypedObject implements Comparable<TypedObject> {
      * @return A {@link Comparator} that can places {@link TypedObject#NULL} objects last.
      */
     public static Comparator<TypedObject> nullsLast() {
-        return nullsFirst().reversed();
+        return (o1, o2) -> {
+            boolean firstNull = o1.isNull();
+            // One is null
+            if (firstNull ^ o2.isNull()) {
+                return firstNull ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+            }
+            return o1.compareTo(o2);
+        };
     }
 
     @Override
