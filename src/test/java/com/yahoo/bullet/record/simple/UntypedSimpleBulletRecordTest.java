@@ -10,13 +10,15 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.Serializable;
+
 @SuppressWarnings("unchecked")
-public class UntypedSimpleBulletRecordTest extends BulletRecordTest<Object> {
+public class UntypedSimpleBulletRecordTest extends BulletRecordTest<Serializable> {
     private UntypedSimpleBulletRecord simpleRecord;
     private UntypedSimpleBulletRecord simpleAnother;
 
     @Override
-    protected Object revert(Object data) {
+    protected Serializable revert(Serializable data) {
         return data;
     }
 

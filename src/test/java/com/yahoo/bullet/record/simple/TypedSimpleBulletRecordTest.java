@@ -12,13 +12,15 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.Serializable;
+
 @SuppressWarnings("unchecked")
 public class TypedSimpleBulletRecordTest extends BulletRecordTest<TypedObject> {
     private TypedSimpleBulletRecord simpleRecord;
     private TypedSimpleBulletRecord simpleAnother;
 
     @Override
-    protected Object revert(TypedObject data) {
+    protected Serializable revert(TypedObject data) {
         // If get was used to retrive this, we need to handle nulls
         if (data == null) {
             return null;

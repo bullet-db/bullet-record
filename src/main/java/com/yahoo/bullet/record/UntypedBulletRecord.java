@@ -7,12 +7,14 @@ package com.yahoo.bullet.record;
 
 import com.yahoo.bullet.typesystem.TypedObject;
 
-public abstract class UntypedBulletRecord extends BulletRecord<Object> {
+import java.io.Serializable;
+
+public abstract class UntypedBulletRecord extends BulletRecord<Serializable> {
     private static final long serialVersionUID = -7477930424136052034L;
 
     @Override
-    protected Object convert(Object object) {
-        return object;
+    protected Serializable convert(Object object) {
+        return (Serializable) object;
     }
 
     /**

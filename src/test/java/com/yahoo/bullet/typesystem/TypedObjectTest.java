@@ -7,10 +7,16 @@ package com.yahoo.bullet.typesystem;
 
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
+import static com.yahoo.bullet.TestHelpers.list;
+import static com.yahoo.bullet.TestHelpers.map;
+import static com.yahoo.bullet.TestHelpers.nestedList;
+import static com.yahoo.bullet.TestHelpers.nestedMap;
 import static com.yahoo.bullet.typesystem.Type.BOOLEAN;
 import static com.yahoo.bullet.typesystem.Type.BOOLEAN_LIST;
 import static com.yahoo.bullet.typesystem.Type.BOOLEAN_MAP_LIST;
@@ -40,7 +46,6 @@ import static com.yahoo.bullet.typesystem.Type.UNKNOWN;
 import static com.yahoo.bullet.typesystem.TypedObject.safeCastFromObject;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.testng.Assert.assertEquals;
@@ -53,7 +58,7 @@ import static org.testng.Assert.assertTrue;
 public class TypedObjectTest {
     @Test
     public void testTypedObjectWithUnsupportedType() {
-        TypedObject object = new TypedObject(UNKNOWN, emptyList());
+        TypedObject object = new TypedObject(UNKNOWN, new ArrayList<>());
         assertEquals(object.getType(), UNKNOWN);
         assertEquals(object.getValue(), emptyList());
     }
@@ -82,7 +87,7 @@ public class TypedObjectTest {
         assertFalse(object.isList());
         assertFalse(object.isMap());
 
-        object = new TypedObject(Type.FLOAT_MAP, singletonMap("a", 1.0f));
+        object = new TypedObject(Type.FLOAT_MAP, map(singletonMap("a", 1.0f)));
         assertFalse(object.isUnknown());
         assertFalse(object.isNull());
         assertFalse(object.isPrimitive());
@@ -91,7 +96,7 @@ public class TypedObjectTest {
         assertTrue(object.isPrimitiveMap());
         assertFalse(object.isComplexMap());
 
-        object = new TypedObject(DOUBLE_LIST, singletonList(1.0));
+        object = new TypedObject(DOUBLE_LIST, list(singletonList(1.0)));
         assertFalse(object.isUnknown());
         assertFalse(object.isNull());
         assertFalse(object.isPrimitive());
@@ -121,12 +126,12 @@ public class TypedObjectTest {
 
     @Test
     public void testSize() {
-        TypedObject objectA = new TypedObject(STRING_LIST, asList("1", "2"));
-        TypedObject objectB = new TypedObject(STRING_LIST, emptyList());
+        TypedObject objectA = new TypedObject(STRING_LIST, list(asList("1", "2")));
+        TypedObject objectB = new TypedObject(STRING_LIST, new ArrayList<>());
         TypedObject objectC = new TypedObject(STRING, "");
         TypedObject objectD = new TypedObject(STRING, "11");
-        TypedObject objectE = new TypedObject(LONG_MAP, emptyMap());
-        TypedObject objectF = new TypedObject(LONG_MAP, singletonMap("foo", 1L));
+        TypedObject objectE = new TypedObject(LONG_MAP, new HashMap<>());
+        TypedObject objectF = new TypedObject(LONG_MAP, map(singletonMap("foo", 1L)));
         assertEquals(objectA.size(), 2);
         assertEquals(objectB.size(), 0);
         assertEquals(objectC.size(), 0);
@@ -143,12 +148,12 @@ public class TypedObjectTest {
 
     @Test
     public void testContainsKey() {
-        TypedObject objectB = new TypedObject(STRING_MAP_LIST, emptyList());
-        TypedObject objectC = new TypedObject(STRING_MAP_LIST, singletonList(Collections.emptyMap()));
-        TypedObject objectD = new TypedObject(STRING_MAP_LIST, singletonList(singletonMap("1", "2")));
-        TypedObject objectE = new TypedObject(STRING_MAP, Collections.emptyMap());
-        TypedObject objectF = new TypedObject(STRING_MAP, singletonMap("1", "2"));
-        TypedObject objectG = new TypedObject(STRING_MAP_MAP, singletonMap("11", singletonMap("1", "2")));
+        TypedObject objectB = new TypedObject(STRING_MAP_LIST, new ArrayList<>());
+        TypedObject objectC = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(Collections.emptyMap())));
+        TypedObject objectD = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(singletonMap("1", "2"))));
+        TypedObject objectE = new TypedObject(STRING_MAP, new HashMap<>());
+        TypedObject objectF = new TypedObject(STRING_MAP, map(singletonMap("1", "2")));
+        TypedObject objectG = new TypedObject(STRING_MAP_MAP, nestedMap(singletonMap("11", singletonMap("1", "2"))));
         assertFalse(objectB.containsKey("1"));
         assertFalse(objectC.containsKey("1"));
         assertTrue(objectD.containsKey("1"));
@@ -169,13 +174,13 @@ public class TypedObjectTest {
 
     @Test
     public void testContainsValue() {
-        TypedObject objectA = new TypedObject(INTEGER_LIST, asList(1, 2));
-        TypedObject objectB = new TypedObject(INTEGER_LIST, emptyList());
-        TypedObject objectC = new TypedObject(INTEGER_MAP_LIST, singletonList(Collections.emptyMap()));
-        TypedObject objectD = new TypedObject(INTEGER_MAP_LIST, singletonList(singletonMap(1, 2)));
-        TypedObject objectE = new TypedObject(INTEGER_MAP, Collections.emptyMap());
-        TypedObject objectF = new TypedObject(INTEGER_MAP, singletonMap(1, 2));
-        TypedObject objectG = new TypedObject(INTEGER_MAP_MAP, singletonMap(11, singletonMap(1, 2)));
+        TypedObject objectA = new TypedObject(INTEGER_LIST, list(asList(1, 2)));
+        TypedObject objectB = new TypedObject(INTEGER_LIST, new ArrayList<>());
+        TypedObject objectC = new TypedObject(INTEGER_MAP_LIST, nestedList(singletonList(Collections.<String, Integer>emptyMap())));
+        TypedObject objectD = new TypedObject(INTEGER_MAP_LIST, nestedList(singletonList(singletonMap("1", 2))));
+        TypedObject objectE = new TypedObject(INTEGER_MAP, new HashMap<>());
+        TypedObject objectF = new TypedObject(INTEGER_MAP, map(singletonMap("1", 2)));
+        TypedObject objectG = new TypedObject(INTEGER_MAP_MAP, nestedMap(singletonMap("1", singletonMap("1", 2))));
         assertFalse(objectA.containsValue(new TypedObject(INTEGER, 3)));
         assertTrue(objectA.containsValue(new TypedObject(INTEGER, 1)));
         assertFalse(objectB.containsValue(new TypedObject(INTEGER, 1)));
@@ -319,31 +324,31 @@ public class TypedObjectTest {
 
     @Test(expectedExceptions = ClassCastException.class)
     public void testForceCastUnsupportedTypeToInteger() {
-        TypedObject object = new TypedObject(INTEGER_LIST, singletonList(1));
+        TypedObject object = new TypedObject(INTEGER_LIST, list(singletonList(1)));
         object.forceCast(INTEGER);
     }
 
     @Test(expectedExceptions = ClassCastException.class)
     public void testForceCastUnsupportedTypeToLong() {
-        TypedObject object = new TypedObject(LONG_LIST, singletonList(1L));
+        TypedObject object = new TypedObject(LONG_LIST, list(singletonList(1L)));
         object.forceCast(LONG);
     }
 
     @Test(expectedExceptions = ClassCastException.class)
     public void testForceCastUnsupportedTypeToDouble() {
-        TypedObject object = new TypedObject(DOUBLE_LIST, singletonList(1.0));
+        TypedObject object = new TypedObject(DOUBLE_LIST, list(singletonList(1.0)));
         object.forceCast(DOUBLE);
     }
 
     @Test(expectedExceptions = ClassCastException.class)
     public void testForceCastUnsupportedTypeToFloat() {
-        TypedObject object = new TypedObject(FLOAT_LIST, singletonList(1.0f));
+        TypedObject object = new TypedObject(FLOAT_LIST, list(singletonList(1.0f)));
         object.forceCast(Type.FLOAT);
     }
 
     @Test(expectedExceptions = ClassCastException.class)
     public void testForceCastUnsupportedTypeToBoolean() {
-        TypedObject object = new TypedObject(BOOLEAN_LIST, singletonList(false));
+        TypedObject object = new TypedObject(BOOLEAN_LIST, list(singletonList(false)));
         object.forceCast(Type.BOOLEAN);
     }
 
@@ -468,7 +473,7 @@ public class TypedObjectTest {
     @Test(expectedExceptions = UnsupportedOperationException.class)
     public void testNonPrimitiveComparison() {
         TypedObject objectA = new TypedObject(LONG, 1L);
-        TypedObject objectB = new TypedObject(LONG_LIST, singletonList(1L));
+        TypedObject objectB = new TypedObject(LONG_LIST, list(singletonList(1L)));
         objectA.compareTo(objectB);
     }
 
@@ -482,8 +487,8 @@ public class TypedObjectTest {
 
     @Test(expectedExceptions = UnsupportedOperationException.class)
     public void testUnsupportedTypeComparison() {
-        TypedObject objectA = new TypedObject(LONG_MAP_LIST, singletonList(singletonMap("bar", 42L)));
-        TypedObject objectB = new TypedObject(LONG_MAP_LIST, singletonList(singletonMap("bar", 42L)));
+        TypedObject objectA = new TypedObject(LONG_MAP_LIST, nestedList(singletonList(singletonMap("bar", 42L))));
+        TypedObject objectB = new TypedObject(LONG_MAP_LIST, nestedList(singletonList(singletonMap("bar", 42L))));
         objectA.compareTo(objectB);
     }
 
@@ -550,7 +555,7 @@ public class TypedObjectTest {
         object = new TypedObject("foo");
         assertEquals(object.getType(), STRING);
         assertEquals(object.toString(), "foo::STRING");
-        object = new TypedObject(singletonList(singletonMap("foo", "bar")));
+        object = new TypedObject(nestedList(singletonList(singletonMap("foo", "bar"))));
         assertEquals(object.getType(), Type.STRING_MAP_LIST);
         assertEquals(object.toString(), "[{foo=bar}]::STRING_MAP_LIST");
     }
@@ -561,18 +566,18 @@ public class TypedObjectTest {
         assertFalse(new TypedObject(DOUBLE, 42.0).equals(42.0));
         assertEquals(new TypedObject(DOUBLE, 42.0), new TypedObject(DOUBLE, 42.0));
         assertNotEquals(new TypedObject(DOUBLE, 42.0), new TypedObject(FLOAT, 42.0f));
-        assertEquals(new TypedObject(STRING_MAP, singletonMap("foo", "bar")),
-                     new TypedObject(STRING_MAP, singletonMap("foo", "bar")));
+        assertEquals(new TypedObject(STRING_MAP, map(singletonMap("foo", "bar"))),
+                     new TypedObject(STRING_MAP, map(singletonMap("foo", "bar"))));
         assertEquals(new TypedObject(STRING_MAP_LIST, null), new TypedObject(STRING_MAP_LIST, null));
         assertNotEquals(new TypedObject(STRING_MAP_MAP, null), new TypedObject(STRING_MAP_LIST, null));
-        assertNotEquals(new TypedObject(STRING_MAP, singletonMap("foo", "bar")), new TypedObject(STRING_MAP, null));
-        assertNotEquals(new TypedObject(STRING_MAP, null), new TypedObject(STRING_MAP, singletonMap("foo", "bar")));
+        assertNotEquals(new TypedObject(STRING_MAP, map(singletonMap("foo", "bar"))), new TypedObject(STRING_MAP, null));
+        assertNotEquals(new TypedObject(STRING_MAP, null), new TypedObject(STRING_MAP, map(singletonMap("foo", "bar"))));
     }
 
     @Test
     public void testHashCode() {
-        assertEquals(new TypedObject(STRING_MAP, singletonMap("foo", "bar")).hashCode(),
-                     new TypedObject(STRING_MAP, singletonMap("foo", "bar")).hashCode());
+        assertEquals(new TypedObject(STRING_MAP, map(singletonMap("foo", "bar"))).hashCode(),
+                     new TypedObject(STRING_MAP, map(singletonMap("foo", "bar"))).hashCode());
         assertNotEquals(new TypedObject(DOUBLE, 42.0).hashCode(), new TypedObject(FLOAT, 42.0f).hashCode());
         assertEquals(new TypedObject(STRING_MAP_LIST, null).hashCode(),
                      new TypedObject(STRING_MAP_LIST, null).hashCode());
@@ -608,7 +613,7 @@ public class TypedObjectTest {
         assertEquals(safeCastFromObject(STRING, 1.0), new TypedObject(STRING, "1.0"));
         assertEquals(safeCastFromObject(STRING, "foo"), new TypedObject(STRING, "foo"));
         assertEquals(safeCastFromObject(STRING, false), new TypedObject(STRING, "false"));
-        assertEquals(safeCastFromObject(STRING, singletonList("[1]")), TypedObject.UNKNOWN);
+        assertEquals(safeCastFromObject(STRING, list(singletonList("[1]"))), TypedObject.UNKNOWN);
     }
 
     @Test
@@ -623,24 +628,24 @@ public class TypedObjectTest {
     @Test
     public void testSafeCastingToLongMap() {
         // To Long Map
-        assertEquals(safeCastFromObject(LONG_MAP, singletonMap("foo", Integer.MAX_VALUE)),
-                     new TypedObject(LONG_MAP, singletonMap("foo", (long) Integer.MAX_VALUE)));
-        assertEquals(safeCastFromObject(LONG_MAP, singletonMap("foo", 1L)),
-                     new TypedObject(LONG_MAP, singletonMap("foo", 1L)));
-        assertEquals(safeCastFromObject(LONG_MAP, singletonMap("foo", 1.0f)), TypedObject.UNKNOWN);
-        assertEquals(safeCastFromObject(LONG_MAP, singletonMap("foo", 1.0)), TypedObject.UNKNOWN);
+        assertEquals(safeCastFromObject(LONG_MAP, map(singletonMap("foo", Integer.MAX_VALUE))),
+                     new TypedObject(LONG_MAP, map(singletonMap("foo", (long) Integer.MAX_VALUE))));
+        assertEquals(safeCastFromObject(LONG_MAP, map(singletonMap("foo", 1L))),
+                     new TypedObject(LONG_MAP, map(singletonMap("foo", 1L))));
+        assertEquals(safeCastFromObject(LONG_MAP, map(singletonMap("foo", 1.0f))), TypedObject.UNKNOWN);
+        assertEquals(safeCastFromObject(LONG_MAP, map(singletonMap("foo", 1.0))), TypedObject.UNKNOWN);
     }
 
     @Test
     public void testSafeCastingToLongMapMap() {
         // To Long Map Map
-        assertEquals(safeCastFromObject(LONG_MAP_MAP, singletonMap("foo", singletonMap("bar", 1))),
-                     new TypedObject(LONG_MAP_MAP, singletonMap("foo", singletonMap("bar", 1L))));
-        assertEquals(safeCastFromObject(LONG_MAP_MAP, singletonMap("foo", singletonMap("bar", 1L))),
-                     new TypedObject(LONG_MAP_MAP, singletonMap("foo", singletonMap("bar", 1L))));
-        assertEquals(safeCastFromObject(LONG_MAP_MAP, singletonMap("foo", singletonMap("bar", 1.0f))),
+        assertEquals(safeCastFromObject(LONG_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1)))),
+                     new TypedObject(LONG_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1L)))));
+        assertEquals(safeCastFromObject(LONG_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1L)))),
+                     new TypedObject(LONG_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1L)))));
+        assertEquals(safeCastFromObject(LONG_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1.0f)))),
                      TypedObject.UNKNOWN);
-        assertEquals(safeCastFromObject(LONG_MAP_MAP, singletonMap("foo", singletonMap("bar", 1.0))),
+        assertEquals(safeCastFromObject(LONG_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1.0)))),
                      TypedObject.UNKNOWN);
     }
 
@@ -652,35 +657,35 @@ public class TypedObjectTest {
         assertEquals(safeCastFromObject(DOUBLE, 1.0f), new TypedObject(DOUBLE, 1.0));
         assertEquals(safeCastFromObject(DOUBLE, 1.0), new TypedObject(DOUBLE, 1.0));
         assertEquals(safeCastFromObject(DOUBLE, "foo"), TypedObject.UNKNOWN);
-        assertEquals(safeCastFromObject(DOUBLE, singletonList(singletonMap("foo", 1.0))), TypedObject.UNKNOWN);
+        assertEquals(safeCastFromObject(DOUBLE, nestedList(singletonList(singletonMap("foo", 1.0)))), TypedObject.UNKNOWN);
     }
 
     @Test
     public void testSafeCastingToDoubleMap() {
         // To Double Map
-        assertEquals(safeCastFromObject(DOUBLE_MAP, singletonMap("foo", 1)),
-                     new TypedObject(DOUBLE_MAP, singletonMap("foo", 1.0)));
-        assertEquals(safeCastFromObject(DOUBLE_MAP, singletonMap("foo", 1L)),
-                     new TypedObject(DOUBLE_MAP, singletonMap("foo", 1.0)));
-        assertEquals(safeCastFromObject(DOUBLE_MAP, singletonMap("foo", 1.0f)),
-                     new TypedObject(DOUBLE_MAP, singletonMap("foo", 1.0)));
-        assertEquals(safeCastFromObject(DOUBLE_MAP, singletonMap("foo", 1.0)),
-                     new TypedObject(DOUBLE_MAP, singletonMap("foo", 1.0)));
-        assertEquals(safeCastFromObject(DOUBLE_MAP, singletonMap("foo", "bar")), TypedObject.UNKNOWN);
+        assertEquals(safeCastFromObject(DOUBLE_MAP, map(singletonMap("foo", 1))),
+                     new TypedObject(DOUBLE_MAP, map(singletonMap("foo", 1.0))));
+        assertEquals(safeCastFromObject(DOUBLE_MAP, map(singletonMap("foo", 1L))),
+                     new TypedObject(DOUBLE_MAP, map(singletonMap("foo", 1.0))));
+        assertEquals(safeCastFromObject(DOUBLE_MAP, map(singletonMap("foo", 1.0f))),
+                     new TypedObject(DOUBLE_MAP, map(singletonMap("foo", 1.0))));
+        assertEquals(safeCastFromObject(DOUBLE_MAP, map(singletonMap("foo", 1.0))),
+                     new TypedObject(DOUBLE_MAP, map(singletonMap("foo", 1.0))));
+        assertEquals(safeCastFromObject(DOUBLE_MAP, map(singletonMap("foo", "bar"))), TypedObject.UNKNOWN);
     }
 
     @Test
     public void testSafeCastingToDoubleMapMap() {
         // To Double Map Map
-        assertEquals(safeCastFromObject(DOUBLE_MAP_MAP, singletonMap("foo", singletonMap("bar", 1))),
-                     new TypedObject(DOUBLE_MAP_MAP, singletonMap("foo", singletonMap("bar", 1.0))));
-        assertEquals(safeCastFromObject(DOUBLE_MAP_MAP, singletonMap("foo", singletonMap("bar", 1L))),
-                     new TypedObject(DOUBLE_MAP_MAP, singletonMap("foo", singletonMap("bar", 1.0))));
-        assertEquals(safeCastFromObject(DOUBLE_MAP_MAP, singletonMap("foo", singletonMap("bar", 1.0f))),
-                     new TypedObject(DOUBLE_MAP_MAP, singletonMap("foo", singletonMap("bar", 1.0))));
-        assertEquals(safeCastFromObject(DOUBLE_MAP_MAP, singletonMap("foo", singletonMap("bar", 1.0))),
-                     new TypedObject(DOUBLE_MAP_MAP, singletonMap("foo", singletonMap("bar", 1.0))));
-        assertEquals(safeCastFromObject(DOUBLE_MAP_MAP, singletonMap("foo", singletonMap("bar", "bar"))),
+        assertEquals(safeCastFromObject(DOUBLE_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1)))),
+                     new TypedObject(DOUBLE_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1.0)))));
+        assertEquals(safeCastFromObject(DOUBLE_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1L)))),
+                     new TypedObject(DOUBLE_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1.0)))));
+        assertEquals(safeCastFromObject(DOUBLE_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1.0f)))),
+                     new TypedObject(DOUBLE_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1.0)))));
+        assertEquals(safeCastFromObject(DOUBLE_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1.0)))),
+                     new TypedObject(DOUBLE_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", 1.0)))));
+        assertEquals(safeCastFromObject(DOUBLE_MAP_MAP, nestedMap(singletonMap("foo", singletonMap("bar", "bar")))),
                      TypedObject.UNKNOWN);
     }
 
@@ -714,11 +719,11 @@ public class TypedObjectTest {
         assertEquals(objectC.getType(), UNKNOWN);
         assertNull(objectC.getValue());
 
-        TypedObject objectD = TypedObject.forceCastStringToNumber(emptyList());
+        TypedObject objectD = TypedObject.forceCastStringToNumber(new ArrayList<>());
         assertEquals(objectD.getType(), UNKNOWN);
         assertNull(objectD.getValue());
 
-        TypedObject objectE = TypedObject.forceCastStringToNumber(Collections.emptyMap());
+        TypedObject objectE = TypedObject.forceCastStringToNumber(new HashMap<>());
         assertEquals(objectE.getType(), UNKNOWN);
         assertNull(objectE.getValue());
 

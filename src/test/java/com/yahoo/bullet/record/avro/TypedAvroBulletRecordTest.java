@@ -18,6 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Collections;
 
 import static java.util.Collections.singletonList;
@@ -29,7 +30,7 @@ public class TypedAvroBulletRecordTest extends BulletRecordTest<TypedObject> {
     private TypedAvroBulletRecord avroAnother;
 
     @Override
-    protected Object revert(TypedObject data) {
+    protected Serializable revert(TypedObject data) {
         // If get or getAndRemove was used to retrive this, we need to handle nulls
         if (data == null) {
             return null;

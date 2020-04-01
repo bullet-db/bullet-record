@@ -8,12 +8,14 @@ package com.yahoo.bullet.record;
 import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
 
+import java.io.Serializable;
+
 public abstract class TypedBulletRecord extends BulletRecord<TypedObject> {
     private static final long serialVersionUID = 5093501631768714558L;
 
     @Override
     protected TypedObject convert(Object object) {
-        return new TypedObject(object);
+        return new TypedObject((Serializable) object);
     }
 
     /**

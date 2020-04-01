@@ -7,15 +7,21 @@ package com.yahoo.bullet.typesystem;
 
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Represents an object with its {@link Type}. Note that these objects must be {@link Serializable}.
+ */
 @Getter
-public class TypedObject implements Comparable<TypedObject> {
+public class TypedObject implements Comparable<TypedObject>, Serializable {
+    private static final long serialVersionUID = -2162794063118775558L;
+
     private final Type type;
-    private final Object value;
+    private final Serializable value;
 
     /**
      * Represents the {@link Type#UNKNOWN} object. The value is null.
@@ -27,24 +33,24 @@ public class TypedObject implements Comparable<TypedObject> {
     public static final TypedObject NULL = new TypedObject(Type.NULL, null);
 
     /**
-     * Constructor that wraps an Object into a type. See {@link Type#getType(Object)} to see how the type of the
-     * corresponding object will be determined.
+     * Constructor that wraps a {@link Serializable} object into a type. See {@link Type#getType(Object)} to see how the
+     * type of the corresponding object will be determined.
      *
-     * @param value The value who is being wrapped.
+     * @param value The {@link Serializable} value that is being wrapped.
      */
-    public TypedObject(Object value) {
+    public TypedObject(Serializable value) {
         this(Type.getType(value), value);
     }
 
     /**
      * Create a TypedObject with the given non-null type. Note that the value is not validated to be of that type. If
-     * it is not, all operation results are undefined. You should use {@link Type#cast(Object)} or
-     * {@link Type#forceCast(Type, Object)} to force the value to the desired type if it is not.
+     * it is not, all operation results are undefined. You should use {@link Type#cast(Serializable)} or
+     * {@link Type#forceCast(Type, Serializable)} to force the value to the desired type if it is not.
      *
      * @param type The type of the value.
      * @param value The value being wrapped.
      */
-    public TypedObject(Type type, Object value) {
+    public TypedObject(Type type, Serializable value) {
         Objects.requireNonNull(type);
         this.type = type;
         this.value = value;
@@ -181,13 +187,17 @@ public class TypedObject implements Comparable<TypedObject> {
     @SuppressWarnings("unchecked")
     public boolean containsValue(TypedObject target) {
         if (isPrimitiveList()) {
-            return ((List) value).stream().anyMatch(target::equalTo);
+            Type subType = type.getSubType();
+            return ((List) value).stream().anyMatch(o -> target.equalTo(subType, o));
         } else if (isComplexList()) {
-            return ((List) value).stream().anyMatch(e -> containsValueInPrimitiveMap((Map) e, target));
+            Type subType = type.getSubType().getSubType();
+            return ((List) value).stream().anyMatch(e -> containsValueInPrimitiveMap(subType, (Map) e, target));
         } else if (isPrimitiveMap()) {
-            return ((Map) value).values().stream().anyMatch(target::equalTo);
+            Type subType = type.getSubType();
+            return ((Map) value).values().stream().anyMatch(o -> target.equalTo(subType, o));
         } else if (isComplexMap()) {
-            return ((Map) value).values().stream().anyMatch(e -> containsValueInPrimitiveMap((Map) e, target));
+            Type subType = type.getSubType().getSubType();
+            return ((Map) value).values().stream().anyMatch(e -> containsValueInPrimitiveMap(subType, (Map) e, target));
 
         }
         throw new UnsupportedOperationException("This type of field does not support contains value: " + type);
@@ -317,13 +327,13 @@ public class TypedObject implements Comparable<TypedObject> {
 
     /**
      * Takes an object and returns a casted TypedObject according to the given type. Note that this only casts safely.
-     * It can widen numeric types if loss of precision does not occur. See {@link Type#cast(Object)}.
+     * It can widen numeric types if loss of precision does not occur. See {@link Type#cast(Serializable)}.
      *
      * @param type The {@link Type} to cast the values to.
      * @param object The Object that is being cast.
      * @return The casted TypedObject with the {@link Type} or {@link TypedObject#UNKNOWN} if the cast failed.
      */
-    public static TypedObject safeCastFromObject(Type type, Object object) {
+    public static TypedObject safeCastFromObject(Type type, Serializable object) {
         // No longer makes a UNKNOWN object if object was null
         try {
             return new TypedObject(type, type.cast(object));
@@ -339,7 +349,7 @@ public class TypedObject implements Comparable<TypedObject> {
      * @param value The Object value that is being cast to a numeric.
      * @return The casted TypedObject with the type set to numeric or {@link TypedObject#UNKNOWN} if not.
      */
-    public static TypedObject forceCastStringToNumber(Object value) {
+    public static TypedObject forceCastStringToNumber(Serializable value) {
         if (value == null) {
             return UNKNOWN;
         }
@@ -350,11 +360,12 @@ public class TypedObject implements Comparable<TypedObject> {
         }
     }
 
-    private boolean equalTo(Object object) {
-        return equalTo(new TypedObject(object));
+    private boolean equalTo(Type type, Object object) {
+        // These are our objects. They should be serializable
+        return equalTo(new TypedObject(type, (Serializable) object));
     }
 
-    private static boolean containsValueInPrimitiveMap(Map<?, ?> map, TypedObject target) {
-        return map.values().stream().anyMatch(target::equalTo);
+    private static boolean containsValueInPrimitiveMap(Type mapValueType, Map<?, ?> map, TypedObject target) {
+        return map.values().stream().anyMatch(o -> target.equalTo(mapValueType, o));
     }
 }

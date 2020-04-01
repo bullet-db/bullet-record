@@ -22,7 +22,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <avro.version>1.7.7</avro.version>
+        <avro.version>1.9.2</avro.version>
         <gson.version>2.7</gson.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>

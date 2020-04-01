@@ -13,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -60,7 +61,7 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
 
     @Override
     public TypedObject getAndRemove(String field) {
-        TypedObject object = makeTypedObject(field, data.getAndRemove(field));
+        TypedObject object = makeTypedObject(field, (Serializable) data.getAndRemove(field));
         types.remove(field);
         return object;
     }
@@ -93,7 +94,7 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
             public Map.Entry<String, TypedObject> next() {
                 Map.Entry<String, Object> field = iterator.next();
                 String key = field.getKey();
-                return new AbstractMap.SimpleEntry<>(key, makeTypedObject(key, field.getValue()));
+                return new AbstractMap.SimpleEntry<>(key, makeTypedObject(key, (Serializable) field.getValue()));
             }
         };
     }
@@ -104,8 +105,7 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
             return false;
         }
         TypedAvroBulletRecord that = (TypedAvroBulletRecord) object;
-        return (types == that.types || types != null && types.equals(that.types)) &&
-               (data == that.data  || data != null && data.equals(that.data));
+        return Objects.equals(types, that.types) && Objects.equals(data, that.data);
     }
 
     @Override
@@ -114,7 +114,7 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
         return data == null ? 42 : data.hashCode();
     }
 
-    private TypedObject makeTypedObject(String field, Object value) {
+    private TypedObject makeTypedObject(String field, Serializable value) {
         if (value == null) {
             return TypedObject.NULL;
         }

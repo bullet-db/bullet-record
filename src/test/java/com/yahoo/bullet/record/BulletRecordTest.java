@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,12 +24,13 @@ import static java.util.Collections.singletonMap;
 
 /**
  * Each instance of {@link BulletRecord} can extend this test to get a bunch of common tests for the various operations
- * in a record. Implement {@link #revert(Object)} to convert the data from the particular record to a regular Object.
+ * in a record. Implement {@link #revert(Serializable)} to convert the data from the particular record to a regular
+ * Object.
  *
- * @param <T> The type of the object stored in the record.
+ * @param <T> The type of the object stored in the record. Is a sub-class of {@link Serializable}.
  */
 @SuppressWarnings("unchecked")
-public abstract class BulletRecordTest<T> {
+public abstract class BulletRecordTest<T extends Serializable> {
     protected BulletRecord<T> record;
     protected BulletRecord<T> another;
 
@@ -42,9 +44,10 @@ public abstract class BulletRecordTest<T> {
      * @param entries The non-null entries to insert.
      * @return This object for chaining.
      */
-    public static <T> BulletRecord<T> setMap(BulletRecord<T> record, String field, Map.Entry<String, Object>... entries) {
+    public static <T extends Serializable> BulletRecord<T> setMap(BulletRecord<T> record, String field,
+                                                                  Map.Entry<String, Object>... entries) {
         Objects.requireNonNull(entries);
-        Map<String, Object> newMap = new HashMap<>(entries.length);
+        HashMap<String, Object> newMap = new HashMap<>(entries.length);
         for (Map.Entry<String, Object> entry : entries) {
             newMap.put(entry.getKey(), entry.getValue());
         }
@@ -61,9 +64,10 @@ public abstract class BulletRecordTest<T> {
      * @param entries The non-null entries to insert.
      * @return This object for chaining.
      */
-    public static <T> BulletRecord<T> setListMap(BulletRecord<T> record, String field, Map<String, Object>... entries) {
+    public static <T extends Serializable> BulletRecord<T> setListMap(BulletRecord<T> record, String field,
+                                                                      Map<String, Object>... entries) {
         Objects.requireNonNull(entries);
-        List<Map<String, Object>> data = new ArrayList<>();
+        ArrayList<Map<String, Object>> data = new ArrayList<>();
         for (Map<String, Object> entry : entries) {
             data.add(entry);
         }
@@ -84,7 +88,7 @@ public abstract class BulletRecordTest<T> {
                             "The value did not match. Actual: " + actualValue + " Expected: " + expectedValue);
     }
 
-    public static <T> Object extractField(BulletRecord<T> record, String identifier) {
+    public static <T extends Serializable> Serializable extractField(BulletRecord<T> record, String identifier) {
         return record.typedExtract(identifier).getValue();
     }
 
@@ -94,7 +98,7 @@ public abstract class BulletRecordTest<T> {
      * @param data The data in the record.
      * @return The data converted to an Object.
      */
-    protected abstract Object revert(T data);
+    protected abstract Serializable revert(T data);
 
     @Test
     public void testSetBoolean() {
