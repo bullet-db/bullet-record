@@ -14,7 +14,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
-import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -61,7 +60,7 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
 
     @Override
     public TypedObject getAndRemove(String field) {
-        TypedObject object = makeTypedObject(field, (Serializable) data.getAndRemove(field));
+        TypedObject object = makeTypedObject(field, data.getAndRemove(field));
         types.remove(field);
         return object;
     }
@@ -83,20 +82,7 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
 
     @Override
     public Iterator<Map.Entry<String, TypedObject>> iterator() {
-        final Iterator<Map.Entry<String, Object>> iterator = data.iterator();
-        return new Iterator<Map.Entry<String, TypedObject>>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public Map.Entry<String, TypedObject> next() {
-                Map.Entry<String, Object> field = iterator.next();
-                String key = field.getKey();
-                return new AbstractMap.SimpleEntry<>(key, makeTypedObject(key, (Serializable) field.getValue()));
-            }
-        };
+        return data.iterator(this::makeTypedObject);
     }
 
     @Override
@@ -114,10 +100,14 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
         return data == null ? 42 : data.hashCode();
     }
 
-    private TypedObject makeTypedObject(String field, Serializable value) {
+    private TypedObject makeTypedObject(Map.Entry<String, Object> entry) {
+        return makeTypedObject(entry.getKey(), (Serializable) entry.getValue());
+    }
+
+    private TypedObject makeTypedObject(String key, Serializable value) {
         if (value == null) {
             return TypedObject.NULL;
         }
-        return new TypedObject(types.getOrDefault(field, Type.UNKNOWN), value);
+        return new TypedObject(types.getOrDefault(key, Type.UNKNOWN), value);
     }
 }

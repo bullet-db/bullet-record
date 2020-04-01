@@ -12,7 +12,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
-import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -54,7 +53,7 @@ public class UntypedAvroBulletRecord extends UntypedBulletRecord {
 
     @Override
     public Serializable getAndRemove(String field) {
-        return (Serializable) data.getAndRemove(field);
+        return data.getAndRemove(field);
     }
 
     @Override
@@ -72,19 +71,7 @@ public class UntypedAvroBulletRecord extends UntypedBulletRecord {
 
     @Override
     public Iterator<Map.Entry<String, Serializable>> iterator() {
-        final Iterator<Map.Entry<String, Object>> iterator = data.iterator();
-        return new Iterator<Map.Entry<String, Serializable>>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public Map.Entry<String, Serializable> next() {
-                Map.Entry<String, Object> field = iterator.next();
-                return new AbstractMap.SimpleEntry<>(field.getKey(), (Serializable) field.getValue());
-            }
-        };
+        return data.iterator();
     }
 
     @Override

@@ -26,16 +26,18 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 @Slf4j @NoArgsConstructor
 @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE)
-class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>> {
+class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Serializable>> {
     private boolean isDeserialized = true;
     private Map<String, Object> data = new HashMap<>();
     private byte[] serializedData;
@@ -170,8 +172,8 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>
      * @param field The name of the field.
      * @return The value in the data or null if it does not exist.
      */
-    public Object getAndRemove(String field) {
-        return hasField(field) ? data.remove(field) : null;
+    public Serializable getAndRemove(String field) {
+        return hasField(field) ? (Serializable) data.remove(field) : null;
     }
 
     /**
@@ -194,8 +196,38 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>
      * @return An iterator over the data stored.
      */
     @Override
-    public Iterator<Map.Entry<String, Object>> iterator() {
-        return forceReadData() ? data.entrySet().iterator() : Collections.<String, Object>emptyMap().entrySet().iterator();
+    public Iterator<Map.Entry<String, Serializable>> iterator() {
+        return iterator(e -> (Serializable) e.getValue());
+    }
+
+    /**
+     * Exposed at package since this exposes the underlying {@link Map} structure and raw values used by this class.
+     *
+     * Allows you to iterate over the data while applying a mapping {@link Function} to convert the underlying
+     * raw objects to a type of {@link Serializable}.
+     *
+     * @param valueMapper The {@link Function} that takes {@link Map.Entry} of the key and raw object and returns a
+     *                    sub-type of {@link Serializable}.
+     * @param <T> The sub-type of {@link Serializable}.
+     * @return An {@link Iterator} over the data.
+     */
+    <T extends Serializable> Iterator<Map.Entry<String, T>> iterator(Function<Map.Entry<String, Object>, T> valueMapper) {
+        if (!forceReadData()) {
+            return Collections.<String, T>emptyMap().entrySet().iterator();
+        }
+        Iterator<Map.Entry<String, Object>> iterator = data.entrySet().iterator();
+        return new Iterator<Map.Entry<String, T>>() {
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public Map.Entry<String, T> next() {
+                Map.Entry<String, Object> entry = iterator.next();
+                return new AbstractMap.SimpleEntry<>(entry.getKey(), valueMapper.apply(entry));
+            }
+        };
     }
 
     @Override
