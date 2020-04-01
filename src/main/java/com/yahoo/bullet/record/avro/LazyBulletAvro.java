@@ -43,9 +43,9 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>
     private static final long serialVersionUID = -5368363606317600282L;
 
     /**
-     * This is overridden so that when we read arrays from the serialized avro, they are read as
+     * This is overridden so that when we read arrays from the serialized AVRO, they are read as
      * {@link ArrayList} instances. Otherwise, {@link org.apache.avro.generic.GenericData.Array} is used which is not
-     * {@link Serializable}. This breaks the guarantee that {@link LazyBulletAvro#get(String)} etc return
+     * {@link Serializable}, which breaks the guarantee that {@link LazyBulletAvro#get(String)} etc. return
      * {@link Serializable} instances.
      */
     private static class CustomReader extends SpecificDatumReader<BulletAvro> {
@@ -67,6 +67,8 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>
      * does not support reusing old containers when creating new arrays so make sure to pass in null for reuse when
      * invoking {@link DatumReader#read(Object, Decoder)}. By using {@link ArrayList}, we also lose the pruning and
      * container reuse benefits of the {@link org.apache.avro.generic.GenericData.Array}.
+     *
+     * We do not need one for {@link Map} because AVRO uses {@link HashMap} instances.
      */
     private static class SpecificDataArrayList extends SpecificData {
         @Override
@@ -236,7 +238,6 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>
 
     private Map<String, Object> reify(byte[] data) throws IOException {
         DatumReader<BulletAvro> reader = new CustomReader();
-        //new SpecificDatumReader<>(BulletAvro.class).getSpecificData().addLogicalTypeConversion();
         BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
         BulletAvro avro = reader.read(null, decoder);
         return avro.getData();
