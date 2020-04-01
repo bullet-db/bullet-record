@@ -10,11 +10,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 
@@ -23,21 +26,58 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 @Slf4j @NoArgsConstructor
 @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE)
-class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>> {
+class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Serializable>> {
     private boolean isDeserialized = true;
     private Map<String, Object> data = new HashMap<>();
     private byte[] serializedData;
 
     private static final long serialVersionUID = -5368363606317600282L;
-    private static final SpecificDatumWriter<BulletAvro> WRITER = new SpecificDatumWriter<>(BulletAvro.class);
+
+    /**
+     * This is overridden so that when we read arrays from the serialized AVRO, they are read as
+     * {@link ArrayList} instances. Otherwise, {@link org.apache.avro.generic.GenericData.Array} is used which is not
+     * {@link Serializable}, which breaks the guarantee that {@link LazyBulletAvro#get(String)} etc. return
+     * {@link Serializable} instances.
+     */
+    private static class CustomReader extends SpecificDatumReader<BulletAvro> {
+        private static final SpecificData INSTANCE = new SpecificDataArrayList();
+
+        private CustomReader() {
+            super(INSTANCE);
+            setSchema(getSpecificData().getSchema(BulletAvro.class));
+        }
+
+        @Override
+        public SpecificData getSpecificData() {
+            return INSTANCE;
+        }
+    }
+
+    /**
+     * This is a custom {@link SpecificData} that simply returns an {@link ArrayList} when a new array is asked. It
+     * does not support reusing old containers when creating new arrays so make sure to pass in null for reuse when
+     * invoking {@link DatumReader#read(Object, Decoder)}. By using {@link ArrayList}, we also lose the pruning and
+     * container reuse benefits of the {@link org.apache.avro.generic.GenericData.Array}.
+     *
+     * We do not need one for {@link Map} because AVRO uses {@link HashMap} instances.
+     */
+    private static class SpecificDataArrayList extends SpecificData {
+        @Override
+        public Object newArray(Object old, int size, Schema schema) {
+            return new ArrayList<>();
+        }
+    }
 
     /**
      * Constructor.
@@ -85,7 +125,7 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>
      * @param object The value of the field. Must be a supported type in the {@link BulletAvro} data field.
      * @return This object for chaining.
      */
-    public LazyBulletAvro set(String field, Object object) {
+    public LazyBulletAvro set(String field, Serializable object) {
         Objects.requireNonNull(field);
         forceReadData();
         data.put(field, object);
@@ -98,11 +138,11 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>
      * @param field The name of the field.
      * @return The value of field or null if it was not present.
      */
-    public Object get(String field) {
+    public Serializable get(String field) {
         if (!forceReadData()) {
             return null;
         }
-        return data.get(field);
+        return (Serializable) data.get(field);
     }
 
     /**
@@ -132,8 +172,8 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>
      * @param field The name of the field.
      * @return The value in the data or null if it does not exist.
      */
-    public Object getAndRemove(String field) {
-        return hasField(field) ? data.remove(field) : null;
+    public Serializable getAndRemove(String field) {
+        return hasField(field) ? (Serializable) data.remove(field) : null;
     }
 
     /**
@@ -156,8 +196,38 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>
      * @return An iterator over the data stored.
      */
     @Override
-    public Iterator<Map.Entry<String, Object>> iterator() {
-        return forceReadData() ? data.entrySet().iterator() : Collections.<String, Object>emptyMap().entrySet().iterator();
+    public Iterator<Map.Entry<String, Serializable>> iterator() {
+        return iterator(e -> (Serializable) e.getValue());
+    }
+
+    /**
+     * Exposed at package since this exposes the underlying {@link Map} structure and raw values used by this class.
+     *
+     * Allows you to iterate over the data while applying a mapping {@link Function} to convert the underlying
+     * raw objects to a type of {@link Serializable}.
+     *
+     * @param valueMapper The {@link Function} that takes {@link Map.Entry} of the key and raw object and returns a
+     *                    sub-type of {@link Serializable}.
+     * @param <T> The sub-type of {@link Serializable}.
+     * @return An {@link Iterator} over the data.
+     */
+    <T extends Serializable> Iterator<Map.Entry<String, T>> iterator(Function<Map.Entry<String, Object>, T> valueMapper) {
+        if (!forceReadData()) {
+            return Collections.<String, T>emptyMap().entrySet().iterator();
+        }
+        Iterator<Map.Entry<String, Object>> iterator = data.entrySet().iterator();
+        return new Iterator<Map.Entry<String, T>>() {
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public Map.Entry<String, T> next() {
+                Map.Entry<String, Object> entry = iterator.next();
+                return new AbstractMap.SimpleEntry<>(entry.getKey(), valueMapper.apply(entry));
+            }
+        };
     }
 
     @Override
@@ -192,13 +262,14 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Object>
         ByteArrayOutputStream stream = new ByteArrayOutputStream(2048);
         EncoderFactory encoderFactory = new EncoderFactory();
         Encoder encoder = encoderFactory.binaryEncoder(stream, null);
-        WRITER.write(record, encoder);
+        SpecificDatumWriter<BulletAvro> writer = new SpecificDatumWriter<>(BulletAvro.class);
+        writer.write(record, encoder);
         encoder.flush();
         return stream.toByteArray();
     }
 
     private Map<String, Object> reify(byte[] data) throws IOException {
-        DatumReader<BulletAvro> reader = new SpecificDatumReader<>(BulletAvro.class);
+        DatumReader<BulletAvro> reader = new CustomReader();
         BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
         BulletAvro avro = reader.read(null, decoder);
         return avro.getData();

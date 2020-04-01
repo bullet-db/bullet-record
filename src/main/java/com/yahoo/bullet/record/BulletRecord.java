@@ -18,9 +18,13 @@ import java.util.Objects;
  * {@link Serializable} and {@link Iterable} so records can be used in for-each loops. The various
  * set methods can be used to insert fields into the record. They are implemented by default to use
  * the {@link #set(String, Object)} method which should be overridden in child classes. This method
- * delegates to the {@link #rawSet(String, Object)} method after calling {@link #convert(Object)} on
+ * delegates to the {@link #rawSet(String, Serializable)} method after calling {@link #convert(Object)} on
  * it. Field names are to be provided as Strings and must be unique, otherwise the duplicate takes precedence
  * over the first by default.
+ *
+ * Note that when using the various {@code "set.*Map"} or {@code "set.*List"} methods, the provided {@link Map}
+ * and {@link List} instances will not deep-copied and are expected to be {@link Serializable}. If not and if your
+ * particular instance of the record does not handle the conversion, a {@link RuntimeException} will be thrown.
  *
  * When inserting into the Record, methods are explicitly provided for each type supported (listed
  * below). You may also use {@link #typedSet(String, TypedObject)} to set a {@link TypedObject} into
@@ -35,7 +39,7 @@ import java.util.Objects;
  *
  * Instead of setting a field to null (you cannot for top level Java primitives), avoid setting it instead.
  */
-public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>, Serializable {
+public abstract class BulletRecord<T extends Serializable> implements Iterable<Map.Entry<String, T>>, Serializable {
     private static final long serialVersionUID = 3319286957467020672L;
     private static final String KEY_DELIMITER = "\\.";
 
@@ -133,8 +137,8 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
         if (!value.isMap()) {
             throw new ClassCastException(field + " is not a map. It has type " + value.getType());
         }
-        Map<String, Object> map = (Map<String, Object>) value.getValue();
-        Object fieldValue = map.get(subKey);
+        Map<String, Serializable> map = (Map<String, Serializable>) value.getValue();
+        Serializable fieldValue = map.get(subKey);
         return fieldValue == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType(), fieldValue);
     }
 
@@ -156,12 +160,12 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
         if (!value.isComplexMap()) {
             throw new ClassCastException(field + " is not a map of maps. It has type " + value.getType());
         }
-        Map<String, Map<String, Object>> first = (Map<String, Map<String, Object>>) value.getValue();
-        Map<String, Object> second = first.get(subKey);
+        Map<String, Map<String, Serializable>> first = (Map<String, Map<String, Serializable>>) value.getValue();
+        Map<String, Serializable> second = first.get(subKey);
         if (second == null) {
             return TypedObject.NULL;
         }
-        Object fieldValue = second.get(subSubKey);
+        Serializable fieldValue = second.get(subSubKey);
         return fieldValue == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType().getSubType(), fieldValue);
     }
 
@@ -183,8 +187,8 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
         if (!value.isList()) {
             throw new ClassCastException(field + " is not a list. It has type " + value.getType());
         }
-        List<Object> list = (List<Object>) value.getValue();
-        Object listValue = list.get(index);
+        List<Serializable> list = (List<Serializable>) value.getValue();
+        Serializable listValue = list.get(index);
         return listValue == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType(), listValue);
     }
 
@@ -207,12 +211,12 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
         if (!value.isComplexList()) {
             throw new ClassCastException(field + " is not a list of maps. It has type " + value.getType());
         }
-        List<Map<String, Object>> first = (List<Map<String, Object>>) value.getValue();
-        Map<String, Object> second = first.get(index);
+        List<Map<String, Serializable>> first = (List<Map<String, Serializable>>) value.getValue();
+        Map<String, Serializable> second = first.get(index);
         if (second == null) {
             return TypedObject.NULL;
         }
-        Object mapValue = second.get(subKey);
+        Serializable mapValue = second.get(subKey);
         return mapValue == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType().getSubType(), mapValue);
     }
 
@@ -237,16 +241,16 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
             String[] keys = identifier.split(KEY_DELIMITER, 3);
             TypedObject object = typedGet(keys[0]);
             Type type = object.getType();
-            Object first = object.getValue();
+            Serializable first = object.getValue();
             if (keys.length == 1) {
                 return object;
             }
-            Object second;
+            Serializable second;
             Type subType = type.getSubType();
             if (object.isMap()) {
-                second = ((Map<String, ?>) first).get(keys[1]);
+                second = ((Map<String, ? extends Serializable>) first).get(keys[1]);
             } else if (object.isList()) {
-                second = ((List<?>) first).get(Integer.parseInt(keys[1]));
+                second = ((List<? extends Serializable>) first).get(Integer.parseInt(keys[1]));
             } else {
                 return TypedObject.NULL;
             }
@@ -256,7 +260,7 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
             if (!Type.isMap(subType)) {
                 return TypedObject.NULL;
             }
-            return wrapAsTyped(subType.getSubType(), ((Map<String, ?>) second).get(keys[2]));
+            return wrapAsTyped(subType.getSubType(), ((Map<String, ? extends Serializable>) second).get(keys[2]));
         } catch (Exception e) {
             return TypedObject.NULL;
         }
@@ -264,6 +268,15 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
 
     // ******************************************** Setters ********************************************
 
+    /**
+     * Checks to see if a {@link TypedObject} is valid to set. By default, checks if it is non-null and is not
+     * {@link TypedObject#isNull()} or {@link TypedObject#isUnknown()}. It throws {@link RuntimeException}
+     * if so.
+     *
+     * @param object The object to check.
+     * @throws NullPointerException if the object is null
+     * @throws UnsupportedOperationException if the object is unsupported for storage.
+     */
     protected void validateObject(TypedObject object) {
         Objects.requireNonNull(object);
         if (object.isNull() || object.isUnknown()) {
@@ -723,7 +736,7 @@ public abstract class BulletRecord<T> implements Iterable<Map.Entry<String, T>>,
         return builder.append("}").toString();
     }
 
-    private TypedObject wrapAsTyped(Type type, Object object) {
+    private TypedObject wrapAsTyped(Type type, Serializable object) {
         if (object == null) {
             return TypedObject.NULL;
         }

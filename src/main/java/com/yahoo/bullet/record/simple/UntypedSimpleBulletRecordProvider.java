@@ -15,7 +15,7 @@ public class UntypedSimpleBulletRecordProvider implements BulletRecordProvider {
     private static final long serialVersionUID = 6155338160701668740L;
 
     @Override
-    public BulletRecord<Object> getInstance() {
+    public BulletRecord getInstance() {
         return new UntypedSimpleBulletRecord();
     }
 }

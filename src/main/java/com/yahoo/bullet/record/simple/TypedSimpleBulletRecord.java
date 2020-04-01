@@ -74,7 +74,7 @@ public class TypedSimpleBulletRecord extends TypedBulletRecord {
             return false;
         }
         TypedSimpleBulletRecord that = (TypedSimpleBulletRecord) object;
-        return data == that.data || (data != null && data.equals(that.data));
+        return Objects.equals(data, that.data);
     }
 
     @Override

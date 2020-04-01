@@ -22,6 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.yahoo.bullet.TestHelpers.list;
+import static com.yahoo.bullet.TestHelpers.map;
+import static com.yahoo.bullet.TestHelpers.nestedList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
@@ -95,18 +98,18 @@ public class LazyBulletAvroTest {
 
     @Test
     public void testEqualsAndHashcodeByteArrays() {
-        Map<String, Boolean> data = new HashMap<>();
+        HashMap<String, Boolean> data = new HashMap<>();
         data.put("4.1", false);
         data.put("4.2", true);
         data.put("4.3", null);
         avro.set("1", "bar").set("2", 42L).set("3", false)
             .set("4", data)
-            .set("5", singletonList(singletonMap("5.1", "foo")))
-            .set("6", singletonList("baz"));
+            .set("5", nestedList(singletonList(singletonMap("5.1", "foo"))))
+            .set("6", list(singletonList("baz")));
         another.set("1", "bar").set("2", 42L).set("3", false)
                .set("4", data)
-               .set("5", singletonList(singletonMap("5.1", "foo")))
-               .set("6", singletonList("baz"));
+               .set("5", nestedList(singletonList(singletonMap("5.1", "foo"))))
+               .set("6", list(singletonList("baz")));
 
         avro.setSerializedData(getAvroBytes(avro));
         avro.setDeserialized(false);
@@ -241,18 +244,18 @@ public class LazyBulletAvroTest {
     @Test
     @SuppressWarnings("unchecked")
     public void testSerializationDeserializationWithDataInput() {
-        Map<String, Boolean> dataA = new HashMap<>();
+        HashMap<String, Boolean> dataA = new HashMap<>();
         dataA.put("5.1", false);
         dataA.put("5.2", true);
         dataA.put("5.3", null);
-        Map<String, String> dataB = new HashMap<>();
+        HashMap<String, String> dataB = new HashMap<>();
         dataB.put("6.1", "foo");
         dataB.put("6.2", "bar");
         dataB.put("6.3", "baz");
         avro.set("1", "bar").set("2", 42L).set("3", false).set("4", 0.34)
             .set("5", dataA).set("6", dataB)
-            .set("7", singletonList(singletonMap("7.1", 3L)))
-            .set("8", singletonList(singletonMap("8.1", true)));
+            .set("7", nestedList(singletonList(singletonMap("7.1", 3L))))
+            .set("8", nestedList(singletonList(singletonMap("8.1", true))));
 
         // SerDe
         byte[] serialized = getAvroBytes(avro);
@@ -266,9 +269,9 @@ public class LazyBulletAvroTest {
         Assert.assertEquals(((List<Map<String, Long>>) reified.get("7")).get(0), singletonMap("7.1", 3L));
 
         // Add new fields and modify fields in the record
-        reified.set("2", singletonMap("2.1", 42L));
+        reified.set("2", map(singletonMap("2.1", 42L)));
         reified.set("9", 4L);
-        reified.set("10", singletonMap("10.1", "foo"));
+        reified.set("10", map(singletonMap("10.1", "foo")));
 
         // SerDe again
         serialized = getAvroBytes(reified);

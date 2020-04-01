@@ -7,13 +7,18 @@ package com.yahoo.bullet.typesystem;
 
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
 
 import static com.yahoo.bullet.TestHelpers.assertException;
+import static com.yahoo.bullet.TestHelpers.list;
+import static com.yahoo.bullet.TestHelpers.map;
+import static com.yahoo.bullet.TestHelpers.nestedList;
+import static com.yahoo.bullet.TestHelpers.nestedMap;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -25,30 +30,30 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TypeTest {
-    private static final List<Boolean> SIMPLE_BOOLEAN_LIST = singletonList(true);
-    private static final List<Integer> SIMPLE_INTEGER_LIST = singletonList(1);
-    private static final List<Long> SIMPLE_LONG_LIST = singletonList(1L);
-    private static final List<Float> SIMPLE_FLOAT_LIST = singletonList(1.0f);
-    private static final List<Double> SIMPLE_DOUBLE_LIST = singletonList(1.0);
-    private static final List<String> SIMPLE_STRING_LIST = singletonList("1");
-    private static final Map<String, Boolean> SIMPLE_BOOLEAN_MAP = singletonMap("a", true);
-    private static final Map<String, Integer> SIMPLE_INTEGER_MAP = singletonMap("a", 1);
-    private static final Map<String, Long> SIMPLE_LONG_MAP = singletonMap("a", 1L);
-    private static final Map<String, Float> SIMPLE_FLOAT_MAP = singletonMap("a", 1.0f);
-    private static final Map<String, Double> SIMPLE_DOUBLE_MAP = singletonMap("a", 1.0);
-    private static final Map<String, String> SIMPLE_STRING_MAP = singletonMap("a", "1");
-    private static final Map<String, Map<String, Boolean>> SIMPLE_BOOLEAN_MAP_MAP = singletonMap("a", SIMPLE_BOOLEAN_MAP);
-    private static final Map<String, Map<String, Integer>> SIMPLE_INTEGER_MAP_MAP = singletonMap("a", SIMPLE_INTEGER_MAP);
-    private static final Map<String, Map<String, Long>> SIMPLE_LONG_MAP_MAP = singletonMap("a", SIMPLE_LONG_MAP);
-    private static final Map<String, Map<String, Float>> SIMPLE_FLOAT_MAP_MAP = singletonMap("a", SIMPLE_FLOAT_MAP);
-    private static final Map<String, Map<String, Double>> SIMPLE_DOUBLE_MAP_MAP = singletonMap("a", SIMPLE_DOUBLE_MAP);
-    private static final Map<String, Map<String, String>> SIMPLE_STRING_MAP_MAP = singletonMap("a", SIMPLE_STRING_MAP);
-    private static final List<Map<String, Boolean>> SIMPLE_BOOLEAN_MAP_LIST = singletonList(SIMPLE_BOOLEAN_MAP);
-    private static final List<Map<String, Integer>> SIMPLE_INTEGER_MAP_LIST = singletonList(SIMPLE_INTEGER_MAP);
-    private static final List<Map<String, Long>> SIMPLE_LONG_MAP_LIST = singletonList(SIMPLE_LONG_MAP);
-    private static final List<Map<String, Float>> SIMPLE_FLOAT_MAP_LIST = singletonList(SIMPLE_FLOAT_MAP);
-    private static final List<Map<String, Double>> SIMPLE_DOUBLE_MAP_LIST = singletonList(SIMPLE_DOUBLE_MAP);
-    private static final List<Map<String, String>> SIMPLE_STRING_MAP_LIST = singletonList(SIMPLE_STRING_MAP);
+    private static final ArrayList<Boolean> SIMPLE_BOOLEAN_LIST = list(singletonList(true));
+    private static final ArrayList<Integer> SIMPLE_INTEGER_LIST = list(singletonList(1));
+    private static final ArrayList<Long> SIMPLE_LONG_LIST = list(singletonList(1L));
+    private static final ArrayList<Float> SIMPLE_FLOAT_LIST = list(singletonList(1.0f));
+    private static final ArrayList<Double> SIMPLE_DOUBLE_LIST = list(singletonList(1.0));
+    private static final ArrayList<String> SIMPLE_STRING_LIST = list(singletonList("1"));
+    private static final HashMap<String, Boolean> SIMPLE_BOOLEAN_MAP = map(singletonMap("a", true));
+    private static final HashMap<String, Integer> SIMPLE_INTEGER_MAP = map(singletonMap("a", 1));
+    private static final HashMap<String, Long> SIMPLE_LONG_MAP = map(singletonMap("a", 1L));
+    private static final HashMap<String, Float> SIMPLE_FLOAT_MAP = map(singletonMap("a", 1.0f));
+    private static final HashMap<String, Double> SIMPLE_DOUBLE_MAP = map(singletonMap("a", 1.0));
+    private static final HashMap<String, String> SIMPLE_STRING_MAP = map(singletonMap("a", "1"));
+    private static final HashMap<String, HashMap<String, Boolean>> SIMPLE_BOOLEAN_MAP_MAP = nestedMap(singletonMap("a", SIMPLE_BOOLEAN_MAP));
+    private static final HashMap<String, HashMap<String, Integer>> SIMPLE_INTEGER_MAP_MAP = nestedMap(singletonMap("a", SIMPLE_INTEGER_MAP));
+    private static final HashMap<String, HashMap<String, Long>> SIMPLE_LONG_MAP_MAP = nestedMap(singletonMap("a", SIMPLE_LONG_MAP));
+    private static final HashMap<String, HashMap<String, Float>> SIMPLE_FLOAT_MAP_MAP = nestedMap(singletonMap("a", SIMPLE_FLOAT_MAP));
+    private static final HashMap<String, HashMap<String, Double>> SIMPLE_DOUBLE_MAP_MAP = nestedMap(singletonMap("a", SIMPLE_DOUBLE_MAP));
+    private static final HashMap<String, HashMap<String, String>> SIMPLE_STRING_MAP_MAP = nestedMap(singletonMap("a", SIMPLE_STRING_MAP));
+    private static final ArrayList<HashMap<String, Boolean>> SIMPLE_BOOLEAN_MAP_LIST = nestedList(singletonList(SIMPLE_BOOLEAN_MAP));
+    private static final ArrayList<HashMap<String, Integer>> SIMPLE_INTEGER_MAP_LIST = nestedList(singletonList(SIMPLE_INTEGER_MAP));
+    private static final ArrayList<HashMap<String, Long>> SIMPLE_LONG_MAP_LIST = nestedList(singletonList(SIMPLE_LONG_MAP));
+    private static final ArrayList<HashMap<String, Float>> SIMPLE_FLOAT_MAP_LIST = nestedList(singletonList(SIMPLE_FLOAT_MAP));
+    private static final ArrayList<HashMap<String, Double>> SIMPLE_DOUBLE_MAP_LIST = nestedList(singletonList(SIMPLE_DOUBLE_MAP));
+    private static final ArrayList<HashMap<String, String>> SIMPLE_STRING_MAP_LIST = nestedList(singletonList(SIMPLE_STRING_MAP));
 
     private static void assertAllSatisfy(Collection<Type> collection, BiPredicate<Type, Type> check) {
         for (Type typeA : collection) {
@@ -273,8 +278,8 @@ public class TypeTest {
         assertException(() -> Type.STRING.cast(SIMPLE_STRING_LIST), ".*Cannot safely cast.*");
         assertException(() -> Type.STRING.cast(SIMPLE_BOOLEAN_MAP), ".*Cannot safely cast.*");
         assertException(() -> Type.STRING_MAP.cast("foo"), ".*Cannot safely cast.*");
-        assertException(() -> Type.INTEGER_LIST.cast(singletonList(1L)), ".*Cannot safely cast.*");
-        assertException(() -> Type.BOOLEAN_MAP_LIST.cast(singletonList(singletonMap("a", 1L))), ".*Cannot safely cast.*");
+        assertException(() -> Type.INTEGER_LIST.cast(list(singletonList(1L))), ".*Cannot safely cast.*");
+        assertException(() -> Type.BOOLEAN_MAP_LIST.cast(nestedList(singletonList(singletonMap("a", 1L)))), ".*Cannot safely cast.*");
     }
 
     @Test
@@ -482,7 +487,7 @@ public class TypeTest {
         assertEquals(Type.STRING_MAP.forceCast(Type.LONG_MAP, SIMPLE_STRING_MAP), SIMPLE_LONG_MAP);
         assertEquals(Type.STRING_MAP.forceCast(Type.FLOAT_MAP, SIMPLE_STRING_MAP), SIMPLE_FLOAT_MAP);
         assertEquals(Type.STRING_MAP.forceCast(Type.DOUBLE_MAP, SIMPLE_STRING_MAP), SIMPLE_DOUBLE_MAP);
-        assertEquals(Type.STRING_MAP.forceCast(Type.DOUBLE_MAP, singletonMap(null, "1")), singletonMap(null, 1.0));
+        assertEquals(Type.STRING_MAP.forceCast(Type.DOUBLE_MAP, map(singletonMap(null, "1"))), singletonMap(null, 1.0));
         // Booleans parse only "true" as true. Everything else is false
         assertEquals(Type.STRING_MAP.forceCast(Type.BOOLEAN_MAP, SIMPLE_STRING_MAP), singletonMap("a", false));
         assertEquals(Type.STRING_MAP_MAP.forceCast(Type.INTEGER_MAP_MAP, SIMPLE_STRING_MAP_MAP), SIMPLE_INTEGER_MAP_MAP);

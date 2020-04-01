@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -29,14 +30,14 @@ public class UntypedAvroBulletRecord extends UntypedBulletRecord {
     private LazyBulletAvro data = new LazyBulletAvro();
 
     @Override
-    protected UntypedAvroBulletRecord rawSet(String field, Object object) {
+    protected UntypedAvroBulletRecord rawSet(String field, Serializable object) {
         Objects.requireNonNull(field);
         data.set(field, object);
         return this;
     }
 
     @Override
-    public Object get(String field) {
+    public Serializable get(String field) {
         return data.get(field);
     }
 
@@ -51,7 +52,7 @@ public class UntypedAvroBulletRecord extends UntypedBulletRecord {
     }
 
     @Override
-    public Object getAndRemove(String field) {
+    public Serializable getAndRemove(String field) {
         return data.getAndRemove(field);
     }
 
@@ -69,7 +70,7 @@ public class UntypedAvroBulletRecord extends UntypedBulletRecord {
     }
 
     @Override
-    public Iterator<Map.Entry<String, Object>> iterator() {
+    public Iterator<Map.Entry<String, Serializable>> iterator() {
         return data.iterator();
     }
 
@@ -79,7 +80,7 @@ public class UntypedAvroBulletRecord extends UntypedBulletRecord {
             return false;
         }
         UntypedAvroBulletRecord that = (UntypedAvroBulletRecord) object;
-        return data == that.data  || data != null && data.equals(that.data);
+        return Objects.equals(data, that.data);
     }
 
     @Override

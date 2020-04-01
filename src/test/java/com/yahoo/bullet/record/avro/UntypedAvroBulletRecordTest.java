@@ -18,17 +18,18 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
 @SuppressWarnings("unchecked")
-public class UntypedAvroBulletRecordTest extends BulletRecordTest<Object> {
+public class UntypedAvroBulletRecordTest extends BulletRecordTest<Serializable> {
     private UntypedAvroBulletRecord avroRecord;
     private UntypedAvroBulletRecord avroAnother;
 
     @Override
-    protected Object revert(Object data) {
+    protected Serializable revert(Serializable data) {
         return data;
     }
 
