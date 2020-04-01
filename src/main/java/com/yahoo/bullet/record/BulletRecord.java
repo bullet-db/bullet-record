@@ -268,6 +268,15 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
 
     // ******************************************** Setters ********************************************
 
+    /**
+     * Checks to see if a {@link TypedObject} is valid to set. By default, checks if it is non-null and is not
+     * {@link TypedObject#isNull()} or {@link TypedObject#isUnknown()}. It throws {@link RuntimeException}
+     * if so.
+     *
+     * @param object The object to check.
+     * @throws NullPointerException if the object is null
+     * @throws UnsupportedOperationException if the object is unsupported for storage.
+     */
     protected void validateObject(TypedObject object) {
         Objects.requireNonNull(object);
         if (object.isNull() || object.isUnknown()) {
