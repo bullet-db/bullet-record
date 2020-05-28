@@ -738,10 +738,10 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
     /**
      * Creates a read-only copy of the raw data in the record as a {@link Map} with keys being the names of the fields
      * and values being the raw data stored in the record. The raw data stored need not be necessarily of the generic
-     * type of record. the Note, this does not prevent you from accessing the underlying values and modifying them and
+     * type of record. Note, this does not prevent you from accessing the underlying values and modifying them and
      * if you do, the record makes no guarantees on correctness of calls thereafter.
      *
-     * @return A {@link Collections#unmodifiableMap(Map)} of the raw data in the record..
+     * @return A {@link Collections#unmodifiableMap(Map)} of the raw data in the record.
      */
     public Map<String, Serializable> toUnmodifiableDataMap() {
         return Collections.unmodifiableMap(getRawDataMap());
