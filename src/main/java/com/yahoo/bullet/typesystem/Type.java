@@ -61,7 +61,15 @@ public enum Type {
     FLOAT_MAP_LIST(List.class, Type.FLOAT_MAP),
     DOUBLE_MAP_LIST(List.class, Type.DOUBLE_MAP),
     // Doesn't matter what underlyingClass is for UNKNOWN, just need something that isn't encountered
-    UNKNOWN(Type.class);
+    UNKNOWN(Type.class),
+    // Any List class that is empty or contains values whose types can't be determined
+    UNKNOWN_LIST(List.class, Type.UNKNOWN),
+    // Any Map class that is empty or contains non-string keys or values whose types can't be determined
+    UNKNOWN_MAP(Map.class, Type.UNKNOWN),
+    // Any Map that only contains empty maps or contains maps with non-string keys or values whose types can't be determined
+    UNKNOWN_MAP_MAP(Map.class, Type.UNKNOWN_MAP),
+    // Any List class that only contains empty maps or maps with non-string keys or values whose types can't be determined
+    UNKNOWN_MAP_LIST(List.class, Type.UNKNOWN_MAP);
 
     /**
      * A {@link Set} of the {@link #BOOLEAN}, {@link #INTEGER} {@link #LONG}, {@link #FLOAT}, {@link #DOUBLE} and
@@ -76,32 +84,32 @@ public enum Type {
 
     /**
      * A {@link Set} of the {@link #BOOLEAN_MAP}, {@link #INTEGER_MAP} {@link #LONG_MAP}, {@link #FLOAT_MAP},
-     * {@link #DOUBLE_MAP} and {@link #STRING_MAP} types.
+     * {@link #DOUBLE_MAP}, {@link #STRING_MAP} and {@link #UNKNOWN_MAP} types.
      */
-    public static Set<Type> PRIMITIVE_MAPS = set(STRING_MAP, BOOLEAN_MAP, INTEGER_MAP, LONG_MAP, FLOAT_MAP, DOUBLE_MAP);
+    public static Set<Type> PRIMITIVE_MAPS = set(STRING_MAP, BOOLEAN_MAP, INTEGER_MAP, LONG_MAP, FLOAT_MAP, DOUBLE_MAP, UNKNOWN_MAP);
 
     /**
      * A {@link Set} of the {@link #BOOLEAN_MAP_MAP}, {@link #INTEGER_MAP_MAP} {@link #LONG_MAP_MAP},
-     * {@link #FLOAT_MAP_MAP}, {@link #DOUBLE_MAP_MAP} and {@link #STRING_MAP_MAP} types.
+     * {@link #FLOAT_MAP_MAP}, {@link #DOUBLE_MAP_MAP}, {@link #STRING_MAP_MAP} and {@link #UNKNOWN_MAP_MAP} types.
      */
-    public static Set<Type> COMPLEX_MAPS = set(STRING_MAP_MAP, BOOLEAN_MAP_MAP, INTEGER_MAP_MAP, LONG_MAP_MAP, FLOAT_MAP_MAP, DOUBLE_MAP_MAP);
+    public static Set<Type> COMPLEX_MAPS = set(STRING_MAP_MAP, BOOLEAN_MAP_MAP, INTEGER_MAP_MAP, LONG_MAP_MAP, FLOAT_MAP_MAP, DOUBLE_MAP_MAP, UNKNOWN_MAP_MAP);
 
     /**
-     * A {@link Set} of the {@link #PRIMITIVE_MAPS}, {@link #COMPLEX_MAPS} types.
+     * A {@link Set} of the {@link #PRIMITIVE_MAPS} and {@link #COMPLEX_MAPS} types.
      */
     public static Set<Type> MAPS = set(PRIMITIVE_MAPS, COMPLEX_MAPS);
 
     /**
      * A {@link Set} of the {@link #BOOLEAN_LIST}, {@link #INTEGER_LIST} {@link #LONG_LIST}, {@link #FLOAT_LIST},
-     * {@link #DOUBLE_LIST} and {@link #STRING_LIST} types.
+     * {@link #DOUBLE_LIST}, {@link #STRING_LIST} and {@link #UNKNOWN_LIST} types.
      */
-    public static Set<Type> PRIMITIVE_LISTS = set(STRING_LIST, BOOLEAN_LIST, INTEGER_LIST, LONG_LIST, FLOAT_LIST, DOUBLE_LIST);
+    public static Set<Type> PRIMITIVE_LISTS = set(STRING_LIST, BOOLEAN_LIST, INTEGER_LIST, LONG_LIST, FLOAT_LIST, DOUBLE_LIST, UNKNOWN_LIST);
 
     /**
      * A {@link Set} of the {@link #BOOLEAN_MAP_LIST}, {@link #INTEGER_MAP_LIST} {@link #LONG_MAP_LIST},
-     * {@link #FLOAT_MAP_LIST}, {@link #DOUBLE_MAP_LIST} and {@link #STRING_MAP_LIST} types.
+     * {@link #FLOAT_MAP_LIST}, {@link #DOUBLE_MAP_LIST}, {@link #STRING_MAP_LIST} and {@link #UNKNOWN_MAP_LIST} types.
      */
-    public static Set<Type> COMPLEX_LISTS = set(STRING_MAP_LIST, BOOLEAN_MAP_LIST, INTEGER_MAP_LIST, LONG_MAP_LIST, FLOAT_MAP_LIST, DOUBLE_MAP_LIST);
+    public static Set<Type> COMPLEX_LISTS = set(STRING_MAP_LIST, BOOLEAN_MAP_LIST, INTEGER_MAP_LIST, LONG_MAP_LIST, FLOAT_MAP_LIST, DOUBLE_MAP_LIST, UNKNOWN_MAP_LIST);
 
     /**
      * A {@link Set} of the {@link #PRIMITIVE_LISTS} and {@link #COMPLEX_LISTS} types.
@@ -609,8 +617,10 @@ public enum Type {
 
     private static Type findNestedValueType(Collection nestedValue) {
         Type nestedType = UNKNOWN;
+        // Inside our supported types for Map or List, there can only be Maps or Primitives
         // Try till a nested type is gotten because we could have objects that are null, empty or have null mappings
-        for (Iterator it = nestedValue.iterator(); it.hasNext() && nestedType == UNKNOWN;) {
+        // We need to proceed checking for UNKNOWN_MAP as well since there might be a map later that's not
+        for (Iterator it = nestedValue.iterator(); it.hasNext() && (nestedType == UNKNOWN || nestedType == UNKNOWN_MAP);) {
             Object value = it.next();
             if (value == null) {
                 continue;
