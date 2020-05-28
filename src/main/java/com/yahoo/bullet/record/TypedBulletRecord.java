@@ -9,6 +9,8 @@ import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class TypedBulletRecord extends BulletRecord<TypedObject> {
     private static final long serialVersionUID = 5093501631768714558L;
@@ -37,5 +39,12 @@ public abstract class TypedBulletRecord extends BulletRecord<TypedObject> {
     @Override
     public TypedObject typedGet(String field) {
         return get(field);
+    }
+
+    @Override
+    protected Map<String, Serializable> getRawDataMap() {
+        Map<String, Serializable> data = new HashMap<>();
+        this.forEach(e -> data.put(e.getKey(), e.getValue().getValue()));
+        return data;
     }
 }

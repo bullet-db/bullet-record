@@ -13,6 +13,7 @@ import org.testng.annotations.Test;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1043,5 +1044,50 @@ public abstract class BulletRecordTest<T extends Serializable> {
         Assert.assertTrue(copy.equals(record));
         Assert.assertEquals(record.fieldCount(), copy.fieldCount());
         Assert.assertEquals(record.hashCode(), copy.hashCode());
+    }
+
+    @Test
+    public void testGettingRawDataMap() {
+        setMap(record, "4", Pair.of("4.1", false), Pair.of("4.2", true), Pair.of("4.3", null));
+        record.setString("1", "bar").setLong("2", 42L).setBoolean("3", false)
+              .setListOfStringMap("5", singletonList(singletonMap("5.1", "foo")))
+              .setStringList("6", singletonList("baz"))
+              .setBooleanMap("7", new HashMap<>())
+              .setDoubleList("8", new ArrayList<>())
+              .setMapOfFloatMap("9", new HashMap<>())
+              .setListOfLongMap("10", new ArrayList<>());
+        Map<String, Serializable> unmodifiable = record.toUnmodifiableDataMap();
+        Map<String, Serializable> data = record.getRawDataMap();
+        Assert.assertEquals(data, unmodifiable);
+
+        Assert.assertEquals(unmodifiable.get("1"), "bar");
+        Assert.assertEquals(unmodifiable.get("2"), 42L);
+        Assert.assertEquals(unmodifiable.get("3"), false);
+
+        Map<String, Boolean> booleanMap = new HashMap<>();
+        booleanMap.put("4.1", false);
+        booleanMap.put("4.2", true);
+        booleanMap.put("4.3", null);
+        Assert.assertEquals(unmodifiable.get("4"), booleanMap);
+
+        List<Map<String, String>> stringMapList = new ArrayList<>();
+        stringMapList.add(singletonMap("5.1", "foo"));
+        Assert.assertEquals(unmodifiable.get("5"), stringMapList);
+        Assert.assertEquals(unmodifiable.get("6"), singletonList("baz"));
+        Assert.assertEquals(unmodifiable.get("7"), Collections.emptyMap());
+        Assert.assertEquals(unmodifiable.get("8"), Collections.emptyList());
+        Assert.assertEquals(unmodifiable.get("9"), Collections.emptyMap());
+        Assert.assertEquals(unmodifiable.get("10"), Collections.emptyList());
+
+        try {
+            unmodifiable.put("1", "foo");
+            Assert.fail("The record should not allow the unmodifiable map to be modified");
+        } catch (UnsupportedOperationException ignored) {
+        }
+
+        // But the data can still be modified
+        List<Double> doubleList = (List<Double>) data.get("8");
+        doubleList.add(42.0);
+        Assert.assertEquals(unmodifiable.get("8"), singletonList(42.0));
     }
 }

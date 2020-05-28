@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -43,9 +44,15 @@ import static com.yahoo.bullet.typesystem.Type.STRING_MAP;
 import static com.yahoo.bullet.typesystem.Type.STRING_MAP_LIST;
 import static com.yahoo.bullet.typesystem.Type.STRING_MAP_MAP;
 import static com.yahoo.bullet.typesystem.Type.UNKNOWN;
+import static com.yahoo.bullet.typesystem.Type.UNKNOWN_LIST;
+import static com.yahoo.bullet.typesystem.Type.UNKNOWN_MAP;
+import static com.yahoo.bullet.typesystem.Type.UNKNOWN_MAP_LIST;
+import static com.yahoo.bullet.typesystem.Type.UNKNOWN_MAP_MAP;
 import static com.yahoo.bullet.typesystem.TypedObject.safeCastFromObject;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.testng.Assert.assertEquals;
@@ -58,9 +65,25 @@ import static org.testng.Assert.assertTrue;
 public class TypedObjectTest {
     @Test
     public void testTypedObjectWithUnsupportedType() {
-        TypedObject object = new TypedObject(UNKNOWN, new ArrayList<>());
+        TypedObject object = new TypedObject(UNKNOWN, new HashSet<>());
         assertEquals(object.getType(), UNKNOWN);
-        assertEquals(object.getValue(), emptyList());
+        assertEquals(object.getValue(), emptySet());
+    }
+
+    @Test
+    public void testTypedObjectWithUnknownContainerTypes() {
+        TypedObject objectA = new TypedObject(UNKNOWN_LIST, new ArrayList<>());
+        assertEquals(objectA.getType(), UNKNOWN_LIST);
+        assertEquals(objectA.getValue(), emptyList());
+        TypedObject objectB = new TypedObject(UNKNOWN_MAP, new HashMap<>());
+        assertEquals(objectB.getType(), UNKNOWN_MAP);
+        assertEquals(objectB.getValue(), emptyMap());
+        TypedObject objectC = new TypedObject(UNKNOWN_MAP_MAP, nestedMap(singletonMap("foo", new HashMap<>())));
+        assertEquals(objectC.getType(), UNKNOWN_MAP_MAP);
+        assertEquals(objectC.getValue(), singletonMap("foo", emptyMap()));
+        TypedObject objectD = new TypedObject(UNKNOWN_LIST, nestedList(singletonList(emptyMap())));
+        assertEquals(objectD.getType(), UNKNOWN_LIST);
+        assertEquals(objectD.getValue(), singletonList(emptyMap()));
     }
 
     @Test
@@ -72,6 +95,42 @@ public class TypedObjectTest {
         assertFalse(object.isNull());
         assertFalse(object.isList());
         assertFalse(object.isMap());
+
+        object = new TypedObject(UNKNOWN_LIST, new ArrayList<>());
+        assertFalse(object.isUnknown());
+        assertFalse(object.isNull());
+        assertFalse(object.isPrimitive());
+        assertTrue(object.isList());
+        assertTrue(object.isPrimitiveList());
+        assertFalse(object.isComplexList());
+        assertFalse(object.isMap());
+
+        object = new TypedObject(UNKNOWN_MAP_LIST, nestedList(singletonList(emptyMap())));
+        assertFalse(object.isUnknown());
+        assertFalse(object.isNull());
+        assertFalse(object.isPrimitive());
+        assertTrue(object.isList());
+        assertFalse(object.isPrimitiveList());
+        assertTrue(object.isComplexList());
+        assertFalse(object.isMap());
+
+        object = new TypedObject(UNKNOWN_MAP, new HashMap<>());
+        assertFalse(object.isUnknown());
+        assertFalse(object.isNull());
+        assertFalse(object.isPrimitive());
+        assertTrue(object.isMap());
+        assertTrue(object.isPrimitiveMap());
+        assertFalse(object.isComplexMap());
+        assertFalse(object.isList());
+
+        object = new TypedObject(UNKNOWN_MAP_MAP, nestedMap(singletonMap("foo", emptyMap())));
+        assertFalse(object.isUnknown());
+        assertFalse(object.isNull());
+        assertFalse(object.isPrimitive());
+        assertTrue(object.isMap());
+        assertFalse(object.isPrimitiveMap());
+        assertTrue(object.isComplexMap());
+        assertFalse(object.isList());
 
         object = new TypedObject(NULL, null);
         assertTrue(object.isNull());
@@ -127,17 +186,21 @@ public class TypedObjectTest {
     @Test
     public void testSize() {
         TypedObject objectA = new TypedObject(STRING_LIST, list(asList("1", "2")));
-        TypedObject objectB = new TypedObject(STRING_LIST, new ArrayList<>());
+        TypedObject objectB = new TypedObject(UNKNOWN_LIST, new ArrayList<>());
         TypedObject objectC = new TypedObject(STRING, "");
         TypedObject objectD = new TypedObject(STRING, "11");
-        TypedObject objectE = new TypedObject(LONG_MAP, new HashMap<>());
+        TypedObject objectE = new TypedObject(UNKNOWN_MAP, new HashMap<>());
         TypedObject objectF = new TypedObject(LONG_MAP, map(singletonMap("foo", 1L)));
+        TypedObject objectG = new TypedObject(UNKNOWN_MAP_LIST, nestedList(singletonList(new HashMap<>())));
+        TypedObject objectH = new TypedObject(UNKNOWN_MAP_MAP, nestedMap(singletonMap("foo", new HashMap<>())));
         assertEquals(objectA.size(), 2);
         assertEquals(objectB.size(), 0);
         assertEquals(objectC.size(), 0);
         assertEquals(objectD.size(), 2);
         assertEquals(objectE.size(), 0);
         assertEquals(objectF.size(), 1);
+        assertEquals(objectG.size(), 1);
+        assertEquals(objectH.size(), 1);
     }
 
     @Test(expectedExceptions = UnsupportedOperationException.class, expectedExceptionsMessageRegExp = ".*This type does not support getting a size.*")
@@ -148,22 +211,25 @@ public class TypedObjectTest {
 
     @Test
     public void testContainsKey() {
-        TypedObject objectB = new TypedObject(STRING_MAP_LIST, new ArrayList<>());
-        TypedObject objectC = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(Collections.emptyMap())));
-        TypedObject objectD = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(singletonMap("1", "2"))));
-        TypedObject objectE = new TypedObject(STRING_MAP, new HashMap<>());
-        TypedObject objectF = new TypedObject(STRING_MAP, map(singletonMap("1", "2")));
-        TypedObject objectG = new TypedObject(STRING_MAP_MAP, nestedMap(singletonMap("11", singletonMap("1", "2"))));
+        TypedObject objectA = new TypedObject(UNKNOWN_MAP_LIST, nestedList(singletonList(emptyMap())));
+        TypedObject objectB = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(Collections.emptyMap())));
+        TypedObject objectC = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(singletonMap("1", "2"))));
+        TypedObject objectD = new TypedObject(UNKNOWN_MAP, new HashMap<>());
+        TypedObject objectE = new TypedObject(STRING_MAP, map(singletonMap("1", "2")));
+        TypedObject objectF = new TypedObject(STRING_MAP_MAP, nestedMap(singletonMap("11", singletonMap("1", "2"))));
+        TypedObject objectG = new TypedObject(UNKNOWN_MAP_MAP, nestedMap(singletonMap("11", emptyMap())));
+        assertFalse(objectA.containsKey("1"));
         assertFalse(objectB.containsKey("1"));
-        assertFalse(objectC.containsKey("1"));
-        assertTrue(objectD.containsKey("1"));
-        assertFalse(objectD.containsKey("2"));
-        assertFalse(objectE.containsKey("1"));
+        assertTrue(objectC.containsKey("1"));
+        assertFalse(objectC.containsKey("2"));
+        assertFalse(objectD.containsKey("1"));
+        assertTrue(objectE.containsKey("1"));
+        assertFalse(objectE.containsKey("2"));
         assertTrue(objectF.containsKey("1"));
+        assertTrue(objectF.containsKey("11"));
         assertFalse(objectF.containsKey("2"));
-        assertTrue(objectG.containsKey("1"));
+        assertFalse(objectG.containsKey("1"));
         assertTrue(objectG.containsKey("11"));
-        assertFalse(objectG.containsKey("2"));
     }
 
     @Test(expectedExceptions = UnsupportedOperationException.class, expectedExceptionsMessageRegExp = ".*This type does not support mappings.*")
@@ -175,12 +241,14 @@ public class TypedObjectTest {
     @Test
     public void testContainsValue() {
         TypedObject objectA = new TypedObject(INTEGER_LIST, list(asList(1, 2)));
-        TypedObject objectB = new TypedObject(INTEGER_LIST, new ArrayList<>());
-        TypedObject objectC = new TypedObject(INTEGER_MAP_LIST, nestedList(singletonList(Collections.<String, Integer>emptyMap())));
+        TypedObject objectB = new TypedObject(UNKNOWN_LIST, new ArrayList<>());
+        TypedObject objectC = new TypedObject(INTEGER_MAP_LIST, nestedList(singletonList(emptyMap())));
         TypedObject objectD = new TypedObject(INTEGER_MAP_LIST, nestedList(singletonList(singletonMap("1", 2))));
-        TypedObject objectE = new TypedObject(INTEGER_MAP, new HashMap<>());
+        TypedObject objectE = new TypedObject(UNKNOWN_MAP, new HashMap<>());
         TypedObject objectF = new TypedObject(INTEGER_MAP, map(singletonMap("1", 2)));
         TypedObject objectG = new TypedObject(INTEGER_MAP_MAP, nestedMap(singletonMap("1", singletonMap("1", 2))));
+        TypedObject objectH = new TypedObject(UNKNOWN_MAP_MAP, nestedMap(singletonMap("11", emptyMap())));
+        TypedObject objectI = new TypedObject(UNKNOWN_MAP_LIST, nestedList(singletonList(emptyMap())));
         assertFalse(objectA.containsValue(new TypedObject(INTEGER, 3)));
         assertTrue(objectA.containsValue(new TypedObject(INTEGER, 1)));
         assertFalse(objectB.containsValue(new TypedObject(INTEGER, 1)));
@@ -192,6 +260,8 @@ public class TypedObjectTest {
         assertTrue(objectF.containsValue(new TypedObject(INTEGER, 2)));
         assertFalse(objectG.containsValue(new TypedObject(INTEGER, 1)));
         assertTrue(objectG.containsValue(new TypedObject(INTEGER, 2)));
+        assertFalse(objectH.containsValue(new TypedObject(STRING, "11")));
+        assertFalse(objectI.containsValue(new TypedObject(INTEGER, 1)));
     }
 
     @Test(expectedExceptions = UnsupportedOperationException.class, expectedExceptionsMessageRegExp = ".*This type of field does not support contains value:.*")
@@ -481,8 +551,14 @@ public class TypedObjectTest {
     public void testUnknownComparison() {
         TypedObject objectA = new TypedObject(UNKNOWN, null);
         TypedObject objectB = new TypedObject(42.1);
-        assertEquals(objectA.compareTo(objectB), Integer.MIN_VALUE);
-        assertEquals(objectA.compareTo(objectA), Integer.MIN_VALUE);
+        objectA.compareTo(objectB);
+    }
+
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void testUnknownContainerComparison() {
+        TypedObject objectA = new TypedObject(UNKNOWN_LIST, new ArrayList<>());
+        TypedObject objectB = new TypedObject(UNKNOWN_LIST, new ArrayList<>());
+        objectA.compareTo(objectB);
     }
 
     @Test(expectedExceptions = UnsupportedOperationException.class)
@@ -549,15 +625,35 @@ public class TypedObjectTest {
 
     @Test
     public void testToString() {
-        TypedObject object = new TypedObject(null);
+        TypedObject object;
+
+        object = new TypedObject(null);
         assertEquals(object.getType(), NULL);
         assertEquals(object.toString(), Objects.toString(null) + "::NULL");
+
         object = new TypedObject("foo");
         assertEquals(object.getType(), STRING);
         assertEquals(object.toString(), "foo::STRING");
+
         object = new TypedObject(nestedList(singletonList(singletonMap("foo", "bar"))));
         assertEquals(object.getType(), Type.STRING_MAP_LIST);
         assertEquals(object.toString(), "[{foo=bar}]::STRING_MAP_LIST");
+
+        object = new TypedObject(new ArrayList<>());
+        assertEquals(object.getType(), UNKNOWN_LIST);
+        assertEquals(object.toString(), "[]::UNKNOWN_LIST");
+
+        object = new TypedObject(new HashMap<>());
+        assertEquals(object.getType(), UNKNOWN_MAP);
+        assertEquals(object.toString(), "{}::UNKNOWN_MAP");
+
+        object = new TypedObject(nestedList(singletonList(emptyMap())));
+        assertEquals(object.getType(), UNKNOWN_MAP_LIST);
+        assertEquals(object.toString(), "[{}]::UNKNOWN_MAP_LIST");
+
+        object = new TypedObject(nestedMap(singletonMap("foo", emptyMap())));
+        assertEquals(object.getType(), UNKNOWN_MAP_MAP);
+        assertEquals(object.toString(), "{foo={}}::UNKNOWN_MAP_MAP");
     }
 
     @Test
@@ -572,6 +668,8 @@ public class TypedObjectTest {
         assertNotEquals(new TypedObject(STRING_MAP_MAP, null), new TypedObject(STRING_MAP_LIST, null));
         assertNotEquals(new TypedObject(STRING_MAP, map(singletonMap("foo", "bar"))), new TypedObject(STRING_MAP, null));
         assertNotEquals(new TypedObject(STRING_MAP, null), new TypedObject(STRING_MAP, map(singletonMap("foo", "bar"))));
+        assertEquals(new TypedObject(nestedMap(singletonMap("foo", emptyMap()))),
+                     new TypedObject(nestedMap(singletonMap("foo", emptyMap()))));
     }
 
     @Test
@@ -595,12 +693,16 @@ public class TypedObjectTest {
         assertEquals(safeCastFromObject(BOOLEAN, null), new TypedObject(BOOLEAN, null));
         assertEquals(safeCastFromObject(STRING_MAP, null), new TypedObject(STRING_MAP, null));
         assertEquals(safeCastFromObject(DOUBLE_MAP, null), new TypedObject(DOUBLE_MAP, null));
+        assertEquals(safeCastFromObject(UNKNOWN_MAP, null), new TypedObject(UNKNOWN_MAP, null));
         assertEquals(safeCastFromObject(LONG_LIST, null), new TypedObject(LONG_LIST, null));
         assertEquals(safeCastFromObject(FLOAT_LIST, null), new TypedObject(FLOAT_LIST, null));
+        assertEquals(safeCastFromObject(UNKNOWN_LIST, null), new TypedObject(UNKNOWN_LIST, null));
         assertEquals(safeCastFromObject(DOUBLE_MAP_MAP, null), new TypedObject(DOUBLE_MAP_MAP, null));
         assertEquals(safeCastFromObject(INTEGER_MAP_MAP, null), new TypedObject(INTEGER_MAP_MAP, null));
+        assertEquals(safeCastFromObject(UNKNOWN_MAP_MAP, null), new TypedObject(UNKNOWN_MAP_MAP, null));
         assertEquals(safeCastFromObject(BOOLEAN_MAP_LIST, null), new TypedObject(BOOLEAN_MAP_LIST, null));
         assertEquals(safeCastFromObject(STRING_MAP_LIST, null), new TypedObject(STRING_MAP_LIST, null));
+        assertEquals(safeCastFromObject(UNKNOWN_MAP_LIST, null), new TypedObject(UNKNOWN_MAP_LIST, null));
     }
 
     @Test
@@ -695,6 +797,10 @@ public class TypedObjectTest {
         assertEquals(safeCastFromObject(STRING_LIST, "[]"), TypedObject.UNKNOWN);
         assertEquals(safeCastFromObject(INTEGER_MAP_MAP, "{1:{2:3}}"), TypedObject.UNKNOWN);
         assertEquals(safeCastFromObject(LONG_MAP_LIST, "{1:{2:3}}"), TypedObject.UNKNOWN);
+        assertEquals(safeCastFromObject(UNKNOWN_MAP, new HashMap<>()), TypedObject.UNKNOWN);
+        assertEquals(safeCastFromObject(UNKNOWN_LIST, new ArrayList<>()), TypedObject.UNKNOWN);
+        assertEquals(safeCastFromObject(UNKNOWN_MAP_MAP, nestedMap(singletonMap("foo", emptyMap()))), TypedObject.UNKNOWN);
+        assertEquals(safeCastFromObject(UNKNOWN_MAP_LIST, nestedList(singletonList(emptyMap()))), TypedObject.UNKNOWN);
     }
 
     @Test

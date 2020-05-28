@@ -9,6 +9,7 @@ import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -60,6 +61,15 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
      * @return This object for chaining.
      */
     protected abstract BulletRecord<T> rawSet(String field, T object);
+
+    /**
+     * Extracts the raw data in the record as a {@link Map}. This should remain protected in child classes and should
+     * be implemented to extract the raw data stored without any extra data structures or types. This is intended to
+     * be used by {@link #toUnmodifiableDataMap()}.
+     *
+     * @return A {@link Map} containing the field names to the raw data for them.
+     */
+    protected abstract Map<String, Serializable> getRawDataMap();
 
     /**
      * Gets a field stored in the record. However, recommend using {@link #typedGet(String)} and other related
@@ -723,6 +733,18 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
             rawSet(newName, getAndRemove(field));
         }
         return this;
+    }
+
+    /**
+     * Creates a read-only copy of the raw data in the record as a {@link Map} with keys being the names of the fields
+     * and values being the raw data stored in the record. The raw data stored need not be necessarily of the generic
+     * type of record. Note, this does not prevent you from accessing the underlying values and modifying them and
+     * if you do, the record makes no guarantees on correctness of calls thereafter.
+     *
+     * @return A {@link Collections#unmodifiableMap(Map)} of the raw data in the record.
+     */
+    public Map<String, Serializable> toUnmodifiableDataMap() {
+        return Collections.unmodifiableMap(getRawDataMap());
     }
 
     @Override

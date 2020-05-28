@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiPredicate;
@@ -92,8 +93,9 @@ public class TypeTest {
         assertEquals(Type.getType(asList(1L, 24L)), Type.LONG_LIST);
         assertEquals(Type.getType(singletonList(1.4f)), Type.FLOAT_LIST);
         assertEquals(Type.getType(singletonList(1.4)), Type.DOUBLE_LIST);
-        assertEquals(Type.getType(emptyList()), Type.UNKNOWN);
-        assertEquals(Type.getType(singletonList(null)), Type.UNKNOWN);
+        assertEquals(Type.getType(singletonList(null)), Type.UNKNOWN_LIST);
+        assertEquals(Type.getType(singletonList(new HashSet<>())), Type.UNKNOWN_LIST);
+        assertEquals(Type.getType(emptyList()), Type.UNKNOWN_LIST);
     }
 
     @Test
@@ -104,10 +106,11 @@ public class TypeTest {
         assertEquals(Type.getType(asList(singletonMap("a", null), singletonMap("b", 1L))), Type.LONG_MAP_LIST);
         assertEquals(Type.getType(singletonList(singletonMap("a", 1.4f))), Type.FLOAT_MAP_LIST);
         assertEquals(Type.getType(singletonList(singletonMap("a", 1.4))), Type.DOUBLE_MAP_LIST);
-        assertEquals(Type.getType(singletonList(emptyMap())), Type.UNKNOWN);
-        assertEquals(Type.getType(singletonList(singletonMap("a", null))), Type.UNKNOWN);
-        assertEquals(Type.getType(singletonList(singletonMap(1, 0))), Type.UNKNOWN);
-        assertEquals(Type.getType(asList(singletonMap("a", null), singletonMap(1, 0))), Type.UNKNOWN);
+        assertEquals(Type.getType(singletonList(singletonMap("a", null))), Type.UNKNOWN_MAP_LIST);
+        assertEquals(Type.getType(singletonList(singletonMap("a", new HashSet<>()))), Type.UNKNOWN_MAP_LIST);
+        assertEquals(Type.getType(singletonList(singletonMap(1, 0))), Type.UNKNOWN_MAP_LIST);
+        assertEquals(Type.getType(asList(singletonMap("a", null), singletonMap(1, 0))), Type.UNKNOWN_MAP_LIST);
+        assertEquals(Type.getType(singletonList(emptyMap())), Type.UNKNOWN_MAP_LIST);
     }
 
     @Test
@@ -121,8 +124,10 @@ public class TypeTest {
         data.put("a", null);
         data.put(null, 1.0);
         assertEquals(Type.getType(data), Type.DOUBLE_MAP);
-        assertEquals(Type.getType(singletonMap(1, 1.0f)), Type.UNKNOWN);
-        assertEquals(Type.getType(singletonMap("a", null)), Type.UNKNOWN);
+        assertEquals(Type.getType(singletonMap("a", null)), Type.UNKNOWN_MAP);
+        assertEquals(Type.getType(singletonMap(1, 1.0f)), Type.UNKNOWN_MAP);
+        assertEquals(Type.getType(singletonMap("a", new HashSet<>())), Type.UNKNOWN_MAP);
+        assertEquals(Type.getType(emptyMap()), Type.UNKNOWN_MAP);
     }
 
     @Test
@@ -132,6 +137,13 @@ public class TypeTest {
         assertEquals(Type.getType(singletonMap("a", singletonMap("a", 1))), Type.INTEGER_MAP_MAP);
         assertEquals(Type.getType(singletonMap("a", singletonMap("a", 1L))), Type.LONG_MAP_MAP);
         assertEquals(Type.getType(singletonMap("a", singletonMap("a", 1.0f))), Type.FLOAT_MAP_MAP);
+        assertEquals(Type.getType(emptyMap()), Type.UNKNOWN_MAP);
+        assertEquals(Type.getType(singletonMap("a", singletonMap(1, 1.0f))), Type.UNKNOWN_MAP_MAP);
+        assertEquals(Type.getType(singletonMap("a", singletonMap("b", new HashSet<>()))), Type.UNKNOWN_MAP_MAP);
+        // Note we can only go as far as the first non-string map
+        assertEquals(Type.getType(singletonMap(1, singletonMap(1, 1.0))), Type.UNKNOWN_MAP);
+        assertEquals(Type.getType(singletonMap("a", emptyMap())), Type.UNKNOWN_MAP_MAP);
+
         Map<String, Map<String, Double>> data = new LinkedHashMap<>();
         data.put("a", emptyMap());
         data.put("b", singletonMap("a", null));
@@ -140,10 +152,6 @@ public class TypeTest {
         nestedData.put(null, 1.0);
         data.put("c", nestedData);
         assertEquals(Type.getType(data), Type.DOUBLE_MAP_MAP);
-        assertEquals(Type.getType(emptyMap()), Type.UNKNOWN);
-        assertEquals(Type.getType(singletonMap("a", singletonMap(1, 1.0f))), Type.UNKNOWN);
-        assertEquals(Type.getType(singletonMap(1, singletonMap(1, 1.0))), Type.UNKNOWN);
-        assertEquals(Type.getType(singletonMap("a", emptyMap())), Type.UNKNOWN);
     }
 
     @Test
