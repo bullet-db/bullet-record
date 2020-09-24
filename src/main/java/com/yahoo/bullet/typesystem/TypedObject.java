@@ -31,6 +31,14 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
      * Represents the {@link Type#NULL} object. The value is null.
      */
     public static final TypedObject NULL = new TypedObject(Type.NULL, null);
+    /**
+     * Represents the {@link Type#BOOLEAN} object for the true value.
+     */
+    public static final TypedObject TRUE = new TypedObject(Type.BOOLEAN, true);
+    /**
+     * Represents the {@link Type#BOOLEAN} object for the false value.
+     */
+    public static final TypedObject FALSE = new TypedObject(Type.BOOLEAN, false);
 
     /**
      * Constructor that wraps a {@link Serializable} object into a type. See {@link Type#getType(Object)} to see how the
