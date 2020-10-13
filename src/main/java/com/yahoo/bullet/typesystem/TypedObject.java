@@ -196,16 +196,142 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
     public boolean containsValue(TypedObject target) {
         if (isPrimitiveList()) {
             Type subType = type.getSubType();
-            return ((List) value).stream().anyMatch(o -> target.equalTo(subType, o));
+            return ((List) value).stream().filter(Objects::nonNull).anyMatch(o -> target.equalTo(subType, o));
         } else if (isComplexList()) {
             Type subType = type.getSubType().getSubType();
-            return ((List) value).stream().anyMatch(e -> containsValueInPrimitiveMap(subType, (Map) e, target));
+            return ((List) value).stream().filter(Objects::nonNull).anyMatch(e -> containsValueInPrimitiveMap(subType, (Map) e, target));
         } else if (isPrimitiveMap()) {
             Type subType = type.getSubType();
-            return ((Map) value).values().stream().anyMatch(o -> target.equalTo(subType, o));
+            return ((Map) value).values().stream().filter(Objects::nonNull).anyMatch(o -> target.equalTo(subType, o));
         } else if (isComplexMap()) {
             Type subType = type.getSubType().getSubType();
-            return ((Map) value).values().stream().anyMatch(e -> containsValueInPrimitiveMap(subType, (Map) e, target));
+            return ((Map) value).values().stream().filter(Objects::nonNull).anyMatch(e -> containsValueInPrimitiveMap(subType, (Map) e, target));
+
+        }
+        throw new UnsupportedOperationException("This type of field does not support contains value: " + type);
+    }
+
+    /**
+     * Returns {@link TypedObject#TRUE} if the value or its underlying values contain a mapping for the specified key.
+     * Returns {@link TypedObject#NULL} if the value or its underlying values does not contain a mapping for the
+     * specified key but contains a null key(s). Returns {@link TypedObject#FALSE} otherwise. Only
+     * {@link Type#COMPLEX_LISTS} and {@link Type#MAPS} support getting a mapping.
+     *
+     * @param key The key to be tested.
+     * @return A {@link TypedObject} Boolean or Null to indicate if the value or its underlying values contain a mapping for the specified key.
+     * @throws UnsupportedOperationException if not supported.
+     */
+    @SuppressWarnings("unchecked")
+    public Boolean ternaryContainsKey(String key) {
+        if (value == null || key == null) {
+            return null;
+        }
+        if (isComplexList()) {
+            List list = (List) value;
+            boolean containsNull = false;
+            for (Object o : list) {
+                Map map = (Map) o;
+                if (map == null) {
+                    containsNull = true;
+                } else if (map.containsKey(key)) {
+                    return true;
+                } else if (map.containsKey(null)) {
+                    containsNull = true;
+                }
+            }
+            return containsNull ? null : false;
+        } else if (isComplexMap()) {
+            Map map = (Map) value;
+            if (map.containsKey(key) || map.values().stream().anyMatch(e -> ((Map) e).containsKey(key))) {
+                return true;
+            } else if (map.containsKey(null) || map.values().stream().anyMatch(e -> ((Map) e).containsKey(null))) {
+                return null;
+            } else {
+                return false;
+            }
+        } else if (isPrimitiveMap()) {
+            Map map = (Map) value;
+            if (map.containsKey(key)) {
+                return true;
+            } else if (map.containsKey(null)) {
+                return null;
+            } else {
+                return false;
+            }
+        }
+        throw new UnsupportedOperationException("This type does not support mappings: " + type);
+    }
+
+    /**
+     * Returns {@link TypedObject#TRUE} if the value or its underlying values contain the specified value. Returns
+     * {@link TypedObject#NULL} if the value or its underlying values does not contain the specified value but contains
+     * a null value(s). Returns {@link TypedObject#FALSE} otherwise. Only LIST and MAP are supported.
+     *
+     * @param target The target {@link TypedObject} to be tested.
+     * @return A {@link TypedObject} Boolean or Null to indicate if the value or its underlying values contain the specified value.
+     * @throws UnsupportedOperationException if not supported.
+     */
+    @SuppressWarnings("unchecked")
+    public Boolean ternaryContainsValue(TypedObject target) {
+        if (isNull() || target.isNull()) {
+            return null;
+        }
+        if (isPrimitiveList()) {
+            Type subType = type.getSubType();
+            boolean containsNull = false;
+            for (Object o : ((List) value)) {
+                if (o == null) {
+                    containsNull = true;
+                } else if (target.equalTo(subType, o)) {
+                    return true;
+                }
+            }
+            return containsNull ? null : false;
+        } else if (isComplexList()) {
+            Type subType = type.getSubType().getSubType();
+            boolean containsNull = false;
+            for (Object o : ((List) value)) {
+                if (o == null) {
+                    containsNull = true;
+                } else {
+                    for (Object p : ((Map) o).values()) {
+                        if (p == null) {
+                            containsNull = true;
+                        } else if (target.equalTo(subType, p)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return containsNull ? null : false;
+        } else if (isPrimitiveMap()) {
+            Type subType = type.getSubType();
+            boolean containsNull = false;
+            for (Object o : ((Map) value).values()) {
+                if (o == null) {
+                    containsNull = true;
+                } else if (target.equalTo(subType, o)) {
+                    return true;
+                }
+            }
+            return containsNull ? null : false;
+        } else if (isComplexMap()) {
+            Type subType = type.getSubType().getSubType();
+            boolean containsNull = false;
+            for (Object o : ((Map) value).values()) {
+                if (o == null) {
+                    containsNull = true;
+                } else {
+                    for (Object p : ((Map) o).values()) {
+                        if (p == null) {
+                            containsNull = true;
+                        } else if (target.equalTo(subType, p)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return containsNull ? null : false;
 
         }
         throw new UnsupportedOperationException("This type of field does not support contains value: " + type);
@@ -368,12 +494,73 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
         }
     }
 
+    /**
+     * Returns a {@link TypedObject} representation of the {@link String} argument.
+     *
+     * @param s A non-null {@link String}.
+     * @return A {@link TypedObject} representation of the {@link String} argument.
+     */
+    public static TypedObject valueOf(String s) {
+        Objects.requireNonNull(s);
+        return new TypedObject(Type.STRING, s);
+    }
+
+    /**
+     * Returns a {@link TypedObject} representation of the boolean argument.
+     *
+     * @param b A boolean.
+     * @return A {@link TypedObject} representation of the boolean argument.
+     */
+    public static TypedObject valueOf(boolean b) {
+        return b ? TRUE : FALSE;
+    }
+
+    /**
+     * Returns a {@link TypedObject} representation of the int argument.
+     *
+     * @param i An int.
+     * @return A {@link TypedObject} representation of the int argument.
+     */
+    public static TypedObject valueOf(int i) {
+        return new TypedObject(Type.INTEGER, i);
+    }
+
+    /**
+     * Returns a {@link TypedObject} representation of the long argument.
+     *
+     * @param l A long.
+     * @return A {@link TypedObject} representation of the long argument.
+     */
+    public static TypedObject valueOf(long l) {
+        return new TypedObject(Type.LONG, l);
+    }
+
+    /**
+     * Returns a {@link TypedObject} representation of the float argument.
+     *
+     * @param f A float.
+     * @return A {@link TypedObject} representation of the float argument.
+     */
+    public static TypedObject valueOf(float f) {
+        return new TypedObject(Type.FLOAT, f);
+    }
+
+    /**
+     * Returns a {@link TypedObject} representation of the double argument.
+     *
+     * @param d A double.
+     * @return A {@link TypedObject} representation of the double argument.
+     */
+    public static TypedObject valueOf(double d) {
+        return new TypedObject(Type.DOUBLE, d);
+    }
+
     private boolean equalTo(Type type, Object object) {
         // These are our objects. They should be serializable
         return equalTo(new TypedObject(type, (Serializable) object));
     }
 
     private static boolean containsValueInPrimitiveMap(Type mapValueType, Map<?, ?> map, TypedObject target) {
-        return map.values().stream().anyMatch(o -> target.equalTo(mapValueType, o));
+        return map.values().stream().filter(Objects::nonNull).anyMatch(o -> target.equalTo(mapValueType, o));
     }
 }

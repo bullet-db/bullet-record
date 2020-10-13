@@ -5,6 +5,7 @@
  */
 package com.yahoo.bullet.typesystem;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.yahoo.bullet.TestHelpers.list;
@@ -268,6 +270,185 @@ public class TypedObjectTest {
     public void testUnsupportedTypeContainsValue() {
         TypedObject object = new TypedObject(INTEGER, 1);
         object.containsValue(new TypedObject(INTEGER, 1));
+    }
+
+    @Test
+    public void testTernaryContainsKey() {
+        TypedObject objectA = new TypedObject(UNKNOWN_MAP_LIST, nestedList(singletonList(emptyMap())));
+        TypedObject objectB = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(Collections.emptyMap())));
+        TypedObject objectC = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(singletonMap("1", "2"))));
+        TypedObject objectD = new TypedObject(UNKNOWN_MAP, new HashMap<>());
+        TypedObject objectE = new TypedObject(STRING_MAP, map(singletonMap("1", "2")));
+        TypedObject objectF = new TypedObject(STRING_MAP_MAP, nestedMap(singletonMap("11", singletonMap("1", "2"))));
+        TypedObject objectG = new TypedObject(UNKNOWN_MAP_MAP, nestedMap(singletonMap("11", emptyMap())));
+        assertFalse(objectA.ternaryContainsKey("1"));
+        assertFalse(objectB.ternaryContainsKey("1"));
+        assertTrue(objectC.ternaryContainsKey("1"));
+        assertFalse(objectC.ternaryContainsKey("2"));
+        assertFalse(objectD.ternaryContainsKey("1"));
+        assertTrue(objectE.ternaryContainsKey("1"));
+        assertFalse(objectE.ternaryContainsKey("2"));
+        assertTrue(objectF.ternaryContainsKey("1"));
+        assertTrue(objectF.ternaryContainsKey("11"));
+        assertFalse(objectF.ternaryContainsKey("2"));
+        assertFalse(objectG.ternaryContainsKey("1"));
+        assertTrue(objectG.ternaryContainsKey("11"));
+    }
+
+    @Test
+    public void testTernaryContainsKeyWithNull() {
+        TypedObject objectA = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(singletonMap(null, "2"))));
+
+        List<Map<String, String>> mapListA = new ArrayList<>();
+        mapListA.add(singletonMap("1", "2"));
+        mapListA.add(singletonMap(null, "2"));
+        mapListA.add(singletonMap("3", "2"));
+
+        TypedObject objectB = new TypedObject(STRING_MAP_LIST, (ArrayList) mapListA);
+
+        List<Map<String, String>> mapListB = new ArrayList<>();
+        mapListB.add(singletonMap("1", "2"));
+        mapListB.add(null);
+        mapListB.add(singletonMap("3", "2"));
+
+        TypedObject objectC = new TypedObject(STRING_MAP_LIST, (ArrayList) mapListB);
+
+        Map<String, Map<String, String>> mapMapA = new HashMap<>();
+        mapMapA.put("a", singletonMap("1", "2"));
+        mapMapA.put("b", singletonMap(null, "2"));
+        mapMapA.put("c", singletonMap("3", "2"));
+
+        TypedObject objectD = new TypedObject(STRING_MAP_MAP, (HashMap) mapMapA);
+
+        Map<String, Map<String, String>> mapMapB = new HashMap<>();
+        mapMapB.put("a", singletonMap("1", "2"));
+        mapMapB.put(null, singletonMap("2", "2"));
+        mapMapB.put("c", singletonMap("3", "2"));
+
+        TypedObject objectE = new TypedObject(STRING_MAP_MAP, (HashMap) mapMapB);
+
+        Map<String, String> mapA = new HashMap<>();
+        mapA.put("1", "2");
+        mapA.put(null, "2");
+        mapA.put("3", "2");
+
+        TypedObject objectF = new TypedObject(STRING_MAP, (HashMap) mapA);
+
+        Assert.assertNull(TypedObject.NULL.ternaryContainsKey("1"));
+        Assert.assertNull(objectA.ternaryContainsKey(null));
+        Assert.assertNull(objectA.ternaryContainsKey("1"));
+        Assert.assertTrue(objectB.ternaryContainsKey("1"));
+        Assert.assertNull(objectB.ternaryContainsKey("2"));
+        Assert.assertTrue(objectB.ternaryContainsKey("3"));
+        Assert.assertTrue(objectC.ternaryContainsKey("1"));
+        Assert.assertNull(objectC.ternaryContainsKey("2"));
+        Assert.assertTrue(objectC.ternaryContainsKey("3"));
+        Assert.assertTrue(objectD.ternaryContainsKey("1"));
+        Assert.assertNull(objectD.ternaryContainsKey("2"));
+        Assert.assertTrue(objectD.ternaryContainsKey("3"));
+        Assert.assertTrue(objectE.ternaryContainsKey("a"));
+        Assert.assertNull(objectE.ternaryContainsKey("b"));
+        Assert.assertTrue(objectE.ternaryContainsKey("c"));
+        Assert.assertTrue(objectF.ternaryContainsKey("1"));
+        Assert.assertNull(objectF.ternaryContainsKey("2"));
+        Assert.assertTrue(objectF.ternaryContainsKey("3"));
+    }
+
+    @Test(expectedExceptions = UnsupportedOperationException.class, expectedExceptionsMessageRegExp = ".*This type does not support mappings.*")
+    public void testUnsupportedTypeTernaryContainsKey() {
+        TypedObject object = new TypedObject(1);
+        object.ternaryContainsKey("1");
+    }
+
+    @Test
+    public void testTernaryContainsValue() {
+        TypedObject objectA = new TypedObject(INTEGER_LIST, list(asList(1, 2)));
+        TypedObject objectB = new TypedObject(UNKNOWN_LIST, new ArrayList<>());
+        TypedObject objectC = new TypedObject(INTEGER_MAP_LIST, nestedList(singletonList(emptyMap())));
+        TypedObject objectD = new TypedObject(INTEGER_MAP_LIST, nestedList(singletonList(singletonMap("1", 2))));
+        TypedObject objectE = new TypedObject(UNKNOWN_MAP, new HashMap<>());
+        TypedObject objectF = new TypedObject(INTEGER_MAP, map(singletonMap("1", 2)));
+        TypedObject objectG = new TypedObject(INTEGER_MAP_MAP, nestedMap(singletonMap("1", singletonMap("1", 2))));
+        TypedObject objectH = new TypedObject(UNKNOWN_MAP_MAP, nestedMap(singletonMap("11", emptyMap())));
+        TypedObject objectI = new TypedObject(UNKNOWN_MAP_LIST, nestedList(singletonList(emptyMap())));
+        assertFalse(objectA.ternaryContainsValue(new TypedObject(INTEGER, 3)));
+        assertTrue(objectA.ternaryContainsValue(new TypedObject(INTEGER, 1)));
+        assertFalse(objectB.ternaryContainsValue(new TypedObject(INTEGER, 1)));
+        assertFalse(objectC.ternaryContainsValue(new TypedObject(INTEGER, 1)));
+        assertFalse(objectD.ternaryContainsValue(new TypedObject(INTEGER, 1)));
+        assertTrue(objectD.ternaryContainsValue(new TypedObject(INTEGER, 2)));
+        assertFalse(objectE.ternaryContainsValue(new TypedObject(INTEGER, 1)));
+        assertFalse(objectF.ternaryContainsValue(new TypedObject(INTEGER, 1)));
+        assertTrue(objectF.ternaryContainsValue(new TypedObject(INTEGER, 2)));
+        assertFalse(objectG.ternaryContainsValue(new TypedObject(INTEGER, 1)));
+        assertTrue(objectG.ternaryContainsValue(new TypedObject(INTEGER, 2)));
+        assertFalse(objectH.ternaryContainsValue(new TypedObject(STRING, "11")));
+        assertFalse(objectI.ternaryContainsValue(new TypedObject(INTEGER, 1)));
+    }
+
+    @Test
+    public void testTernaryContainsValueWithNull() {
+        TypedObject objectA = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(singletonMap("1", null))));
+
+        List<Map<String, String>> mapListA = new ArrayList<>();
+        mapListA.add(singletonMap("1", "1"));
+        mapListA.add(singletonMap("2", null));
+        mapListA.add(singletonMap("3", "3"));
+
+        TypedObject objectB = new TypedObject(STRING_MAP_LIST, (ArrayList) mapListA);
+
+        List<Map<String, String>> mapListB = new ArrayList<>();
+        mapListB.add(singletonMap("1", "1"));
+        mapListB.add(null);
+        mapListB.add(singletonMap("3", "3"));
+
+        TypedObject objectC = new TypedObject(STRING_MAP_LIST, (ArrayList) mapListB);
+
+        Map<String, Map<String, String>> mapMapA = new HashMap<>();
+        mapMapA.put("a", singletonMap("1", "1"));
+        mapMapA.put("b", singletonMap("2", null));
+        mapMapA.put("c", singletonMap("3", "3"));
+
+        TypedObject objectD = new TypedObject(STRING_MAP_MAP, (HashMap) mapMapA);
+
+        Map<String, Map<String, String>> mapMapB = new HashMap<>();
+        mapMapB.put("a", singletonMap("1", "1"));
+        mapMapB.put("b", null);
+        mapMapB.put("c", singletonMap("3", "3"));
+
+        TypedObject objectE = new TypedObject(STRING_MAP_MAP, (HashMap) mapMapB);
+
+        Map<String, String> mapA = new HashMap<>();
+        mapA.put("1", "1");
+        mapA.put("2", null);
+        mapA.put("3", "3");
+
+        TypedObject objectF = new TypedObject(STRING_MAP, (HashMap) mapA);
+
+        Assert.assertNull(TypedObject.NULL.ternaryContainsValue(TypedObject.valueOf("1")));
+        Assert.assertNull(objectA.ternaryContainsValue(TypedObject.NULL));
+        Assert.assertNull(objectA.ternaryContainsValue(TypedObject.valueOf("1")));
+        Assert.assertTrue(objectB.ternaryContainsValue(TypedObject.valueOf("1")));
+        Assert.assertNull(objectB.ternaryContainsValue(TypedObject.valueOf("2")));
+        Assert.assertTrue(objectB.ternaryContainsValue(TypedObject.valueOf("3")));
+        Assert.assertTrue(objectC.ternaryContainsValue(TypedObject.valueOf("1")));
+        Assert.assertNull(objectC.ternaryContainsValue(TypedObject.valueOf("2")));
+        Assert.assertTrue(objectC.ternaryContainsValue(TypedObject.valueOf("3")));
+        Assert.assertTrue(objectD.ternaryContainsValue(TypedObject.valueOf("1")));
+        Assert.assertNull(objectD.ternaryContainsValue(TypedObject.valueOf("2")));
+        Assert.assertTrue(objectD.ternaryContainsValue(TypedObject.valueOf("3")));
+        Assert.assertTrue(objectE.ternaryContainsValue(TypedObject.valueOf("1")));
+        Assert.assertNull(objectE.ternaryContainsValue(TypedObject.valueOf("2")));
+        Assert.assertTrue(objectE.ternaryContainsValue(TypedObject.valueOf("3")));
+        Assert.assertTrue(objectF.ternaryContainsValue(TypedObject.valueOf("1")));
+        Assert.assertNull(objectF.ternaryContainsValue(TypedObject.valueOf("2")));
+        Assert.assertTrue(objectF.ternaryContainsValue(TypedObject.valueOf("3")));
+    }
+
+    @Test(expectedExceptions = UnsupportedOperationException.class, expectedExceptionsMessageRegExp = ".*This type of field does not support contains value:.*")
+    public void testUnsupportedTypeTernaryContainsValue() {
+        TypedObject object = new TypedObject(INTEGER, 1);
+        object.ternaryContainsValue(new TypedObject(INTEGER, 1));
     }
 
     @Test
