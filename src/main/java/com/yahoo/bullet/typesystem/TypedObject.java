@@ -8,6 +8,7 @@ package com.yahoo.bullet.typesystem;
 import lombok.Getter;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -245,18 +246,16 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
                 return true;
             } else if (map.containsKey(null) || map.values().stream().anyMatch(e -> ((Map) e).containsKey(null))) {
                 return null;
-            } else {
-                return false;
             }
+            return false;
         } else if (isPrimitiveMap()) {
             Map map = (Map) value;
             if (map.containsKey(key)) {
                 return true;
             } else if (map.containsKey(null)) {
                 return null;
-            } else {
-                return false;
             }
+            return false;
         }
         throw new UnsupportedOperationException("This type does not support mappings: " + type);
     }
@@ -277,61 +276,16 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
         }
         if (isPrimitiveList()) {
             Type subType = type.getSubType();
-            boolean containsNull = false;
-            for (Object o : ((List) value)) {
-                if (o == null) {
-                    containsNull = true;
-                } else if (target.equalTo(subType, o)) {
-                    return true;
-                }
-            }
-            return containsNull ? null : false;
+            return ternaryContainsValueInPrimitiveCollection((List) value, target, subType);
         } else if (isComplexList()) {
             Type subType = type.getSubType().getSubType();
-            boolean containsNull = false;
-            for (Object o : ((List) value)) {
-                if (o == null) {
-                    containsNull = true;
-                } else {
-                    for (Object p : ((Map) o).values()) {
-                        if (p == null) {
-                            containsNull = true;
-                        } else if (target.equalTo(subType, p)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return containsNull ? null : false;
+            return ternaryContainsValueInComplexCollection((List) value, target, subType);
         } else if (isPrimitiveMap()) {
             Type subType = type.getSubType();
-            boolean containsNull = false;
-            for (Object o : ((Map) value).values()) {
-                if (o == null) {
-                    containsNull = true;
-                } else if (target.equalTo(subType, o)) {
-                    return true;
-                }
-            }
-            return containsNull ? null : false;
+            return ternaryContainsValueInPrimitiveCollection(((Map) value).values(), target, subType);
         } else if (isComplexMap()) {
             Type subType = type.getSubType().getSubType();
-            boolean containsNull = false;
-            for (Object o : ((Map) value).values()) {
-                if (o == null) {
-                    containsNull = true;
-                } else {
-                    for (Object p : ((Map) o).values()) {
-                        if (p == null) {
-                            containsNull = true;
-                        } else if (target.equalTo(subType, p)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return containsNull ? null : false;
-
+            return ternaryContainsValueInComplexCollection(((Map) value).values(), target, subType);
         }
         throw new UnsupportedOperationException("This type of field does not support contains value: " + type);
     }
@@ -561,5 +515,35 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
 
     private static boolean containsValueInPrimitiveMap(Type mapValueType, Map<?, ?> map, TypedObject target) {
         return map.values().stream().filter(Objects::nonNull).anyMatch(o -> target.equalTo(mapValueType, o));
+    }
+
+    private static Boolean ternaryContainsValueInPrimitiveCollection(Collection values, TypedObject target, Type subType) {
+        boolean containsNull = false;
+        for (Object o : values) {
+            if (o == null) {
+                containsNull = true;
+            } else if (target.equalTo(subType, o)) {
+                return true;
+            }
+        }
+        return containsNull ? null : false;
+    }
+
+    private static Boolean ternaryContainsValueInComplexCollection(Collection<Map> maps, TypedObject target, Type subType) {
+        boolean containsNull = false;
+        for (Map map : maps) {
+            if (map == null) {
+                containsNull = true;
+            } else {
+                for (Object p : map.values()) {
+                    if (p == null) {
+                        containsNull = true;
+                    } else if (target.equalTo(subType, p)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return containsNull ? null : false;
     }
 }
