@@ -1018,4 +1018,20 @@ public class TypedObjectTest {
         assertEquals(objectF.getType(), UNKNOWN);
         assertNull(objectF.getValue());
     }
+
+    @Test
+    public void testValueOf() {
+        Assert.assertEquals(TypedObject.valueOf("abc"), new TypedObject("abc"));
+        Assert.assertEquals(TypedObject.valueOf(true), TypedObject.TRUE);
+        Assert.assertEquals(TypedObject.valueOf(false), TypedObject.FALSE);
+        Assert.assertEquals(TypedObject.valueOf(1), new TypedObject(1));
+        Assert.assertEquals(TypedObject.valueOf(2L), new TypedObject(2L));
+        Assert.assertEquals(TypedObject.valueOf(3.0f), new TypedObject(3.0f));
+        Assert.assertEquals(TypedObject.valueOf(4.0), new TypedObject(4.0));
+    }
+
+    @Test(expectedExceptions = NullPointerException.class)
+    public void testValueOfNullString() {
+        TypedObject.valueOf(null);
+    }
 }
