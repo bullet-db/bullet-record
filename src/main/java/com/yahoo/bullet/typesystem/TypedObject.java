@@ -212,13 +212,12 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
     }
 
     /**
-     * Returns {@link TypedObject#TRUE} if the value or its underlying values contain a mapping for the specified key.
-     * Returns {@link TypedObject#NULL} if the value or its underlying values does not contain a mapping for the
-     * specified key but contains a null key(s). Returns {@link TypedObject#FALSE} otherwise. Only
-     * {@link Type#COMPLEX_LISTS} and {@link Type#MAPS} support getting a mapping.
+     * Returns true if the value or its underlying values contain a mapping for the specified key. Returns null if the
+     * value or its underlying values does not contain a mapping for the specified key but contains a null key(s).
+     * Returns false otherwise. Only {@link Type#COMPLEX_LISTS} and {@link Type#MAPS} support getting a mapping.
      *
      * @param key The key to be tested.
-     * @return A {@link TypedObject} Boolean or Null to indicate if the value or its underlying values contain a mapping for the specified key.
+     * @return A {@link Boolean} to indicate if the value or its underlying values contain a mapping for the specified key.
      * @throws UnsupportedOperationException if not supported.
      */
     @SuppressWarnings("unchecked")
@@ -263,12 +262,12 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
     }
 
     /**
-     * Returns {@link TypedObject#TRUE} if the value or its underlying values contain the specified value. Returns
-     * {@link TypedObject#NULL} if the value or its underlying values does not contain the specified value but contains
-     * a null value(s). Returns {@link TypedObject#FALSE} otherwise. Only LIST and MAP are supported.
+     * Returns true if the value or its underlying values contain the specified value. Returns null if the value or its
+     * underlying values does not contain the specified value but contains a null value(s). Returns false otherwise.
+     * Only LIST and MAP are supported.
      *
      * @param target The target {@link TypedObject} to be tested.
-     * @return A {@link TypedObject} Boolean or Null to indicate if the value or its underlying values contain the specified value.
+     * @return A {@link Boolean} to indicate if the value or its underlying values contain the specified value.
      * @throws UnsupportedOperationException if not supported.
      */
     @SuppressWarnings("unchecked")
