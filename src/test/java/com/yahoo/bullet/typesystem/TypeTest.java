@@ -582,7 +582,7 @@ public class TypeTest {
 
     @Test
     public void testCanCompare() {
-        assertTrue(Type.canCompare(Type.NULL, Type.NULL));
+        assertFalse(Type.canCompare(Type.NULL, Type.NULL));
         assertFalse(Type.canCompare(Type.UNKNOWN, Type.NULL));
         assertFalse(Type.canCompare(Type.NULL, Type.UNKNOWN));
         assertFalse(Type.canCompare(Type.UNKNOWN, Type.UNKNOWN));

@@ -234,69 +234,8 @@ public class TypedObjectTest {
         assertTrue(objectG.containsKey("11"));
     }
 
-    @Test(expectedExceptions = UnsupportedOperationException.class, expectedExceptionsMessageRegExp = ".*This type does not support mappings.*")
-    public void testUnsupportedTypeContainsKey() {
-        TypedObject object = new TypedObject(1);
-        object.containsKey("1");
-    }
-
     @Test
-    public void testContainsValue() {
-        TypedObject objectA = new TypedObject(INTEGER_LIST, list(asList(1, 2)));
-        TypedObject objectB = new TypedObject(UNKNOWN_LIST, new ArrayList<>());
-        TypedObject objectC = new TypedObject(INTEGER_MAP_LIST, nestedList(singletonList(emptyMap())));
-        TypedObject objectD = new TypedObject(INTEGER_MAP_LIST, nestedList(singletonList(singletonMap("1", 2))));
-        TypedObject objectE = new TypedObject(UNKNOWN_MAP, new HashMap<>());
-        TypedObject objectF = new TypedObject(INTEGER_MAP, map(singletonMap("1", 2)));
-        TypedObject objectG = new TypedObject(INTEGER_MAP_MAP, nestedMap(singletonMap("1", singletonMap("1", 2))));
-        TypedObject objectH = new TypedObject(UNKNOWN_MAP_MAP, nestedMap(singletonMap("11", emptyMap())));
-        TypedObject objectI = new TypedObject(UNKNOWN_MAP_LIST, nestedList(singletonList(emptyMap())));
-        assertFalse(objectA.containsValue(new TypedObject(INTEGER, 3)));
-        assertTrue(objectA.containsValue(new TypedObject(INTEGER, 1)));
-        assertFalse(objectB.containsValue(new TypedObject(INTEGER, 1)));
-        assertFalse(objectC.containsValue(new TypedObject(INTEGER, 1)));
-        assertFalse(objectD.containsValue(new TypedObject(INTEGER, 1)));
-        assertTrue(objectD.containsValue(new TypedObject(INTEGER, 2)));
-        assertFalse(objectE.containsValue(new TypedObject(INTEGER, 1)));
-        assertFalse(objectF.containsValue(new TypedObject(INTEGER, 1)));
-        assertTrue(objectF.containsValue(new TypedObject(INTEGER, 2)));
-        assertFalse(objectG.containsValue(new TypedObject(INTEGER, 1)));
-        assertTrue(objectG.containsValue(new TypedObject(INTEGER, 2)));
-        assertFalse(objectH.containsValue(new TypedObject(STRING, "11")));
-        assertFalse(objectI.containsValue(new TypedObject(INTEGER, 1)));
-    }
-
-    @Test(expectedExceptions = UnsupportedOperationException.class, expectedExceptionsMessageRegExp = ".*This type of field does not support contains value:.*")
-    public void testUnsupportedTypeContainsValue() {
-        TypedObject object = new TypedObject(INTEGER, 1);
-        object.containsValue(new TypedObject(INTEGER, 1));
-    }
-
-    @Test
-    public void testTernaryContainsKey() {
-        TypedObject objectA = new TypedObject(UNKNOWN_MAP_LIST, nestedList(singletonList(emptyMap())));
-        TypedObject objectB = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(Collections.emptyMap())));
-        TypedObject objectC = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(singletonMap("1", "2"))));
-        TypedObject objectD = new TypedObject(UNKNOWN_MAP, new HashMap<>());
-        TypedObject objectE = new TypedObject(STRING_MAP, map(singletonMap("1", "2")));
-        TypedObject objectF = new TypedObject(STRING_MAP_MAP, nestedMap(singletonMap("11", singletonMap("1", "2"))));
-        TypedObject objectG = new TypedObject(UNKNOWN_MAP_MAP, nestedMap(singletonMap("11", emptyMap())));
-        assertFalse(objectA.ternaryContainsKey("1"));
-        assertFalse(objectB.ternaryContainsKey("1"));
-        assertTrue(objectC.ternaryContainsKey("1"));
-        assertFalse(objectC.ternaryContainsKey("2"));
-        assertFalse(objectD.ternaryContainsKey("1"));
-        assertTrue(objectE.ternaryContainsKey("1"));
-        assertFalse(objectE.ternaryContainsKey("2"));
-        assertTrue(objectF.ternaryContainsKey("1"));
-        assertTrue(objectF.ternaryContainsKey("11"));
-        assertFalse(objectF.ternaryContainsKey("2"));
-        assertFalse(objectG.ternaryContainsKey("1"));
-        assertTrue(objectG.ternaryContainsKey("11"));
-    }
-
-    @Test
-    public void testTernaryContainsKeyWithNull() {
+    public void testContainsKeyWithNull() {
         TypedObject objectA = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(singletonMap(null, "2"))));
 
         List<Map<String, String>> mapListA = new ArrayList<>();
@@ -334,34 +273,34 @@ public class TypedObjectTest {
 
         TypedObject objectF = new TypedObject(STRING_MAP, (HashMap) mapA);
 
-        Assert.assertNull(TypedObject.NULL.ternaryContainsKey("1"));
-        Assert.assertNull(objectA.ternaryContainsKey(null));
-        Assert.assertNull(objectA.ternaryContainsKey("1"));
-        Assert.assertTrue(objectB.ternaryContainsKey("1"));
-        Assert.assertNull(objectB.ternaryContainsKey("2"));
-        Assert.assertTrue(objectB.ternaryContainsKey("3"));
-        Assert.assertTrue(objectC.ternaryContainsKey("1"));
-        Assert.assertNull(objectC.ternaryContainsKey("2"));
-        Assert.assertTrue(objectC.ternaryContainsKey("3"));
-        Assert.assertTrue(objectD.ternaryContainsKey("1"));
-        Assert.assertNull(objectD.ternaryContainsKey("2"));
-        Assert.assertTrue(objectD.ternaryContainsKey("3"));
-        Assert.assertTrue(objectE.ternaryContainsKey("a"));
-        Assert.assertNull(objectE.ternaryContainsKey("b"));
-        Assert.assertTrue(objectE.ternaryContainsKey("c"));
-        Assert.assertTrue(objectF.ternaryContainsKey("1"));
-        Assert.assertNull(objectF.ternaryContainsKey("2"));
-        Assert.assertTrue(objectF.ternaryContainsKey("3"));
+        Assert.assertNull(TypedObject.NULL.containsKey("1"));
+        Assert.assertNull(objectA.containsKey(null));
+        Assert.assertNull(objectA.containsKey("1"));
+        Assert.assertTrue(objectB.containsKey("1"));
+        Assert.assertNull(objectB.containsKey("2"));
+        Assert.assertTrue(objectB.containsKey("3"));
+        Assert.assertTrue(objectC.containsKey("1"));
+        Assert.assertNull(objectC.containsKey("2"));
+        Assert.assertTrue(objectC.containsKey("3"));
+        Assert.assertTrue(objectD.containsKey("1"));
+        Assert.assertNull(objectD.containsKey("2"));
+        Assert.assertTrue(objectD.containsKey("3"));
+        Assert.assertTrue(objectE.containsKey("a"));
+        Assert.assertNull(objectE.containsKey("b"));
+        Assert.assertTrue(objectE.containsKey("c"));
+        Assert.assertTrue(objectF.containsKey("1"));
+        Assert.assertNull(objectF.containsKey("2"));
+        Assert.assertTrue(objectF.containsKey("3"));
     }
 
     @Test(expectedExceptions = UnsupportedOperationException.class, expectedExceptionsMessageRegExp = ".*This type does not support mappings.*")
-    public void testUnsupportedTypeTernaryContainsKey() {
+    public void testUnsupportedTypeContainsKey() {
         TypedObject object = new TypedObject(1);
-        object.ternaryContainsKey("1");
+        object.containsKey("1");
     }
 
     @Test
-    public void testTernaryContainsValue() {
+    public void testContainsValue() {
         TypedObject objectA = new TypedObject(INTEGER_LIST, list(asList(1, 2)));
         TypedObject objectB = new TypedObject(UNKNOWN_LIST, new ArrayList<>());
         TypedObject objectC = new TypedObject(INTEGER_MAP_LIST, nestedList(singletonList(emptyMap())));
@@ -371,23 +310,23 @@ public class TypedObjectTest {
         TypedObject objectG = new TypedObject(INTEGER_MAP_MAP, nestedMap(singletonMap("1", singletonMap("1", 2))));
         TypedObject objectH = new TypedObject(UNKNOWN_MAP_MAP, nestedMap(singletonMap("11", emptyMap())));
         TypedObject objectI = new TypedObject(UNKNOWN_MAP_LIST, nestedList(singletonList(emptyMap())));
-        assertFalse(objectA.ternaryContainsValue(new TypedObject(INTEGER, 3)));
-        assertTrue(objectA.ternaryContainsValue(new TypedObject(INTEGER, 1)));
-        assertFalse(objectB.ternaryContainsValue(new TypedObject(INTEGER, 1)));
-        assertFalse(objectC.ternaryContainsValue(new TypedObject(INTEGER, 1)));
-        assertFalse(objectD.ternaryContainsValue(new TypedObject(INTEGER, 1)));
-        assertTrue(objectD.ternaryContainsValue(new TypedObject(INTEGER, 2)));
-        assertFalse(objectE.ternaryContainsValue(new TypedObject(INTEGER, 1)));
-        assertFalse(objectF.ternaryContainsValue(new TypedObject(INTEGER, 1)));
-        assertTrue(objectF.ternaryContainsValue(new TypedObject(INTEGER, 2)));
-        assertFalse(objectG.ternaryContainsValue(new TypedObject(INTEGER, 1)));
-        assertTrue(objectG.ternaryContainsValue(new TypedObject(INTEGER, 2)));
-        assertFalse(objectH.ternaryContainsValue(new TypedObject(STRING, "11")));
-        assertFalse(objectI.ternaryContainsValue(new TypedObject(INTEGER, 1)));
+        assertFalse(objectA.containsValue(new TypedObject(INTEGER, 3)));
+        assertTrue(objectA.containsValue(new TypedObject(INTEGER, 1)));
+        assertFalse(objectB.containsValue(new TypedObject(INTEGER, 1)));
+        assertFalse(objectC.containsValue(new TypedObject(INTEGER, 1)));
+        assertFalse(objectD.containsValue(new TypedObject(INTEGER, 1)));
+        assertTrue(objectD.containsValue(new TypedObject(INTEGER, 2)));
+        assertFalse(objectE.containsValue(new TypedObject(INTEGER, 1)));
+        assertFalse(objectF.containsValue(new TypedObject(INTEGER, 1)));
+        assertTrue(objectF.containsValue(new TypedObject(INTEGER, 2)));
+        assertFalse(objectG.containsValue(new TypedObject(INTEGER, 1)));
+        assertTrue(objectG.containsValue(new TypedObject(INTEGER, 2)));
+        assertFalse(objectH.containsValue(new TypedObject(STRING, "11")));
+        assertFalse(objectI.containsValue(new TypedObject(INTEGER, 1)));
     }
 
     @Test
-    public void testTernaryContainsValueWithNull() {
+    public void testContainsValueWithNull() {
         TypedObject objectA = new TypedObject(STRING_MAP_LIST, nestedList(singletonList(singletonMap("1", null))));
 
         List<Map<String, String>> mapListA = new ArrayList<>();
@@ -425,30 +364,30 @@ public class TypedObjectTest {
 
         TypedObject objectF = new TypedObject(STRING_MAP, (HashMap) mapA);
 
-        Assert.assertNull(TypedObject.NULL.ternaryContainsValue(TypedObject.valueOf("1")));
-        Assert.assertNull(objectA.ternaryContainsValue(TypedObject.NULL));
-        Assert.assertNull(objectA.ternaryContainsValue(TypedObject.valueOf("1")));
-        Assert.assertTrue(objectB.ternaryContainsValue(TypedObject.valueOf("1")));
-        Assert.assertNull(objectB.ternaryContainsValue(TypedObject.valueOf("2")));
-        Assert.assertTrue(objectB.ternaryContainsValue(TypedObject.valueOf("3")));
-        Assert.assertTrue(objectC.ternaryContainsValue(TypedObject.valueOf("1")));
-        Assert.assertNull(objectC.ternaryContainsValue(TypedObject.valueOf("2")));
-        Assert.assertTrue(objectC.ternaryContainsValue(TypedObject.valueOf("3")));
-        Assert.assertTrue(objectD.ternaryContainsValue(TypedObject.valueOf("1")));
-        Assert.assertNull(objectD.ternaryContainsValue(TypedObject.valueOf("2")));
-        Assert.assertTrue(objectD.ternaryContainsValue(TypedObject.valueOf("3")));
-        Assert.assertTrue(objectE.ternaryContainsValue(TypedObject.valueOf("1")));
-        Assert.assertNull(objectE.ternaryContainsValue(TypedObject.valueOf("2")));
-        Assert.assertTrue(objectE.ternaryContainsValue(TypedObject.valueOf("3")));
-        Assert.assertTrue(objectF.ternaryContainsValue(TypedObject.valueOf("1")));
-        Assert.assertNull(objectF.ternaryContainsValue(TypedObject.valueOf("2")));
-        Assert.assertTrue(objectF.ternaryContainsValue(TypedObject.valueOf("3")));
+        Assert.assertNull(TypedObject.NULL.containsValue(TypedObject.valueOf("1")));
+        Assert.assertNull(objectA.containsValue(TypedObject.NULL));
+        Assert.assertNull(objectA.containsValue(TypedObject.valueOf("1")));
+        Assert.assertTrue(objectB.containsValue(TypedObject.valueOf("1")));
+        Assert.assertNull(objectB.containsValue(TypedObject.valueOf("2")));
+        Assert.assertTrue(objectB.containsValue(TypedObject.valueOf("3")));
+        Assert.assertTrue(objectC.containsValue(TypedObject.valueOf("1")));
+        Assert.assertNull(objectC.containsValue(TypedObject.valueOf("2")));
+        Assert.assertTrue(objectC.containsValue(TypedObject.valueOf("3")));
+        Assert.assertTrue(objectD.containsValue(TypedObject.valueOf("1")));
+        Assert.assertNull(objectD.containsValue(TypedObject.valueOf("2")));
+        Assert.assertTrue(objectD.containsValue(TypedObject.valueOf("3")));
+        Assert.assertTrue(objectE.containsValue(TypedObject.valueOf("1")));
+        Assert.assertNull(objectE.containsValue(TypedObject.valueOf("2")));
+        Assert.assertTrue(objectE.containsValue(TypedObject.valueOf("3")));
+        Assert.assertTrue(objectF.containsValue(TypedObject.valueOf("1")));
+        Assert.assertNull(objectF.containsValue(TypedObject.valueOf("2")));
+        Assert.assertTrue(objectF.containsValue(TypedObject.valueOf("3")));
     }
 
     @Test(expectedExceptions = UnsupportedOperationException.class, expectedExceptionsMessageRegExp = ".*This type of field does not support contains value:.*")
-    public void testUnsupportedTypeTernaryContainsValue() {
+    public void testUnsupportedTypeContainsValue() {
         TypedObject object = new TypedObject(INTEGER, 1);
-        object.ternaryContainsValue(new TypedObject(INTEGER, 1));
+        object.containsValue(new TypedObject(INTEGER, 1));
     }
 
     @Test
@@ -613,7 +552,9 @@ public class TypedObjectTest {
         TypedObject objectF = new TypedObject(FLOAT, 41.0f);
         TypedObject objectG = new TypedObject(DOUBLE, 41.0);
 
-        assertTrue(objectA.equalTo(objectA));
+        assertNull(objectA.equalTo(objectA));
+        assertNull(objectA.equalTo(objectB));
+        assertNull(objectB.equalTo(objectA));
         assertTrue(objectB.equalTo(objectB));
         assertTrue(objectC.equalTo(objectC));
 
@@ -639,9 +580,12 @@ public class TypedObjectTest {
     }
 
     @Test
-    public void testNullComparisonToNull() {
+    public void testNullComparison() {
         TypedObject objectA = new TypedObject(NULL, null);
-        assertEquals(TypedObject.NULL.compareTo(objectA), 0);
+        TypedObject objectB = new TypedObject(INTEGER, 42);
+        assertNull(TypedObject.NULL.compareTo(objectA));
+        assertNull(objectA.compareTo(objectB));
+        assertNull(objectB.compareTo(objectA));
     }
 
     @Test
@@ -650,7 +594,7 @@ public class TypedObjectTest {
         TypedObject objectB = new TypedObject(BOOLEAN, false);
         assertTrue(objectA.compareTo(objectB) > 0);
         assertTrue(objectB.compareTo(objectA) < 0);
-        assertEquals(objectA.compareTo(objectA), 0);
+        assertTrue(objectA.compareTo(objectA) == 0);
     }
 
     @Test
@@ -704,12 +648,12 @@ public class TypedObjectTest {
         TypedObject objectB = new TypedObject(FLOAT, 42.1f);
         TypedObject objectC = new TypedObject(INTEGER, 42);
         TypedObject objectD = new TypedObject(LONG, 42L);
-        assertEquals(objectA.compareTo(objectA), 0);
+        assertTrue(objectA.compareTo(objectA) == 0);
         assertTrue(objectA.compareTo(objectB) < 0);
-        assertEquals(objectA.compareTo(objectC), 0);
-        assertEquals(objectA.compareTo(objectD), 0);
+        assertTrue(objectA.compareTo(objectC) == 0);
+        assertTrue(objectA.compareTo(objectD) == 0);
         assertTrue(objectB.compareTo(objectA) > 0);
-        assertEquals(objectB.compareTo(objectB), 0);
+        assertTrue(objectB.compareTo(objectB) == 0);
         assertTrue(objectB.compareTo(objectC) > 0);
         assertTrue(objectB.compareTo(objectD) > 0);
     }
@@ -746,13 +690,6 @@ public class TypedObjectTest {
     public void testUnsupportedTypeComparison() {
         TypedObject objectA = new TypedObject(LONG_MAP_LIST, nestedList(singletonList(singletonMap("bar", 42L))));
         TypedObject objectB = new TypedObject(LONG_MAP_LIST, nestedList(singletonList(singletonMap("bar", 42L))));
-        objectA.compareTo(objectB);
-    }
-
-    @Test(expectedExceptions = UnsupportedOperationException.class)
-    public void testNullComparisonToOthers() {
-        TypedObject objectA = new TypedObject(NULL, null);
-        TypedObject objectB = new TypedObject(DOUBLE, 42.1);
         objectA.compareTo(objectB);
     }
 
