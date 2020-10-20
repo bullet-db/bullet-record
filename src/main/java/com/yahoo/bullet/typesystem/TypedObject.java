@@ -165,8 +165,9 @@ public class TypedObject implements Serializable {
     }
 
     /**
-     * Returns true if the value or its underlying values contain a mapping for the specified key. Returns null if the
-     * value or its underlying values does not contain a mapping for the specified key but contains a null key(s).
+     * Returns true if the value (or its underlying values) contains a mapping for the specified non-null key. Returns
+     * null if there exists no mapping for the specified non-null key but the value (or its underlying values) contains
+     * a null key or the value contains a null underlying value. Always returns null if the value or specified key is null.
      * Returns false otherwise. Only {@link Type#COMPLEX_LISTS} and {@link Type#MAPS} support getting a mapping.
      *
      * @param key The key to be tested.
