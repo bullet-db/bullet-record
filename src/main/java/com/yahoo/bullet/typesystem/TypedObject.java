@@ -8,6 +8,7 @@ package com.yahoo.bullet.typesystem;
 import lombok.Getter;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ import java.util.Objects;
  * Represents an object with its {@link Type}. Note that these objects must be {@link Serializable}.
  */
 @Getter
-public class TypedObject implements Comparable<TypedObject>, Serializable {
+public class TypedObject implements Serializable {
     private static final long serialVersionUID = -2162794063118775558L;
 
     private final Type type;
@@ -31,6 +32,14 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
      * Represents the {@link Type#NULL} object. The value is null.
      */
     public static final TypedObject NULL = new TypedObject(Type.NULL, null);
+    /**
+     * Represents the {@link Type#BOOLEAN} object for the true value.
+     */
+    public static final TypedObject TRUE = new TypedObject(Type.BOOLEAN, true);
+    /**
+     * Represents the {@link Type#BOOLEAN} object for the false value.
+     */
+    public static final TypedObject FALSE = new TypedObject(Type.BOOLEAN, false);
 
     /**
      * Constructor that wraps a {@link Serializable} object into a type. See {@link Type#getType(Object)} to see how the
@@ -156,49 +165,80 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
     }
 
     /**
-     * Returns true if the value or its underlying values contain a mapping for the specified key. Only
-     * {@link Type#COMPLEX_LISTS} and {@link Type#MAPS} support getting a mapping.
+     * Returns true if the value (or its underlying values) contains a mapping for the specified non-null key. Returns
+     * null if there exists no mapping for the specified non-null key but the value (or its underlying values) contains
+     * a null key or the value contains a null underlying value. Always returns null if the value or specified key is null.
+     * Returns false otherwise. Only {@link Type#COMPLEX_LISTS} and {@link Type#MAPS} support getting a mapping.
      *
      * @param key The key to be tested.
-     * @return A Boolean to indicate if the value or its underlying values contain a mapping for the specified key.
+     * @return A {@link Boolean} to indicate if the value or its underlying values contain a mapping for the specified key.
      * @throws UnsupportedOperationException if not supported.
      */
     @SuppressWarnings("unchecked")
-    public boolean containsKey(String key) {
+    public Boolean containsKey(String key) {
+        if (value == null || key == null) {
+            return null;
+        }
         if (isComplexList()) {
-            return ((List) value).stream().anyMatch(e -> ((Map) e).containsKey(key));
+            List list = (List) value;
+            boolean containsNull = false;
+            for (Object o : list) {
+                Map map = (Map) o;
+                if (map == null) {
+                    containsNull = true;
+                } else if (map.containsKey(key)) {
+                    return true;
+                } else if (map.containsKey(null)) {
+                    containsNull = true;
+                }
+            }
+            return containsNull ? null : false;
         } else if (isComplexMap()) {
             Map map = (Map) value;
-            return map.containsKey(key) || map.values().stream().anyMatch(e -> ((Map) e).containsKey(key));
+            if (map.containsKey(key) || map.values().stream().anyMatch(e -> ((Map) e).containsKey(key))) {
+                return true;
+            } else if (map.containsKey(null) || map.values().stream().anyMatch(e -> ((Map) e).containsKey(null))) {
+                return null;
+            }
+            return false;
         } else if (isPrimitiveMap()) {
             Map map = (Map) value;
-            return map.containsKey(key);
+            if (map.containsKey(key)) {
+                return true;
+            } else if (map.containsKey(null)) {
+                return null;
+            }
+            return false;
         }
         throw new UnsupportedOperationException("This type does not support mappings: " + type);
     }
 
     /**
-     * Returns true if the value or its underlying values contain the specified value. Only LIST and MAP are supported.
+     * Returns true if the value or its underlying values contain the specified value. Returns null if the value or its
+     * underlying values does not contain the specified value but contains a null value(s). Returns false otherwise.
+     * Only LIST and MAP are supported.
      *
      * @param target The target {@link TypedObject} to be tested.
-     * @return A Boolean to indicate if the value or its underlying values contain the specified value.
+     * @return A {@link Boolean} to indicate if the value or its underlying values contain the specified value.
      * @throws UnsupportedOperationException if not supported.
      */
     @SuppressWarnings("unchecked")
-    public boolean containsValue(TypedObject target) {
+    public Boolean containsValue(TypedObject target) {
+        if (isNull() || target.isNull()) {
+            return null;
+        }
         if (isPrimitiveList()) {
             Type subType = type.getSubType();
-            return ((List) value).stream().anyMatch(o -> target.equalTo(subType, o));
+            return containsValueInPrimitiveCollection((List) value, target, subType);
         } else if (isComplexList()) {
             Type subType = type.getSubType().getSubType();
-            return ((List) value).stream().anyMatch(e -> containsValueInPrimitiveMap(subType, (Map) e, target));
+            return containsValueInComplexCollection((List) value, target, subType);
         } else if (isPrimitiveMap()) {
             Type subType = type.getSubType();
-            return ((Map) value).values().stream().anyMatch(o -> target.equalTo(subType, o));
+            return containsValueInPrimitiveCollection(((Map) value).values(), target, subType);
         } else if (isComplexMap()) {
             Type subType = type.getSubType().getSubType();
-            return ((Map) value).values().stream().anyMatch(e -> containsValueInPrimitiveMap(subType, (Map) e, target));
-
+            return containsValueInComplexCollection(((Map) value).values(), target, subType);
         }
         throw new UnsupportedOperationException("This type of field does not support contains value: " + type);
     }
@@ -220,31 +260,30 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
      * result is 0.
      *
      * @param target The object to compare to.
-     * @return A boolean to indicate if this equals the specified object.
+     * @return A {@link Boolean} to indicate if this equals the specified object.
      */
-    public boolean equalTo(TypedObject target) {
-        return compareTo(target) == 0;
+    public Boolean equalTo(TypedObject target) {
+        Integer result = compareTo(target);
+        return result == null ? null : result == 0;
     }
 
     /**
-     * Compares this TypedObject to another. Only works on objects that have a type in {@link Type#PRIMITIVES}.
-     * An exception will be thrown when comparing objects whose types are not in {@link Type#PRIMITIVES}, excepting
-     * {@link Type#NULL}, unless both are of {@link Type#NULL}. This will force {@link Type#NUMERICS} that are not of
-     * the same {@link Type} to {@link Double} instances to compare them.
+     * Compares this TypedObject to another. Only works on objects that have a type in {@link Type#PRIMITIVES}. If
+     * either object is of {@link Type#NULL}, then null is returned. Otherwise, an exception will be thrown when
+     * comparing objects whose types are not in {@link Type#PRIMITIVES}. This will force {@link Type#NUMERICS} that are
+     * not of the same {@link Type} to {@link Double} instances to compare them.
      * {@inheritDoc}
      *
      * @param other The other non-null TypedObject.
      * @return {@inheritDoc}
      * @throws UnsupportedOperationException if the other object could not compared to this.
      */
-    @Override
-    public int compareTo(TypedObject other) {
+    public Integer compareTo(TypedObject other) {
+        if (type == Type.NULL || other.type == Type.NULL) {
+            return null;
+        }
         if (!Type.canCompare(type, other.type)) {
             throw new UnsupportedOperationException("Types are not comparable for " + this + " with " + other);
-        }
-        // Both are NULL
-        if (type == Type.NULL) {
-            return 0;
         }
         // If the types are not the same, not NULL and they can be compared, they must be numeric
         if (type != other.type) {
@@ -281,9 +320,11 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
     public static Comparator<TypedObject> nullsFirst() {
         return (o1, o2) -> {
             boolean firstNull = o1.isNull();
-            // One is null
+            // One is null else if both are null
             if (firstNull ^ o2.isNull()) {
                 return firstNull ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+            } else if (firstNull) {
+                return 0;
             }
             return o1.compareTo(o2);
         };
@@ -298,9 +339,11 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
     public static Comparator<TypedObject> nullsLast() {
         return (o1, o2) -> {
             boolean firstNull = o1.isNull();
-            // One is null
+            // One is null else if both are null
             if (firstNull ^ o2.isNull()) {
                 return firstNull ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+            } else if (firstNull) {
+                return 0;
             }
             return o1.compareTo(o2);
         };
@@ -360,12 +403,99 @@ public class TypedObject implements Comparable<TypedObject>, Serializable {
         }
     }
 
+    /**
+     * Returns a {@link TypedObject} representation of the {@link String} argument.
+     *
+     * @param s A non-null {@link String}.
+     * @return A {@link TypedObject} representation of the {@link String} argument.
+     */
+    public static TypedObject valueOf(String s) {
+        Objects.requireNonNull(s);
+        return new TypedObject(Type.STRING, s);
+    }
+
+    /**
+     * Returns a {@link TypedObject} representation of the boolean argument.
+     *
+     * @param b A boolean.
+     * @return A {@link TypedObject} representation of the boolean argument.
+     */
+    public static TypedObject valueOf(boolean b) {
+        return b ? TRUE : FALSE;
+    }
+
+    /**
+     * Returns a {@link TypedObject} representation of the int argument.
+     *
+     * @param i An int.
+     * @return A {@link TypedObject} representation of the int argument.
+     */
+    public static TypedObject valueOf(int i) {
+        return new TypedObject(Type.INTEGER, i);
+    }
+
+    /**
+     * Returns a {@link TypedObject} representation of the long argument.
+     *
+     * @param l A long.
+     * @return A {@link TypedObject} representation of the long argument.
+     */
+    public static TypedObject valueOf(long l) {
+        return new TypedObject(Type.LONG, l);
+    }
+
+    /**
+     * Returns a {@link TypedObject} representation of the float argument.
+     *
+     * @param f A float.
+     * @return A {@link TypedObject} representation of the float argument.
+     */
+    public static TypedObject valueOf(float f) {
+        return new TypedObject(Type.FLOAT, f);
+    }
+
+    /**
+     * Returns a {@link TypedObject} representation of the double argument.
+     *
+     * @param d A double.
+     * @return A {@link TypedObject} representation of the double argument.
+     */
+    public static TypedObject valueOf(double d) {
+        return new TypedObject(Type.DOUBLE, d);
+    }
+
     private boolean equalTo(Type type, Object object) {
         // These are our objects. They should be serializable
         return equalTo(new TypedObject(type, (Serializable) object));
     }
 
-    private static boolean containsValueInPrimitiveMap(Type mapValueType, Map<?, ?> map, TypedObject target) {
-        return map.values().stream().anyMatch(o -> target.equalTo(mapValueType, o));
+    private static Boolean containsValueInPrimitiveCollection(Collection values, TypedObject target, Type subType) {
+        boolean containsNull = false;
+        for (Object o : values) {
+            if (o == null) {
+                containsNull = true;
+            } else if (target.equalTo(subType, o)) {
+                return true;
+            }
+        }
+        return containsNull ? null : false;
+    }
+
+    private static Boolean containsValueInComplexCollection(Collection<Map> maps, TypedObject target, Type subType) {
+        boolean containsNull = false;
+        for (Map map : maps) {
+            if (map == null) {
+                containsNull = true;
+            } else {
+                for (Object p : map.values()) {
+                    if (p == null) {
+                        containsNull = true;
+                    } else if (target.equalTo(subType, p)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return containsNull ? null : false;
     }
 }

@@ -314,11 +314,7 @@ public enum Type {
      * @return A boolean denoting if the comparison can be done.
      */
     public static boolean canCompare(Type first, Type second) {
-        // Null Types can
-        if (first == NULL && second == NULL) {
-            return true;
-        }
-        // UNKNOWNS and non-Primitives Types cannot
+        // NULLS, UNKNOWNS, and non-Primitives Types cannot
         if (!areBothIn(first, second, PRIMITIVES)) {
             return false;
         }
