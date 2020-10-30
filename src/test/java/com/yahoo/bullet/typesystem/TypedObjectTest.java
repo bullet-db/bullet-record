@@ -266,12 +266,19 @@ public class TypedObjectTest {
 
         TypedObject objectE = new TypedObject(STRING_MAP_MAP, (HashMap) mapMapB);
 
+        Map<String, Map<String, String>> mapMapC = new HashMap<>();
+        mapMapC.put("a", singletonMap("1", "2"));
+        mapMapC.put("b", null);
+        mapMapC.put("c", singletonMap("3", "2"));
+
+        TypedObject objectF = new TypedObject(STRING_MAP_MAP, (HashMap) mapMapC);
+
         Map<String, String> mapA = new HashMap<>();
         mapA.put("1", "2");
         mapA.put(null, "2");
         mapA.put("3", "2");
 
-        TypedObject objectF = new TypedObject(STRING_MAP, (HashMap) mapA);
+        TypedObject objectG = new TypedObject(STRING_MAP, (HashMap) mapA);
 
         Assert.assertNull(TypedObject.NULL.containsKey("1"));
         Assert.assertNull(objectA.containsKey(null));
@@ -291,6 +298,9 @@ public class TypedObjectTest {
         Assert.assertTrue(objectF.containsKey("1"));
         Assert.assertNull(objectF.containsKey("2"));
         Assert.assertTrue(objectF.containsKey("3"));
+        Assert.assertTrue(objectG.containsKey("1"));
+        Assert.assertNull(objectG.containsKey("2"));
+        Assert.assertTrue(objectG.containsKey("3"));
     }
 
     @Test(expectedExceptions = UnsupportedOperationException.class, expectedExceptionsMessageRegExp = ".*This type does not support mappings.*")

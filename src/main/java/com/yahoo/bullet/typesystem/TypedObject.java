@@ -180,27 +180,16 @@ public class TypedObject implements Serializable {
             return null;
         }
         if (isComplexList()) {
-            List list = (List) value;
-            boolean containsNull = false;
-            for (Object o : list) {
-                Map map = (Map) o;
-                if (map == null) {
-                    containsNull = true;
-                } else if (map.containsKey(key)) {
-                    return true;
-                } else if (map.containsKey(null)) {
-                    containsNull = true;
-                }
-            }
-            return containsNull ? null : false;
+            return containsKeyInComplexCollection((List) value, key);
         } else if (isComplexMap()) {
             Map map = (Map) value;
-            if (map.containsKey(key) || map.values().stream().anyMatch(e -> ((Map) e).containsKey(key))) {
+            if (map.containsKey(key)) {
                 return true;
-            } else if (map.containsKey(null) || map.values().stream().anyMatch(e -> ((Map) e).containsKey(null))) {
-                return null;
+            } else if (map.containsKey(null)) {
+                return map.values().stream().anyMatch(e -> e != null && ((Map) e).containsKey(key)) ? true : null;
+            } else {
+                return containsKeyInComplexCollection(map.values(), key);
             }
-            return false;
         } else if (isPrimitiveMap()) {
             Map map = (Map) value;
             if (map.containsKey(key)) {
@@ -467,6 +456,20 @@ public class TypedObject implements Serializable {
     private boolean equalTo(Type type, Object object) {
         // These are our objects. They should be serializable
         return equalTo(new TypedObject(type, (Serializable) object));
+    }
+
+    private static Boolean containsKeyInComplexCollection(Collection<Map> maps, String key) {
+        boolean containsNull = false;
+        for (Map map : maps) {
+            if (map == null) {
+                containsNull = true;
+            } else if (map.containsKey(key)) {
+                return true;
+            } else if (map.containsKey(null)) {
+                containsNull = true;
+            }
+        }
+        return containsNull ? null : false;
     }
 
     private static Boolean containsValueInPrimitiveCollection(Collection values, TypedObject target, Type subType) {
