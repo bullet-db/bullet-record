@@ -4,7 +4,7 @@
 
 ## Introduction
 
-This is a wrapper for the Record object that interfaces with the Bullet query engine. Users wishing their data to be queryable by Bullet insert their data into a BulletRecord.
+This is a wrapper for the Record object that interfaces with the Bullet query engine. Users wishing their data to be queryable by Bullet insert their data into a BulletRecord. It also defines a TypeSystem, valid types supported in the Record and a Schema creator.
 
 ## Documentation
 
