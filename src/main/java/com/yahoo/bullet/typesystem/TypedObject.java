@@ -260,11 +260,11 @@ public class TypedObject implements Serializable {
      * Compares this TypedObject to another. Only works on objects that have a type in {@link Type#PRIMITIVES}. If
      * either object is of {@link Type#NULL}, then null is returned. Otherwise, an exception will be thrown when
      * comparing objects whose types are not in {@link Type#PRIMITIVES}. This will force {@link Type#NUMERICS} that are
-     * not of the same {@link Type} to {@link Double} instances to compare them.
-     * {@inheritDoc}
+     * not of the same {@link Type} to {@link Double} instances to compare them. Otherwise, works like
+     * {@link Comparable#compareTo(Object)}.
      *
      * @param other The other non-null TypedObject.
-     * @return {@inheritDoc}
+     * @return An Integer that works like {@link Comparable#compareTo(Object)} or null if either objects were null.
      * @throws UnsupportedOperationException if the other object could not compared to this.
      */
     public Integer compareTo(TypedObject other) {
