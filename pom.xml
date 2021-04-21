@@ -31,8 +31,8 @@
     </distributionManagement>
 
     <scm>
-        <connection>scm:git:git://git@github.com/bullet-db/bullet-record.git</connection>
-        <developerConnection>scm:git:git://git@github.com:bullet-db/bullet-record.git</developerConnection>
+        <connection>scm:git:ssh://git@github.com/bullet-db/bullet-record.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/bullet-db/bullet-record.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
