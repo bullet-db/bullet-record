@@ -1,6 +1,6 @@
 # Bullet Record
 
-[![Build Status](https://travis-ci.com/bullet-db/bullet-record.svg?branch=master)](https://travis-ci.com/bullet-db/bullet-record) [![Coverage Status](https://coveralls.io/repos/github/bullet-db/bullet-record/badge.svg?branch=master)](https://coveralls.io/github/bullet-db/bullet-record?branch=master) [![Download](https://api.bintray.com/packages/yahoo/maven/bullet-record/images/download.svg) ](https://bintray.com/yahoo/maven/bullet-record/_latestVersion)
+[![Build Status](https://travis-ci.com/bullet-db/bullet-record.svg?branch=master)](https://travis-ci.com/bullet-db/bullet-record) [![Coverage Status](https://coveralls.io/repos/github/bullet-db/bullet-record/badge.svg?branch=master)](https://coveralls.io/github/bullet-db/bullet-record?branch=master) 
 
 ## Introduction
 

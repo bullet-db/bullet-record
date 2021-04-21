@@ -7,18 +7,43 @@
     <version>1.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>bullet-record</name>
+    <description>
+        This manages the container format for storing data passed to Bullet as well as its type and schema system.
+    </description>
+    <url>https://github.com/bullet-db/bullet-record</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <scm>
-        <developerConnection>scm:git:ssh://git@github.com/bullet-db/bullet-record.git</developerConnection>
+        <connection>scm:git:git://git@github.com/bullet-db/bullet-record.git</connection>
+        <developerConnection>scm:git:https://git@github.com/bullet-db/bullet-record.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
-    <distributionManagement>
-        <repository>
-            <id>bintray-bullet-record-repo</id>
-            <url>https://api.bintray.com/maven/yahoo/maven/bullet-record;publish=1</url>
-        </repository>
-    </distributionManagement>
+    <developers>
+        <developer>
+            <name>Bullet Developers</name>
+            <email>bullet-dev@googlegroups.com</email>
+            <organization>Yahoo Inc.</organization>
+            <organizationUrl>https://github.com/bullet-db</organizationUrl>
+        </developer>
+    </developers>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -257,4 +282,44 @@
 
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <activation>
+                <property>
+                    <name>release</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.8</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
