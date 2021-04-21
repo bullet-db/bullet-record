@@ -8,8 +8,7 @@ script:
 - mvn verify
 after_success:
 - mvn coveralls:report
-- test "${TRAVIS_PULL_REQUEST}" == "false" && test "${TRAVIS_TAG}" != "" && mvn deploy
-  --settings travis/settings.xml -DskipTests=true -Prelease
+- test "${TRAVIS_PULL_REQUEST}" == "false" && test "${TRAVIS_TAG}" != "" && mvn deploy --settings travis/settings.xml -DskipTests=true -Prelease
 cache:
   directories:
   - "~/.m2"
