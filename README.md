@@ -1,6 +1,8 @@
 # Bullet Record
 
-[![Build Status](https://travis-ci.com/bullet-db/bullet-record.svg?branch=master)](https://travis-ci.com/bullet-db/bullet-record) [![Coverage Status](https://coveralls.io/repos/github/bullet-db/bullet-record/badge.svg?branch=master)](https://coveralls.io/github/bullet-db/bullet-record?branch=master) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.yahoo.bullet/bullet-record/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.yahoo.bullet/bullet-record/)
+[![Build Status](https://cd.screwdriver.cd/pipelines/7219/badge)](https://cd.screwdriver.cd/pipelines/7219)
+[![Coverage Status](https://coveralls.io/repos/github/bullet-db/bullet-record/badge.svg?branch=master)](https://coveralls.io/github/bullet-db/bullet-record?branch=master) 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.yahoo.bullet/bullet-record/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.yahoo.bullet/bullet-record/)
 
 ## Introduction
 
