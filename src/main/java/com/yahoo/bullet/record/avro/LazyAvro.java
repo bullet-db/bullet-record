@@ -41,14 +41,6 @@ import java.util.function.Function;
 public class LazyAvro<T> implements Serializable, Iterable<Map.Entry<String, Serializable>> {
     private static final long serialVersionUID = 5465735405328695881L;
 
-    @AllArgsConstructor
-    private static class Payload<T> implements Serializable {
-        private static final long serialVersionUID = -4687778142213933662L;
-        protected byte[] data;
-        protected Class<T> klazz;
-        protected AvroDataProvider<T> provider;
-    }
-
     @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE)
     private byte[] serializedData;
     @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE)
@@ -280,15 +272,16 @@ public class LazyAvro<T> implements Serializable, Iterable<Map.Entry<String, Ser
             serializedData = serialize(data);
             // Don't get rid of the map in case more data is inserted into it after serialization
         }
-        out.writeObject(new Payload<>(serializedData, klazz, provider));
+        out.writeObject(serializedData);
+        out.writeObject(klazz);
+        out.writeObject(provider);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        Payload<T> payload = (Payload<T>) in.readObject();
-        serializedData = payload.data;
-        klazz = payload.klazz;
+        serializedData = (byte[]) in.readObject();
+        klazz = (Class<T>) in.readObject();
+        provider = (AvroDataProvider<T>) in.readObject();
         reader = new CustomAvroReader<>(klazz);
-        provider = payload.provider;
         data = null;
         isDeserialized = false;
     }
