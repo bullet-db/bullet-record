@@ -5,6 +5,7 @@
  */
 package com.yahoo.bullet.record.avro;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -12,8 +13,7 @@ import java.util.Map;
  *
  * @param <T> The type of the AVRO generated class.
  */
-@FunctionalInterface
-public interface AvroDataProvider<T> {
+public interface AvroDataProvider<T> extends Serializable {
     /**
      * Given an AVRO deserialized data object, return the data in it as a {@link Map}.
      *
@@ -21,4 +21,12 @@ public interface AvroDataProvider<T> {
      * @return The {@link Map} of field names to their values, matching the types supported in Bullet.
      */
     Map<String, Object> getData(T data);
+
+    /**
+     * Given a {@link Map} of fields, return the AVRO record object containing these fields.
+     *
+     * @param data The {@link Map} of fields to their values, matching the types supported in Bullet.
+     * @return The AVRO record.
+     */
+    T getRecord(Map<String, Object> data);
 }
