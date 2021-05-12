@@ -101,8 +101,8 @@ public class UntypedAvroBulletRecordTest extends BulletRecordTest<Serializable> 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Cannot read from record.*")
     public void testFailingWhenCannotRead() {
         LazyBulletAvro bad = new LazyBulletAvro();
-        bad.setSerializedData("foo".getBytes());
-        bad.setDeserialized(false);
+        bad.serializedData = "foo".getBytes();
+        bad.isDeserialized = false;
         avroRecord.setData(bad);
         avroRecord.hasField("foo");
     }

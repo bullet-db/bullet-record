@@ -9,8 +9,6 @@ import com.yahoo.bullet.record.BulletRecord;
 import com.yahoo.bullet.record.TypedBulletRecord;
 import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
-import lombok.AccessLevel;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
@@ -30,10 +28,8 @@ import java.util.Objects;
 public class TypedAvroBulletRecord extends TypedBulletRecord {
     private static final long serialVersionUID = -2200480102971008734L;
 
-    @Setter(AccessLevel.PACKAGE)
-    private Map<String, Type> types = new HashMap<>();
-    @Setter(AccessLevel.PACKAGE)
-    private LazyBulletAvro data = new LazyBulletAvro();
+    protected Map<String, Type> types = new HashMap<>();
+    protected LazyBulletAvro data = new LazyBulletAvro();
 
     @Override
     protected TypedAvroBulletRecord rawSet(String field, TypedObject object) {

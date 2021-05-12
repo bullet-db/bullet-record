@@ -5,10 +5,7 @@
  */
 package com.yahoo.bullet.record.avro;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
@@ -16,6 +13,7 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.specific.SpecificRecord;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,43 +29,21 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * This class wraps all Bullet compatible AVRO data and makes lazily de-serializable. The data is reified only when
- * needed to. It operates on AVRO {@link org.apache.avro.specific.SpecificRecord} types. You should provide an
- * {@link AvroDataProvider} of the same type to extract the data out of the lazily de-serialized AVRO data.
+ * This class wraps all Bullet compatible AVRO data and makes it lazily de-serializable. The data is reified only when
+ * needed to. It operates on AVRO {@link org.apache.avro.specific.SpecificRecord} types. Subclasses should override
+ * {@link #getReader()} to provide the appropriate {@link SpecificDatumReader}, {@link #getWriter()} to provide the
+ * {@link SpecificDatumWriter}, {@link #getData(SpecificRecord)} to convert the AVRO record into a {@link Map} of fields
+ * to their values and {@link #getRecord} to convert a {@link Map} of fields to the AVRO record.
  *
  * @param <T> The type of the AVRO generated class.
  */
-@Slf4j
-public class LazyAvro<T> implements Serializable, Iterable<Map.Entry<String, Serializable>> {
+@Slf4j @NoArgsConstructor
+public abstract class LazyAvro<T extends SpecificRecord> implements Serializable, Iterable<Map.Entry<String, Serializable>> {
     private static final long serialVersionUID = 5465735405328695881L;
 
-    @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE)
-    private byte[] serializedData;
-    @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE)
-    private transient Map<String, Object> data = new HashMap<>();
-    @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE)
-    private transient boolean isDeserialized = true;
-
-    private Class<T> klazz;
-    private AvroDataProvider<T> provider;
-    private transient SpecificDatumReader<T> reader;
-
-    /**
-     * Constructor that takes AVRO serialized data, the type of the AVRO generated record for that data and a
-     * {@link AvroDataProvider} to extract data from a reified record of that type as a {@link Map}.
-     *
-     * @param data The serialized AVRO byte[] of the given type.
-     * @param avroGeneratedClass The type of AVRO generated class.
-     * @param avroDataProvider The {@link AvroDataProvider} that can get a {@link Map} of field names to Bullet types.
-     */
-    public LazyAvro(byte[] data, Class<T> avroGeneratedClass, AvroDataProvider<T> avroDataProvider) {
-        serializedData = data;
-        klazz = avroGeneratedClass;
-        reader = new CustomAvroReader<>(avroGeneratedClass);
-        provider = avroDataProvider;
-        // If no data, then it might as well be deserialized
-        isDeserialized = data == null;
-    }
+    protected byte[] serializedData;
+    protected transient Map<String, Object> data = new HashMap<>();
+    protected transient boolean isDeserialized = true;
 
     /**
      * Copy constructor.
@@ -78,10 +54,7 @@ public class LazyAvro<T> implements Serializable, Iterable<Map.Entry<String, Ser
     public LazyAvro(LazyAvro<T> other) {
         try {
             serializedData = other.getAsByteArray();
-            klazz = other.klazz;
             isDeserialized = false;
-            reader = other.reader;
-            provider = other.provider;
         } catch (Exception e) {
             log.error("Unable to serialize the other record", e);
             throw new RuntimeException(e);
@@ -243,6 +216,38 @@ public class LazyAvro<T> implements Serializable, Iterable<Map.Entry<String, Ser
         return data == null ? 42 : data.hashCode();
     }
 
+    /**
+     * Get a {@link SpecificDatumReader} for this type.
+     *
+     * @return A reader for this type.
+     */
+    public abstract SpecificDatumReader<T> getReader();
+
+    /**
+     * Get a {@link SpecificDatumWriter} for this type.
+     *
+     * @return A writer for this type.
+     */
+    public abstract SpecificDatumWriter<T> getWriter();
+
+    /**
+     * Given a {@link Map} of fields, returns an AVRO record of this type wrapping them. This is the inverse of the
+     * {@link #getData(SpecificRecord)} method.
+     *
+     * @param data The {@link Map} of fields to values matching types supported by Bullet.
+     * @return A {@link }
+     */
+    public abstract T getRecord(Map<String, Object> data);
+
+    /**
+     * Given {@link SpecificRecord}, returns a {@link Map} of fields to values, whose types are supported in Bullet.
+     * This is the inverse of the {@link #getRecord(Map)} method.
+     *
+     * @param record The {@link SpecificRecord} containing the data.
+     * @return A {@link Map} of the fields.
+     */
+    public abstract Map<String, Object> getData(T record);
+
     private void forceFailIfCannotRead() {
         if (!forceReadData()) {
             throw new RuntimeException("Cannot read from record. Unable to proceed.");
@@ -251,11 +256,11 @@ public class LazyAvro<T> implements Serializable, Iterable<Map.Entry<String, Ser
 
     private byte[] serialize(Map<String, Object> data) throws IOException {
         data = (data == null) ? Collections.emptyMap() : data;
-        T record = provider.getRecord(data);
+        T record = getRecord(data);
         ByteArrayOutputStream stream = new ByteArrayOutputStream(2048);
         EncoderFactory encoderFactory = new EncoderFactory();
         Encoder encoder = encoderFactory.binaryEncoder(stream, null);
-        SpecificDatumWriter<T> writer = new SpecificDatumWriter<>(klazz);
+        SpecificDatumWriter<T> writer = getWriter();
         writer.write(record, encoder);
         encoder.flush();
         return stream.toByteArray();
@@ -263,8 +268,8 @@ public class LazyAvro<T> implements Serializable, Iterable<Map.Entry<String, Ser
 
     private Map<String, Object> reify(byte[] data) throws IOException {
         BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
-        T avro = reader.read(null, decoder);
-        return provider.getData(avro);
+        T avro = getReader().read(null, decoder);
+        return getData(avro);
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
@@ -273,15 +278,10 @@ public class LazyAvro<T> implements Serializable, Iterable<Map.Entry<String, Ser
             // Don't get rid of the map in case more data is inserted into it after serialization
         }
         out.writeObject(serializedData);
-        out.writeObject(klazz);
-        out.writeObject(provider);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         serializedData = (byte[]) in.readObject();
-        klazz = (Class<T>) in.readObject();
-        provider = (AvroDataProvider<T>) in.readObject();
-        reader = new CustomAvroReader<>(klazz);
         data = null;
         isDeserialized = false;
     }

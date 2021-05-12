@@ -7,8 +7,6 @@ package com.yahoo.bullet.record.avro;
 
 import com.yahoo.bullet.record.BulletRecord;
 import com.yahoo.bullet.record.UntypedBulletRecord;
-import lombok.AccessLevel;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
@@ -26,8 +24,7 @@ import java.util.Objects;
 @Slf4j
 public class UntypedAvroBulletRecord extends UntypedBulletRecord {
     private static final long serialVersionUID = 926415013785021742L;
-    @Setter(AccessLevel.PACKAGE)
-    private LazyBulletAvro data = new LazyBulletAvro();
+    protected LazyBulletAvro data = new LazyBulletAvro();
 
     @Override
     protected UntypedAvroBulletRecord rawSet(String field, Serializable object) {

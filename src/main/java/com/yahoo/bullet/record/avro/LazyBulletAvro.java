@@ -5,43 +5,19 @@
  */
 package com.yahoo.bullet.record.avro;
 
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificDatumWriter;
 
 import java.util.Map;
 
-@Slf4j
-class LazyBulletAvro extends LazyAvro<BulletAvro> {
+@Slf4j @NoArgsConstructor
+public class LazyBulletAvro extends LazyAvro<BulletAvro> {
     private static final long serialVersionUID = -5368363606317600282L;
 
-    private static class BulletAvroDataProvider implements AvroDataProvider<BulletAvro> {
-        private static final long serialVersionUID = -4126428757611776867L;
-
-        @Override
-        public Map<String, Object> getData(BulletAvro data) {
-            return data.getData();
-        }
-
-        @Override
-        public BulletAvro getRecord(Map<String, Object> data) {
-            return new BulletAvro(data);
-        }
-    }
-
-    private static final BulletAvroDataProvider INSTANCE = new BulletAvroDataProvider();
-
-    /**
-     * Default constructor.
-     */
-    LazyBulletAvro() {
-        super(null, BulletAvro.class, INSTANCE);
-    }
-
-    /**
-     * For coverage.
-     */
-    LazyBulletAvro(byte[] data) {
-        super(data, BulletAvro.class, INSTANCE);
-    }
+    private static final SpecificDatumReader<BulletAvro> READER = new CustomAvroReader<>(BulletAvro.class);
+    private static final SpecificDatumWriter<BulletAvro> WRITER = new SpecificDatumWriter<>(BulletAvro.class);
 
     /**
      * Copy constructor.
@@ -49,7 +25,27 @@ class LazyBulletAvro extends LazyAvro<BulletAvro> {
      * @param other The {@link LazyBulletAvro} to copy.
      * @throws RuntimeException if failed to copy data from the source.
      */
-    LazyBulletAvro(LazyBulletAvro other) {
+    public LazyBulletAvro(LazyBulletAvro other) {
         super(other);
+    }
+
+    @Override
+    public SpecificDatumReader<BulletAvro> getReader() {
+        return READER;
+    }
+
+    @Override
+    public SpecificDatumWriter<BulletAvro> getWriter() {
+        return WRITER;
+    }
+
+    @Override
+    public BulletAvro getRecord(Map<String, Object> data) {
+        return new BulletAvro(data);
+    }
+
+    @Override
+    public Map<String, Object> getData(BulletAvro record) {
+        return record.getData();
     }
 }
