@@ -52,13 +52,13 @@ public class LazyAvro<T> implements Serializable, Iterable<Map.Entry<String, Ser
     @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE)
     protected boolean isDeserialized = true;
     @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE)
-    protected Map<String, Object> data = new HashMap<>();
-    @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE)
     protected byte[] serializedData;
+    @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE)
+    protected transient Map<String, Object> data = new HashMap<>();
 
-    protected Class<T> klazz;
-    protected SpecificDatumReader<T> reader;
-    protected AvroDataProvider<T> provider;
+    private Class<T> klazz;
+    private AvroDataProvider<T> provider;
+    private transient SpecificDatumReader<T> reader;
 
     /**
      * Constructor that takes AVRO serialized data, the type of the AVRO generated record for that data and a
