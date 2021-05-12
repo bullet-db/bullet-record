@@ -65,17 +65,17 @@ public class UntypedAvroBulletRecordTest extends BulletRecordTest<Serializable> 
     @Test
     public void testAvroRecordEqualsEdgeCases() {
         Assert.assertTrue(avroRecord.equals(avroAnother));
-        avroRecord.setData(null);
+        avroRecord.data = null;
         Assert.assertFalse(avroRecord.equals(another));
-        avroAnother.setData(null);
+        avroAnother.data = null;
         Assert.assertTrue(avroRecord.equals(avroAnother));
     }
 
     @Test
     public void testAvroRecordHashcodeEdgeCases() {
         Assert.assertEquals(record.hashCode(), another.hashCode());
-        avroRecord.setData(null);
-        avroAnother.setData(null);
+        avroRecord.data = null;
+        avroAnother.data = null;
         Assert.assertEquals(avroRecord.hashCode(), avroAnother.hashCode());
     }
 
@@ -103,7 +103,7 @@ public class UntypedAvroBulletRecordTest extends BulletRecordTest<Serializable> 
         LazyBulletAvro bad = new LazyBulletAvro();
         bad.serializedData = "foo".getBytes();
         bad.isDeserialized = false;
-        avroRecord.setData(bad);
+        avroRecord.data = bad;
         avroRecord.hasField("foo");
     }
 }
