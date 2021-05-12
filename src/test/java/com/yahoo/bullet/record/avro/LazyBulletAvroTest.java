@@ -81,6 +81,17 @@ public class LazyBulletAvroTest {
         Assert.assertNotNull(avro.getData());
     }
 
+    @Test
+    public void testStartingWithSerializedData() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("foo", "bar");
+        LazyBulletAvro copy = new LazyBulletAvro(getAvroBytes(data));
+        Assert.assertEquals(copy.fieldCount(), 1);
+        Assert.assertEquals(copy.get("foo"), "bar");
+        copy.set("baz", "qux");
+        Assert.assertEquals(copy.fieldCount(), 2);
+    }
+
     @Test(expectedExceptions = RuntimeException.class)
     public void testFailCopying() {
         avro.set("foo", Type.NULL);
