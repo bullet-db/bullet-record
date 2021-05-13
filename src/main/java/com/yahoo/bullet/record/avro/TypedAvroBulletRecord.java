@@ -10,7 +10,6 @@ import com.yahoo.bullet.record.TypedBulletRecord;
 import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
@@ -26,12 +25,20 @@ import java.util.Objects;
  * the get/set methods are called. This makes the object cheap to send through repeated read-write cycles
  * without modifications. You can force a read by either calling a get/set method.
  */
-@Slf4j @NoArgsConstructor @AllArgsConstructor
+@Slf4j @AllArgsConstructor
 public class TypedAvroBulletRecord extends TypedBulletRecord {
     private static final long serialVersionUID = -2200480102971008734L;
 
-    protected Map<String, Type> types = new HashMap<>();
-    protected LazyBulletAvro data = new LazyBulletAvro();
+    protected Map<String, Type> types;
+    protected LazyBulletAvro data;
+
+    /**
+     * Constructor.
+     */
+    public TypedAvroBulletRecord() {
+        types = new HashMap<>();
+        data = new LazyBulletAvro();
+    }
 
     @Override
     protected TypedAvroBulletRecord rawSet(String field, TypedObject object) {
@@ -72,9 +79,8 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
 
     @Override
     public TypedAvroBulletRecord copy() {
-        TypedAvroBulletRecord copy = new TypedAvroBulletRecord();
+        TypedAvroBulletRecord copy = new TypedAvroBulletRecord(new HashMap<>(), this.data.copy());
         copy.types.putAll(this.types);
-        copy.data = this.data.copy();
         return copy;
     }
 

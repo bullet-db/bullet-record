@@ -8,7 +8,6 @@ package com.yahoo.bullet.record.avro;
 import com.yahoo.bullet.record.BulletRecord;
 import com.yahoo.bullet.record.UntypedBulletRecord;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
@@ -23,11 +22,18 @@ import java.util.Objects;
  * the get/set methods are called. This makes the object cheap to send through repeated read-write cycles
  * without modifications. You can force a read by either calling a get/set method.
  */
-@Slf4j @NoArgsConstructor @AllArgsConstructor
+@Slf4j @AllArgsConstructor
 public class UntypedAvroBulletRecord extends UntypedBulletRecord {
     private static final long serialVersionUID = 926415013785021742L;
 
-    protected LazyBulletAvro data = new LazyBulletAvro();
+    protected LazyBulletAvro data;
+
+    /**
+     * Constructor.
+     */
+    public UntypedAvroBulletRecord() {
+        data = new LazyBulletAvro();
+    }
 
     @Override
     protected UntypedAvroBulletRecord rawSet(String field, Serializable object) {
@@ -64,9 +70,7 @@ public class UntypedAvroBulletRecord extends UntypedBulletRecord {
 
     @Override
     public UntypedAvroBulletRecord copy() {
-        UntypedAvroBulletRecord copy = new UntypedAvroBulletRecord();
-        copy.data = this.data.copy();
-        return copy;
+        return new UntypedAvroBulletRecord(this.data.copy());
     }
 
     @Override

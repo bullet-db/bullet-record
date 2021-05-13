@@ -20,7 +20,7 @@ import java.util.Map;
 /**
  * This exists so that when we read arrays from the serialized AVRO for Bullet, they are read as {@link ArrayList}
  * instances. Otherwise, {@link org.apache.avro.generic.GenericData.Array} is used which is not {@link Serializable},
- * which breaks the guarantee that records turn {@link Serializable} instances.
+ * which breaks the guarantee that records return {@link Serializable} instances.
  */
 public class CustomAvroReader<T> extends SpecificDatumReader<T> {
     /**
