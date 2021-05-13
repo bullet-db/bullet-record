@@ -85,4 +85,23 @@ public class UntypedAvroBulletRecord extends UntypedBulletRecord {
         // Value doesn't matter when data is null
         return data == null ? 42 : data.hashCode();
     }
+
+    /**
+     * Hook to replace the {@link LazyBulletAvro} with a subclass.
+     *
+     * @return The created {@link LazyBulletAvro}.
+     */
+    protected LazyBulletAvro getLazyBulletAvro() {
+        return new LazyBulletAvro();
+    }
+
+    /**
+     * Hook to copy the {@link LazyBulletAvro} and replace it with a subclass.
+     *
+     * @param other The {@link LazyBulletAvro} to copy.
+     * @return The copied {@link LazyBulletAvro}.
+     */
+    protected LazyBulletAvro copyLazyBulletAvro(LazyBulletAvro other) {
+        return new LazyBulletAvro(other);
+    }
 }

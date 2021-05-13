@@ -29,7 +29,7 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
     private static final long serialVersionUID = -2200480102971008734L;
 
     protected Map<String, Type> types = new HashMap<>();
-    protected LazyBulletAvro data = new LazyBulletAvro();
+    protected LazyBulletAvro data = getLazyBulletAvro();
 
     @Override
     protected TypedAvroBulletRecord rawSet(String field, TypedObject object) {
@@ -72,7 +72,7 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
     public TypedAvroBulletRecord copy() {
         TypedAvroBulletRecord copy = new TypedAvroBulletRecord();
         copy.types.putAll(this.types);
-        copy.data = new LazyBulletAvro(this.data);
+        copy.data = copyLazyBulletAvro(this.data);
         return copy;
     }
 
@@ -105,5 +105,24 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
             return TypedObject.NULL;
         }
         return new TypedObject(types.getOrDefault(key, Type.UNKNOWN), value);
+    }
+
+    /**
+     * Hook to replace the {@link LazyBulletAvro} with a subclass.
+     *
+     * @return The created {@link LazyBulletAvro}.
+     */
+    protected LazyBulletAvro getLazyBulletAvro() {
+        return new LazyBulletAvro();
+    }
+
+    /**
+     * Hook to copy the {@link LazyBulletAvro} and replace it with a subclass.
+     *
+     * @param other The {@link LazyBulletAvro} to copy.
+     * @return The copied {@link LazyBulletAvro}.
+     */
+    protected LazyBulletAvro copyLazyBulletAvro(LazyBulletAvro other) {
+        return new LazyBulletAvro(other);
     }
 }
