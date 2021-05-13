@@ -57,7 +57,7 @@ public class UntypedAvroBulletRecordTest extends BulletRecordTest<Serializable> 
     @BeforeMethod
     public void setup() {
         avroRecord = new UntypedAvroBulletRecord();
-        avroAnother = new UntypedAvroBulletRecord();
+        avroAnother = new UntypedAvroBulletRecord(new LazyBulletAvro());
         record = avroRecord;
         another = avroAnother;
     }

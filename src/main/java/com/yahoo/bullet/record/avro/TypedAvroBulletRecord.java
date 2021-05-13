@@ -9,6 +9,8 @@ import com.yahoo.bullet.record.BulletRecord;
 import com.yahoo.bullet.record.TypedBulletRecord;
 import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
@@ -18,18 +20,18 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * An implementation of {@link BulletRecord} using Avro for serialization.
+ * An implementation of {@link BulletRecord} using Avro for serialization. It is a {@link TypedBulletRecord}.
  *
  * By default, after serialization the record deserializes lazily. It will only deserialize when one of
  * the get/set methods are called. This makes the object cheap to send through repeated read-write cycles
  * without modifications. You can force a read by either calling a get/set method.
  */
-@Slf4j
+@Slf4j @NoArgsConstructor @AllArgsConstructor
 public class TypedAvroBulletRecord extends TypedBulletRecord {
     private static final long serialVersionUID = -2200480102971008734L;
 
     protected Map<String, Type> types = new HashMap<>();
-    protected LazyBulletAvro data = getLazyBulletAvro();
+    protected LazyBulletAvro data = new LazyBulletAvro();
 
     @Override
     protected TypedAvroBulletRecord rawSet(String field, TypedObject object) {
@@ -72,7 +74,7 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
     public TypedAvroBulletRecord copy() {
         TypedAvroBulletRecord copy = new TypedAvroBulletRecord();
         copy.types.putAll(this.types);
-        copy.data = copyLazyBulletAvro(this.data);
+        copy.data = this.data.copy();
         return copy;
     }
 
@@ -105,24 +107,5 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
             return TypedObject.NULL;
         }
         return new TypedObject(types.getOrDefault(key, Type.UNKNOWN), value);
-    }
-
-    /**
-     * Hook to replace the {@link LazyBulletAvro} with a subclass.
-     *
-     * @return The created {@link LazyBulletAvro}.
-     */
-    protected LazyBulletAvro getLazyBulletAvro() {
-        return new LazyBulletAvro();
-    }
-
-    /**
-     * Hook to copy the {@link LazyBulletAvro} and replace it with a subclass.
-     *
-     * @param other The {@link LazyBulletAvro} to copy.
-     * @return The copied {@link LazyBulletAvro}.
-     */
-    protected LazyBulletAvro copyLazyBulletAvro(LazyBulletAvro other) {
-        return new LazyBulletAvro(other);
     }
 }

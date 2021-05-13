@@ -84,7 +84,7 @@ public class LazyBulletAvroTest {
     @Test(expectedExceptions = RuntimeException.class)
     public void testFailCopying() {
         avro.set("foo", Type.NULL);
-        new LazyBulletAvro(avro);
+        avro.copy();
     }
 
     @Test
@@ -92,8 +92,11 @@ public class LazyBulletAvroTest {
         avro.set("someField", "someValue");
         LazyBulletAvro copy = new LazyBulletAvro(avro);
         LazyBulletAvro copyOfCopy = new LazyBulletAvro(copy);
+        LazyBulletAvro copyOfCopyOfCopy = copyOfCopy.copy();
         Assert.assertEquals(copyOfCopy.get("someField"), "someValue");
         Assert.assertEquals(copyOfCopy.fieldCount(), 1);
+        Assert.assertEquals(copyOfCopyOfCopy.get("someField"), "someValue");
+        Assert.assertEquals(copyOfCopyOfCopy.fieldCount(), 1);
     }
 
     @Test

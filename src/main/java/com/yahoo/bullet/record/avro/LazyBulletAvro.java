@@ -167,6 +167,15 @@ public class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, 
     }
 
     /**
+     * Copy this {@link LazyBulletAvro}.
+     *
+     * @return The {@link LazyBulletAvro} copy.
+     */
+    public LazyBulletAvro copy() {
+        return new LazyBulletAvro(this);
+    }
+
+    /**
      * Exposed at package since this exposes the underlying {@link Map} structure and raw values used by this class.
      *
      * Allows you to iterate over the data while applying a mapping {@link Function} to convert the underlying
@@ -239,6 +248,7 @@ public class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, 
      * {@link SpecificDatumReader} to read the given data from the {@link Decoder} as a {@link Map}.
      *
      * @param decoder The {@link Decoder} to use.
+     * @return The {@link Map} of fields.
      * @throws IOException if there were issues reading.
      */
     protected Map<String, Object> read(Decoder decoder) throws IOException {

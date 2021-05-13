@@ -20,6 +20,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashMap;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -62,7 +63,7 @@ public class TypedAvroBulletRecordTest extends BulletRecordTest<TypedObject> {
     @BeforeMethod
     public void setup() {
         avroRecord = new TypedAvroBulletRecord();
-        avroAnother = new TypedAvroBulletRecord();
+        avroAnother = new TypedAvroBulletRecord(new HashMap<>(), new LazyBulletAvro());
         record = avroRecord;
         another = avroAnother;
     }
