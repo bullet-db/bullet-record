@@ -9,8 +9,7 @@ import com.yahoo.bullet.record.BulletRecord;
 import com.yahoo.bullet.record.TypedBulletRecord;
 import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
-import lombok.AccessLevel;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
@@ -20,20 +19,26 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * An implementation of {@link BulletRecord} using Avro for serialization.
+ * An implementation of {@link BulletRecord} using Avro for serialization. It is a {@link TypedBulletRecord}.
  *
  * By default, after serialization the record deserializes lazily. It will only deserialize when one of
  * the get/set methods are called. This makes the object cheap to send through repeated read-write cycles
  * without modifications. You can force a read by either calling a get/set method.
  */
-@Slf4j
+@Slf4j @AllArgsConstructor
 public class TypedAvroBulletRecord extends TypedBulletRecord {
     private static final long serialVersionUID = -2200480102971008734L;
 
-    @Setter(AccessLevel.PACKAGE)
-    private Map<String, Type> types = new HashMap<>();
-    @Setter(AccessLevel.PACKAGE)
-    private LazyBulletAvro data = new LazyBulletAvro();
+    protected Map<String, Type> types;
+    protected LazyBulletAvro data;
+
+    /**
+     * Constructor.
+     */
+    public TypedAvroBulletRecord() {
+        types = new HashMap<>();
+        data = new LazyBulletAvro();
+    }
 
     @Override
     protected TypedAvroBulletRecord rawSet(String field, TypedObject object) {
@@ -74,10 +79,7 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
 
     @Override
     public TypedAvroBulletRecord copy() {
-        TypedAvroBulletRecord copy = new TypedAvroBulletRecord();
-        copy.types.putAll(this.types);
-        copy.data = new LazyBulletAvro(this.data);
-        return copy;
+        return new TypedAvroBulletRecord(new HashMap<>(this.types), this.data.copy());
     }
 
     @Override

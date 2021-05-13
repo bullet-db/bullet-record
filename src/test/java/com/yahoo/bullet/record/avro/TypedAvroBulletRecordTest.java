@@ -20,6 +20,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashMap;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -62,7 +63,7 @@ public class TypedAvroBulletRecordTest extends BulletRecordTest<TypedObject> {
     @BeforeMethod
     public void setup() {
         avroRecord = new TypedAvroBulletRecord();
-        avroAnother = new TypedAvroBulletRecord();
+        avroAnother = new TypedAvroBulletRecord(new HashMap<>(), new LazyBulletAvro());
         record = avroRecord;
         another = avroAnother;
     }
@@ -82,29 +83,29 @@ public class TypedAvroBulletRecordTest extends BulletRecordTest<TypedObject> {
         Assert.assertFalse(avroRecord.equals(another));
         avroAnother.setString("foo", "bar");
         Assert.assertTrue(avroRecord.equals(avroAnother));
-        avroRecord.setTypes(Collections.EMPTY_MAP);
-        avroAnother.setTypes(Collections.EMPTY_MAP);
+        avroRecord.types = Collections.EMPTY_MAP;
+        avroAnother.types = Collections.EMPTY_MAP;
         Assert.assertTrue(avroRecord.equals(avroAnother));
         LazyBulletAvro avro = new LazyBulletAvro();
-        avroRecord.setData(avro);
+        avroRecord.data = avro;
         Assert.assertFalse(avroRecord.equals(another));
-        avroAnother.setData(avro);
+        avroAnother.data = avro;
         Assert.assertTrue(avroRecord.equals(avroAnother));
-        avroRecord.setData(null);
+        avroRecord.data = null;
         Assert.assertFalse(avroRecord.equals(another));
-        avroAnother.setData(null);
+        avroAnother.data = null;
         Assert.assertTrue(avroRecord.equals(avroAnother));
-        avroRecord.setTypes(null);
+        avroRecord.types = null;
         Assert.assertFalse(avroRecord.equals(another));
-        avroAnother.setTypes(null);
+        avroAnother.types = null;
         Assert.assertTrue(avroRecord.equals(avroAnother));
     }
 
     @Test
     public void testAvroRecordHashcodeEdgeCases() {
         Assert.assertEquals(record.hashCode(), another.hashCode());
-        avroRecord.setData(null);
-        avroAnother.setData(null);
+        avroRecord.data = null;
+        avroAnother.data = null;
         Assert.assertEquals(avroRecord.hashCode(), avroAnother.hashCode());
     }
 
@@ -130,9 +131,9 @@ public class TypedAvroBulletRecordTest extends BulletRecordTest<TypedObject> {
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Cannot read from record.*")
     public void testFailingWhenCannotRead() {
         LazyBulletAvro bad = new LazyBulletAvro();
-        bad.setSerializedData("foo".getBytes());
-        bad.setDeserialized(false);
-        avroRecord.setData(bad);
+        bad.serializedData = "foo".getBytes();
+        bad.isDeserialized = false;
+        avroRecord.data = bad;
         avroRecord.hasField("foo");
     }
 }

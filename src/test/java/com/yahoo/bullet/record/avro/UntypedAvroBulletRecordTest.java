@@ -57,7 +57,7 @@ public class UntypedAvroBulletRecordTest extends BulletRecordTest<Serializable> 
     @BeforeMethod
     public void setup() {
         avroRecord = new UntypedAvroBulletRecord();
-        avroAnother = new UntypedAvroBulletRecord();
+        avroAnother = new UntypedAvroBulletRecord(new LazyBulletAvro());
         record = avroRecord;
         another = avroAnother;
     }
@@ -65,17 +65,17 @@ public class UntypedAvroBulletRecordTest extends BulletRecordTest<Serializable> 
     @Test
     public void testAvroRecordEqualsEdgeCases() {
         Assert.assertTrue(avroRecord.equals(avroAnother));
-        avroRecord.setData(null);
+        avroRecord.data = null;
         Assert.assertFalse(avroRecord.equals(another));
-        avroAnother.setData(null);
+        avroAnother.data = null;
         Assert.assertTrue(avroRecord.equals(avroAnother));
     }
 
     @Test
     public void testAvroRecordHashcodeEdgeCases() {
         Assert.assertEquals(record.hashCode(), another.hashCode());
-        avroRecord.setData(null);
-        avroAnother.setData(null);
+        avroRecord.data = null;
+        avroAnother.data = null;
         Assert.assertEquals(avroRecord.hashCode(), avroAnother.hashCode());
     }
 
@@ -101,9 +101,9 @@ public class UntypedAvroBulletRecordTest extends BulletRecordTest<Serializable> 
     @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = "Cannot read from record.*")
     public void testFailingWhenCannotRead() {
         LazyBulletAvro bad = new LazyBulletAvro();
-        bad.setSerializedData("foo".getBytes());
-        bad.setDeserialized(false);
-        avroRecord.setData(bad);
+        bad.serializedData = "foo".getBytes();
+        bad.isDeserialized = false;
+        avroRecord.data = bad;
         avroRecord.hasField("foo");
     }
 }
