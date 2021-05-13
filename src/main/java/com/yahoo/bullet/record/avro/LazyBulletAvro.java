@@ -38,9 +38,9 @@ import java.util.function.Function;
 @Slf4j @NoArgsConstructor
 @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE)
 class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Serializable>> {
-    private boolean isDeserialized = true;
-    private Map<String, Object> data = new HashMap<>();
-    private byte[] serializedData;
+    protected boolean isDeserialized = true;
+    protected Map<String, Object> data = new HashMap<>();
+    protected byte[] serializedData;
 
     private static final long serialVersionUID = -5368363606317600282L;
 
@@ -256,7 +256,7 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Seriali
         }
     }
 
-    private byte[] serialize(Map<String, Object> data) throws IOException {
+    protected byte[] serialize(Map<String, Object> data) throws IOException {
         data = (data == null) ? Collections.emptyMap() : data;
         BulletAvro record = new BulletAvro(data);
         ByteArrayOutputStream stream = new ByteArrayOutputStream(2048);
@@ -268,7 +268,7 @@ class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Seriali
         return stream.toByteArray();
     }
 
-    private Map<String, Object> reify(byte[] data) throws IOException {
+    protected Map<String, Object> reify(byte[] data) throws IOException {
         DatumReader<BulletAvro> reader = new CustomReader();
         BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
         BulletAvro avro = reader.read(null, decoder);

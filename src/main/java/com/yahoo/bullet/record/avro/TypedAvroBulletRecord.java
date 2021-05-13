@@ -10,6 +10,8 @@ import com.yahoo.bullet.record.TypedBulletRecord;
 import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +29,8 @@ import java.util.Objects;
  * without modifications. You can force a read by either calling a get/set method.
  */
 @Slf4j
+@NoArgsConstructor
+@AllArgsConstructor
 public class TypedAvroBulletRecord extends TypedBulletRecord {
     private static final long serialVersionUID = -2200480102971008734L;
 

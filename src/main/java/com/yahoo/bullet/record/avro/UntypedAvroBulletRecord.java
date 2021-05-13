@@ -8,6 +8,8 @@ package com.yahoo.bullet.record.avro;
 import com.yahoo.bullet.record.BulletRecord;
 import com.yahoo.bullet.record.UntypedBulletRecord;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,6 +26,8 @@ import java.util.Objects;
  * without modifications. You can force a read by either calling a get/set method.
  */
 @Slf4j
+@NoArgsConstructor
+@AllArgsConstructor
 public class UntypedAvroBulletRecord extends UntypedBulletRecord {
     private static final long serialVersionUID = 926415013785021742L;
     @Setter(AccessLevel.PACKAGE)
