@@ -32,8 +32,8 @@ import java.util.function.Function;
  * This class wraps all Bullet compatible AVRO data and makes it lazily de-serializable. The data is reified only when
  * needed to. It operates on AVRO {@link org.apache.avro.specific.SpecificRecord} types. Subclasses should override
  * {@link #serialize(Map)} and {@link #reify(byte[])} to go back and forth between the AVRO serialized data and a
- * {@link Map} of fields. You can also just override {@link #write(Map, Encoder)} and {@link #read} if you wish to use
- * the existing reading and writing process used in {@link #serialize(Map)} and {@link #reify(byte[])}.
+ * {@link Map} of fields. You can also just override {@link #write(Map, Encoder)} and {@link #read(Decoder)} if you wish
+ * to use the existing reading and writing process used in {@link #serialize(Map)} and {@link #reify(byte[])}.
  */
 @Slf4j @NoArgsConstructor
 public class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, Serializable>> {
