@@ -239,6 +239,9 @@ public class TypedObject implements Serializable {
      * @return The casted {@link TypedObject}.
      */
     public TypedObject forceCast(Type castedType) {
+        if (value == null) {
+            return NULL;
+        }
         return new TypedObject(castedType, type.forceCast(castedType, value));
     }
 

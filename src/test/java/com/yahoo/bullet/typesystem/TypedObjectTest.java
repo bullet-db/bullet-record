@@ -516,6 +516,13 @@ public class TypedObjectTest {
         assertEquals(object.forceCast(Type.BOOLEAN).getValue(), false);
     }
 
+    @Test
+    public void testForceCastNull() {
+        TypedObject object = new TypedObject(null);
+        assertEquals(object.forceCast(INTEGER).getType(), NULL);
+        assertNull(object.forceCast(INTEGER).getValue());
+    }
+
     @Test(expectedExceptions = ClassCastException.class)
     public void testForceCastToUnsupportedType() {
         TypedObject object = new TypedObject(1);
