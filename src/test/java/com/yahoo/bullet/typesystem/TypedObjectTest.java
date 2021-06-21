@@ -94,7 +94,7 @@ public class TypedObjectTest {
 
         object = new TypedObject(UNKNOWN, null);
         assertTrue(object.isUnknown());
-        assertFalse(object.isNull());
+        assertTrue(object.isNull());
         assertFalse(object.isList());
         assertFalse(object.isMap());
 
@@ -168,7 +168,7 @@ public class TypedObjectTest {
 
         object = new TypedObject(Type.STRING_MAP_MAP, null);
         assertFalse(object.isUnknown());
-        assertFalse(object.isNull());
+        assertTrue(object.isNull());
         assertFalse(object.isPrimitive());
         assertFalse(object.isList());
         assertTrue(object.isMap());
@@ -177,7 +177,7 @@ public class TypedObjectTest {
 
         object = new TypedObject(Type.BOOLEAN_MAP_LIST, null);
         assertFalse(object.isUnknown());
-        assertFalse(object.isNull());
+        assertTrue(object.isNull());
         assertFalse(object.isPrimitive());
         assertFalse(object.isMap());
         assertTrue(object.isList());
@@ -516,13 +516,6 @@ public class TypedObjectTest {
         assertEquals(object.forceCast(Type.BOOLEAN).getValue(), false);
     }
 
-    @Test
-    public void testForceCastNull() {
-        TypedObject object = new TypedObject(null);
-        assertEquals(object.forceCast(INTEGER).getType(), NULL);
-        assertNull(object.forceCast(INTEGER).getValue());
-    }
-
     @Test(expectedExceptions = ClassCastException.class)
     public void testForceCastToUnsupportedType() {
         TypedObject object = new TypedObject(1);
@@ -691,7 +684,7 @@ public class TypedObjectTest {
 
     @Test(expectedExceptions = UnsupportedOperationException.class)
     public void testUnknownComparison() {
-        TypedObject objectA = new TypedObject(UNKNOWN, null);
+        TypedObject objectA = new TypedObject(UNKNOWN, 5);
         TypedObject objectB = new TypedObject(42.1);
         objectA.compareTo(objectB);
     }

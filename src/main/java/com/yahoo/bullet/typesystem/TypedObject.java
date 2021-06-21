@@ -75,12 +75,12 @@ public class TypedObject implements Serializable {
     }
 
     /**
-     * Returns true if the given type is the {@link Type#NULL} type.
+     * Returns true if this TypedObject's type is {@link Type#NULL} or if this TypedObject's value is null.
      *
-     * @return A boolean denoting if the type is {@link Type#NULL}.
+     * @return A boolean denoting if the type is {@link Type#NULL} or if the value is null.
      */
     public boolean isNull() {
-        return Type.isNull(type);
+        return Type.isNull(type) || value == null;
     }
 
     /**
@@ -239,9 +239,6 @@ public class TypedObject implements Serializable {
      * @return The casted {@link TypedObject}.
      */
     public TypedObject forceCast(Type castedType) {
-        if (value == null) {
-            return NULL;
-        }
         return new TypedObject(castedType, type.forceCast(castedType, value));
     }
 
@@ -271,7 +268,7 @@ public class TypedObject implements Serializable {
      * @throws UnsupportedOperationException if the other object could not compared to this.
      */
     public Integer compareTo(TypedObject other) {
-        if (type == Type.NULL || other.type == Type.NULL) {
+        if (isNull() || other.isNull()) {
             return null;
         }
         if (!Type.canCompare(type, other.type)) {
