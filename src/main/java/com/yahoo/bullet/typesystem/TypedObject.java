@@ -75,7 +75,7 @@ public class TypedObject implements Serializable {
     }
 
     /**
-     * Returns true if this TypedObject's type is {@link Type#NULL} or if this TypedObject's value is null.
+     * Returns true if the type of this TypedObject is {@link Type#NULL} or if the value of this TypedObject is null.
      *
      * @return A boolean denoting if the type is {@link Type#NULL} or if the value is null.
      */
