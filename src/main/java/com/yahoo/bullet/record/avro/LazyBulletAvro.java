@@ -46,17 +46,19 @@ public class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, 
     protected transient boolean isDeserialized = true;
 
     /**
-     * Copy constructor.
+     * Shallow copy constructor.
      *
      * @param other The {@link LazyBulletAvro} to copy.
      * @throws RuntimeException if failed to copy data from the source.
      */
     public LazyBulletAvro(LazyBulletAvro other) {
         try {
-            serializedData = other.getAsByteArray();
-            isDeserialized = false;
+            other.forceFailIfCannotRead();
+            serializedData = null;
+            data = new HashMap<>(other.data);
+            isDeserialized = true;
         } catch (Exception e) {
-            log.error("Unable to serialize the other record", e);
+            log.error("Unable to read data from the other record", e);
             throw new RuntimeException(e);
         }
     }
@@ -298,12 +300,5 @@ public class LazyBulletAvro implements Serializable, Iterable<Map.Entry<String, 
         serializedData = (byte[]) in.readObject();
         data = null;
         isDeserialized = false;
-    }
-
-    private byte[] getAsByteArray() throws IOException {
-        if (isDeserialized) {
-            return serialize(data);
-        }
-        return serializedData;
     }
 }

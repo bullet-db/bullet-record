@@ -5,7 +5,6 @@
  */
 package com.yahoo.bullet.record.avro;
 
-import com.yahoo.bullet.typesystem.Type;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
@@ -83,7 +82,8 @@ public class LazyBulletAvroTest {
 
     @Test(expectedExceptions = RuntimeException.class)
     public void testFailCopying() {
-        avro.set("foo", Type.NULL);
+        avro.serializedData = new byte[0];
+        avro.isDeserialized = false;
         avro.copy();
     }
 
@@ -94,9 +94,11 @@ public class LazyBulletAvroTest {
         LazyBulletAvro copyOfCopy = new LazyBulletAvro(copy);
         LazyBulletAvro copyOfCopyOfCopy = copyOfCopy.copy();
         Assert.assertEquals(copyOfCopy.get("someField"), "someValue");
-        Assert.assertEquals(copyOfCopy.fieldCount(), 1);
+        copyOfCopy.set("someOtherField", "someOtherValue");
+        Assert.assertEquals(copyOfCopy.fieldCount(), 2);
         Assert.assertEquals(copyOfCopyOfCopy.get("someField"), "someValue");
         Assert.assertEquals(copyOfCopyOfCopy.fieldCount(), 1);
+        Assert.assertEquals(avro.fieldCount(), 1);
     }
 
     @Test
