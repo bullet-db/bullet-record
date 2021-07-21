@@ -49,12 +49,6 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
     }
 
     @Override
-    protected Map<String, Serializable> getRawDataMap() {
-        data.forceReadData();
-        return (Map) data.getData();
-    }
-
-    @Override
     public TypedObject get(String field) {
         return makeTypedObject(field, data.get(field));
     }

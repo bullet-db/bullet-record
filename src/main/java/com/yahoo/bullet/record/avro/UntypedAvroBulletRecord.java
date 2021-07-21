@@ -43,12 +43,6 @@ public class UntypedAvroBulletRecord extends UntypedBulletRecord {
     }
 
     @Override
-    protected Map<String, Serializable> getRawDataMap() {
-        data.forceReadData();
-        return (Map) data.getData();
-    }
-
-    @Override
     public Serializable get(String field) {
         return data.get(field);
     }
