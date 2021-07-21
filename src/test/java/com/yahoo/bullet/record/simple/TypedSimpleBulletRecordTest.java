@@ -21,7 +21,7 @@ public class TypedSimpleBulletRecordTest extends BulletRecordTest<TypedObject> {
 
     @Override
     protected Serializable revert(TypedObject data) {
-        // If get was used to retrive this, we need to handle nulls
+        // If get was used to retrieve this, we need to handle nulls
         if (data == null) {
             return null;
         }
