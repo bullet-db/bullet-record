@@ -615,7 +615,7 @@ public enum Type {
     private static Type findNestedValueType(Collection nestedValue) {
         Set<Type> types = ((Collection<Object>) nestedValue).stream().map(Type::getType)
                                                                      .filter(t -> !isNull(t)).collect(Collectors.toSet());
-        if (types.size() > 1) {
+        if (types.size() != 1) {
             return UNKNOWN;
         }
         return types.iterator().next();
