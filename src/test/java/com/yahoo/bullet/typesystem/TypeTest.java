@@ -102,9 +102,9 @@ public class TypeTest {
     public void testTypeFindingListOfMaps() {
         assertEquals(Type.getType(singletonList(singletonMap("a", false))), Type.BOOLEAN_MAP_LIST);
         assertEquals(Type.getType(singletonList(singletonMap("a", "foo"))), Type.STRING_MAP_LIST);
-        assertEquals(Type.getType(asList(singletonMap("a", null), singletonMap("b", 1))), Type.INTEGER_MAP_LIST);
-        assertEquals(Type.getType(asList(singletonMap("a", null), singletonMap("b", 1L))), Type.LONG_MAP_LIST);
-        assertEquals(Type.getType(singletonList(singletonMap("a", 1.4f))), Type.FLOAT_MAP_LIST);
+        assertEquals(Type.getType(asList(singletonMap("a", null), singletonMap("b", 1))), Type.UNKNOWN_MAP_LIST);
+        assertEquals(Type.getType(asList(singletonMap("a", null), singletonMap("b", 1L))), Type.UNKNOWN_MAP_LIST);
+        assertEquals(Type.getType(asList(singletonMap("a", 1.4f), singletonMap("b", 4.2f))), Type.FLOAT_MAP_LIST);
         assertEquals(Type.getType(singletonList(singletonMap("a", 1.4))), Type.DOUBLE_MAP_LIST);
         assertEquals(Type.getType(singletonList(singletonMap("a", null))), Type.UNKNOWN_MAP_LIST);
         assertEquals(Type.getType(singletonList(singletonMap("a", new HashSet<>()))), Type.UNKNOWN_MAP_LIST);
@@ -151,7 +151,7 @@ public class TypeTest {
         nestedData.put("a", null);
         nestedData.put(null, 1.0);
         data.put("c", nestedData);
-        assertEquals(Type.getType(data), Type.DOUBLE_MAP_MAP);
+        assertEquals(Type.getType(data), Type.UNKNOWN_MAP_MAP);
     }
 
     @Test

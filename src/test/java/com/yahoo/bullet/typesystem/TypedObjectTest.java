@@ -92,7 +92,7 @@ public class TypedObjectTest {
     public void testTypeClassification() {
         TypedObject object;
 
-        object = new TypedObject(UNKNOWN, null);
+        object = new TypedObject(UNKNOWN, new TypedObject(NULL, null));
         assertTrue(object.isUnknown());
         assertFalse(object.isNull());
         assertFalse(object.isList());
@@ -684,7 +684,7 @@ public class TypedObjectTest {
 
     @Test(expectedExceptions = UnsupportedOperationException.class)
     public void testUnknownComparison() {
-        TypedObject objectA = new TypedObject(UNKNOWN, null);
+        TypedObject objectA = new TypedObject(UNKNOWN, new TypedObject(NULL, null));
         TypedObject objectB = new TypedObject(42.1);
         objectA.compareTo(objectB);
     }

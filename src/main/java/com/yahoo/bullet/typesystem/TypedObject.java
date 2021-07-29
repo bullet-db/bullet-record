@@ -27,7 +27,8 @@ public class TypedObject implements Serializable {
     /**
      * Represents the {@link Type#UNKNOWN} object. The value is null.
      */
-    public static final TypedObject UNKNOWN = new TypedObject(Type.UNKNOWN, null);
+    public static final TypedObject UNKNOWN = new TypedObject(Type.UNKNOWN, null, false);
+
     /**
      * Represents the {@link Type#NULL} object. The value is null.
      */
@@ -61,8 +62,19 @@ public class TypedObject implements Serializable {
      * @param value The value being wrapped.
      */
     public TypedObject(Type type, Serializable value) {
+        this(type, value, true);
+    }
+
+    /**
+     * Package protected constructor for directly setting types.
+     *
+     * @param type The type of the value.
+     * @param value The value being wrapped.
+     * @param findUnknownTypes Whether to figure out types if the type is {@link Type#UNKNOWN}.
+     */
+    TypedObject(Type type, Serializable value, boolean findUnknownTypes) {
         Objects.requireNonNull(type);
-        this.type = Type.isUnknown(type) ? Type.getType(value) : type;
+        this.type = findUnknownTypes && Type.isUnknown(type) ? Type.getType(value) : type;
         this.value = value;
     }
 
@@ -369,7 +381,7 @@ public class TypedObject implements Serializable {
     public static TypedObject safeCastFromObject(Type type, Serializable object) {
         // No longer makes a UNKNOWN object if object was null
         try {
-            return new TypedObject(type, type.cast(object));
+            return new TypedObject(type, type.cast(object), false);
         } catch (RuntimeException e) {
             return UNKNOWN;
         }
