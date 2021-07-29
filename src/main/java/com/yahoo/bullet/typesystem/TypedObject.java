@@ -54,14 +54,15 @@ public class TypedObject implements Serializable {
     /**
      * Create a TypedObject with the given non-null type. Note that the value is not validated to be of that type. If
      * it is not, all operation results are undefined. You should use {@link Type#cast(Serializable)} or
-     * {@link Type#forceCast(Type, Serializable)} to force the value to the desired type if it is not.
+     * {@link Type#forceCast(Type, Serializable)} to force the value to the desired type if it is not. If the type is
+     * {@link Type#UNKNOWN}, then the type is attempted to be discovered.
      *
      * @param type The type of the value.
      * @param value The value being wrapped.
      */
     public TypedObject(Type type, Serializable value) {
         Objects.requireNonNull(type);
-        this.type = type;
+        this.type = Type.isUnknown(type) ? Type.getType(value) : type;
         this.value = value;
     }
 

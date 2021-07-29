@@ -612,21 +612,18 @@ public enum Type {
     }
 
     private static Type findNestedValueType(Collection nestedValue) {
-        Type nestedType = UNKNOWN;
-        // Inside our supported types for Map or List, there can only be Maps or Primitives
-        // Try till a nested type is gotten because we could have objects that are null, empty or have null mappings
-        // We need to proceed checking for UNKNOWN_MAP as well since there might be a map later that's not
-        for (Iterator it = nestedValue.iterator(); it.hasNext() && (nestedType == UNKNOWN || nestedType == UNKNOWN_MAP);) {
-            Object value = it.next();
-            if (value == null) {
+        Type nestedType = null;
+        for (Object value : nestedValue) {
+            Type type = getType(value);
+            // If null or the type is the same so far, keep going to verify that all types are all the same...
+            if (type == NULL || nestedType == type) {
+                continue;
+            } else if (nestedType == null) {
+                nestedType = type;
                 continue;
             }
-            if (value instanceof Map) {
-                // Only have Map of Map of Primitives or List of Map of Primitives, so type has to be in Primitive Maps
-                nestedType = findTypeWithSubType(PRIMITIVE_MAPS, findSubType((Map<?, ?>) value));
-            } else {
-                nestedType = getPrimitiveType(value);
-            }
+            // Otherwise, we found a newType that is not null and clashes with the last type.
+            return UNKNOWN;
         }
         return nestedType;
     }
