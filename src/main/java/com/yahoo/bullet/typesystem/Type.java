@@ -17,6 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Stores the various types that can be understood by the type system in Bullet.
@@ -612,20 +613,12 @@ public enum Type {
     }
 
     private static Type findNestedValueType(Collection nestedValue) {
-        Type nestedType = null;
-        for (Object value : nestedValue) {
-            Type type = getType(value);
-            // If null or the type is the same so far, keep going to verify that all types are all the same...
-            if (type == NULL || nestedType == type) {
-                continue;
-            } else if (nestedType == null) {
-                nestedType = type;
-                continue;
-            }
-            // Otherwise, we found a newType that is not null and clashes with the last type.
+        Set<Type> types = ((Collection<Object>) nestedValue).stream().map(Type::getType)
+                                                                     .filter(t -> !isNull(t)).collect(Collectors.toSet());
+        if (types.size() > 1) {
             return UNKNOWN;
         }
-        return nestedType;
+        return types.iterator().next();
     }
 
     private static Type findTypeWithSubType(Collection<Type> types, Type subType) {
