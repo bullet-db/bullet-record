@@ -13,10 +13,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Stores the various types that can be understood by the type system in Bullet.
@@ -612,23 +612,15 @@ public enum Type {
     }
 
     private static Type findNestedValueType(Collection nestedValue) {
-        Type nestedType = UNKNOWN;
-        // Inside our supported types for Map or List, there can only be Maps or Primitives
-        // Try till a nested type is gotten because we could have objects that are null, empty or have null mappings
-        // We need to proceed checking for UNKNOWN_MAP as well since there might be a map later that's not
-        for (Iterator it = nestedValue.iterator(); it.hasNext() && (nestedType == UNKNOWN || nestedType == UNKNOWN_MAP);) {
-            Object value = it.next();
-            if (value == null) {
-                continue;
-            }
-            if (value instanceof Map) {
-                // Only have Map of Map of Primitives or List of Map of Primitives, so type has to be in Primitive Maps
-                nestedType = findTypeWithSubType(PRIMITIVE_MAPS, findSubType((Map<?, ?>) value));
-            } else {
-                nestedType = getPrimitiveType(value);
-            }
+        Set<Type> types = ((Collection<Object>) nestedValue).stream().map(Type::getType)
+                                                                     .filter(t -> !isNull(t))
+                                                                     .collect(Collectors.toSet());
+        if (types.size() == 0) {
+            return UNKNOWN;
+        } else if (types.size() > 1) {
+            return types.stream().allMatch(Type::isMap) ? UNKNOWN_MAP : UNKNOWN;
         }
-        return nestedType;
+        return types.iterator().next();
     }
 
     private static Type findTypeWithSubType(Collection<Type> types, Type subType) {
