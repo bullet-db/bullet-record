@@ -79,7 +79,7 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
 
     @Override
     public TypedAvroBulletRecord copy() {
-        return new TypedAvroBulletRecord(new HashMap<>(this.types), this.data.copy());
+        return new TypedAvroBulletRecord(new HashMap<>(types), data.copy());
     }
 
     @Override

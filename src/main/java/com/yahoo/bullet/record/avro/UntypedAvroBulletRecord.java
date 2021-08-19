@@ -70,7 +70,7 @@ public class UntypedAvroBulletRecord extends UntypedBulletRecord {
 
     @Override
     public UntypedAvroBulletRecord copy() {
-        return new UntypedAvroBulletRecord(this.data.copy());
+        return new UntypedAvroBulletRecord(data.copy());
     }
 
     @Override
