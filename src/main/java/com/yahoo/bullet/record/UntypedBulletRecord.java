@@ -5,6 +5,7 @@
  */
 package com.yahoo.bullet.record;
 
+import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
 
 import java.io.Serializable;
@@ -29,6 +30,14 @@ public abstract class UntypedBulletRecord extends BulletRecord<Serializable> {
     @Override
     public TypedObject typedGet(String field) {
         return hasField(field) ? new TypedObject(get(field)) : TypedObject.NULL;
+    }
+
+    @Override
+    public TypedObject typedGet(String field, Type hint) {
+        if (!hasField(field)) {
+            return TypedObject.NULL;
+        }
+        return hint != null && hint != Type.UNKNOWN ? new TypedObject(hint, get(field)) : new TypedObject(get(field));
     }
 
     @Override

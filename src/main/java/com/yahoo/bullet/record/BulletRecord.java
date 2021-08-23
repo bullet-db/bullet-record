@@ -120,6 +120,8 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
      */
     public abstract TypedObject typedGet(String field);
 
+    public abstract TypedObject typedGet(String field, Type hint);
+
     /**
      * Creates a copy of this record. This might be a shallow copy so the original (i.e. this) is recommended to be
      * used as a read-only record after.
@@ -140,7 +142,12 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
      */
     @SuppressWarnings("unchecked")
     public TypedObject typedGet(String field, String subKey) {
-        TypedObject value = typedGet(field);
+        return typedGet(field, subKey, Type.UNKNOWN);
+    }
+
+    @SuppressWarnings("unchecked")
+    public TypedObject typedGet(String field, String subKey, Type hint) {
+        TypedObject value = typedGet(field, hint);
         if (value.isNull()) {
             return TypedObject.NULL;
         }
@@ -163,7 +170,12 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
      */
     @SuppressWarnings("unchecked")
     public TypedObject typedGet(String field, String subKey, String subSubKey) {
-        TypedObject value = typedGet(field);
+        return typedGet(field, subKey, subSubKey, Type.UNKNOWN);
+    }
+
+    @SuppressWarnings("unchecked")
+    public TypedObject typedGet(String field, String subKey, String subSubKey, Type hint) {
+        TypedObject value = typedGet(field, hint);
         if (value.isNull()) {
             return TypedObject.NULL;
         }
@@ -190,7 +202,12 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
      */
     @SuppressWarnings("unchecked")
     public TypedObject typedGet(String field, int index) {
-        TypedObject value = typedGet(field);
+        return typedGet(field, index, Type.UNKNOWN);
+    }
+
+    @SuppressWarnings("unchecked")
+    public TypedObject typedGet(String field, int index, Type hint) {
+        TypedObject value = typedGet(field, hint);
         if (value.isNull()) {
             return TypedObject.NULL;
         }
@@ -214,7 +231,12 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
      */
     @SuppressWarnings("unchecked")
     public TypedObject typedGet(String field, int index, String subKey) {
-        TypedObject value = typedGet(field);
+        return typedGet(field, index, subKey, Type.UNKNOWN);
+    }
+
+    @SuppressWarnings("unchecked")
+    public TypedObject typedGet(String field, int index, String subKey, Type hint) {
+        TypedObject value = typedGet(field, hint);
         if (value.isNull()) {
             return TypedObject.NULL;
         }
