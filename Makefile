@@ -19,7 +19,7 @@ coverage:
 	    mvn clean clover2:setup test clover2:aggregate clover2:clover
 
 doc:
-	    mvn clean javadoc:javadoc
+	    mvn clean package -DskipTests=true && rm -rf target/site && mkdir target/site && mv target/apidocs target/site/apidocs
 
 see-coverage: coverage
 	    cd target/site/clover; python -m SimpleHTTPServer
