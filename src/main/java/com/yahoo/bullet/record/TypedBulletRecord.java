@@ -35,17 +35,12 @@ public abstract class TypedBulletRecord extends BulletRecord<TypedObject> {
         validateObject(object);
         return rawSet(field, object);
     }
-
-    @Override
-    public TypedObject typedGet(String field) {
-        return get(field);
-    }
-
+    /*
     @Override
     public TypedObject typedGet(String field, Type hint) {
-        return typedGet(field);
+        return get(field);
     }
-
+    */
     @Override
     protected Map<String, Serializable> getRawDataMap() {
         Map<String, Serializable> data = new HashMap<>();

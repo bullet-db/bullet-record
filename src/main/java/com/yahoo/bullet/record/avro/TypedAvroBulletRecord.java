@@ -79,7 +79,7 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
 
     @Override
     public TypedObject typedGet(String field, Type hint) {
-        return hint != null ? makeTypedObjectWithHint(field, data.get(field), hint) : typedGet(field);
+        return makeTypedObject(field, data.get(field), hint);
     }
 
     @Override
@@ -112,13 +112,10 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
     }
 
     private TypedObject makeTypedObject(String key, Serializable value) {
-        if (value == null) {
-            return TypedObject.NULL;
-        }
-        return new TypedObject(types.getOrDefault(key, Type.UNKNOWN), value);
+        return makeTypedObject(key, value, Type.UNKNOWN);
     }
 
-    private TypedObject makeTypedObjectWithHint(String key, Serializable value, Type hint) {
+    private TypedObject makeTypedObject(String key, Serializable value, Type hint) {
         if (value == null) {
             return TypedObject.NULL;
         }

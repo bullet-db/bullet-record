@@ -28,16 +28,8 @@ public abstract class UntypedBulletRecord extends BulletRecord<Serializable> {
      * @return The {@link TypedObject} or null if the field does not exist.
      */
     @Override
-    public TypedObject typedGet(String field) {
-        return hasField(field) ? new TypedObject(get(field)) : TypedObject.NULL;
-    }
-
-    @Override
     public TypedObject typedGet(String field, Type hint) {
-        if (!hasField(field)) {
-            return TypedObject.NULL;
-        }
-        return hint != null && hint != Type.UNKNOWN ? new TypedObject(hint, get(field)) : new TypedObject(get(field));
+        return hasField(field) ? new TypedObject(hint, get(field)) : TypedObject.NULL;
     }
 
     @Override

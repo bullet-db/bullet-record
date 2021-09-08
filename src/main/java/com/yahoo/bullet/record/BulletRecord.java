@@ -118,7 +118,10 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
      * @param field The non-null name of the field.
      * @return The value of the field as a {@link TypedObject} or {@link TypedObject#NULL} if it does not exist.
      */
-    public abstract TypedObject typedGet(String field);
+    public TypedObject typedGet(String field) {
+        return typedGet(field, (Type) null);
+        //return typedGet(field, Type.UNKNOWN);
+    }
 
     public abstract TypedObject typedGet(String field, Type hint);
 
@@ -142,17 +145,33 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
      */
     @SuppressWarnings("unchecked")
     public TypedObject typedGet(String field, String subKey) {
-        return typedGet(field, subKey, Type.UNKNOWN);
+        return typedGetFromMap(typedGet(field), subKey);
+        //return typedGet(field, subKey, Type.UNKNOWN);
     }
 
     @SuppressWarnings("unchecked")
     public TypedObject typedGet(String field, String subKey, Type hint) {
+        return typedGetFromMap(typedGet(field, hint), subKey);
+        /*
         TypedObject value = typedGet(field, hint);
         if (value.isNull()) {
             return TypedObject.NULL;
         }
         if (!value.isMap()) {
             throw new ClassCastException(field + " is not a map. It has type " + value.getType());
+        }
+        Map<String, Serializable> map = (Map<String, Serializable>) value.getValue();
+        Serializable fieldValue = map.get(subKey);
+        return fieldValue == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType(), fieldValue);
+        */
+    }
+
+    private TypedObject typedGetFromMap(TypedObject value, String subKey) {
+        if (value.isNull()) {
+            return TypedObject.NULL;
+        }
+        if (!value.isMap()) {
+            throw new ClassCastException(value + " is not a map.");
         }
         Map<String, Serializable> map = (Map<String, Serializable>) value.getValue();
         Serializable fieldValue = map.get(subKey);
