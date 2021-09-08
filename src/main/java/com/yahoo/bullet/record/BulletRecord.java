@@ -119,10 +119,16 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
      * @return The value of the field as a {@link TypedObject} or {@link TypedObject#NULL} if it does not exist.
      */
     public TypedObject typedGet(String field) {
-        return typedGet(field, (Type) null);
-        //return typedGet(field, Type.UNKNOWN);
+        return typedGet(field, Type.UNKNOWN);
     }
 
+    /**
+     * Gets a field stored in the record as a {@link TypedObject} with a hint as to the type of the field.
+     *
+     * @param field The non-null name of the field.
+     * @param hint The non-null type hint for the field.
+     * @return The value of the field as a {@link TypedObject} or {@link TypedObject#NULL} if it does not exist.
+     */
     public abstract TypedObject typedGet(String field, Type hint);
 
     /**
@@ -145,33 +151,26 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
      */
     @SuppressWarnings("unchecked")
     public TypedObject typedGet(String field, String subKey) {
-        return typedGetFromMap(typedGet(field), subKey);
-        //return typedGet(field, subKey, Type.UNKNOWN);
+        return typedGet(field, subKey, Type.UNKNOWN);
     }
 
+    /**
+     * Gets a {@link TypedObject} from a {@link Map} stored in the record with a hint as to the type of the base field.
+     *
+     * @param field The field name in the record that is a {@link Map}.
+     * @param subKey The subfield in the {@link Map} that is desired.
+     * @param hint The non-null type hint for the base field.
+     * @return The value of the subfield in the {@link Map} as a {@link TypedObject} or {@link TypedObject#NULL} if the field does not exist.
+     * @throws ClassCastException if the field is not a {@link Map}.
+     */
     @SuppressWarnings("unchecked")
     public TypedObject typedGet(String field, String subKey, Type hint) {
-        return typedGetFromMap(typedGet(field, hint), subKey);
-        /*
         TypedObject value = typedGet(field, hint);
         if (value.isNull()) {
             return TypedObject.NULL;
         }
         if (!value.isMap()) {
             throw new ClassCastException(field + " is not a map. It has type " + value.getType());
-        }
-        Map<String, Serializable> map = (Map<String, Serializable>) value.getValue();
-        Serializable fieldValue = map.get(subKey);
-        return fieldValue == null ? TypedObject.NULL : new TypedObject(value.getType().getSubType(), fieldValue);
-        */
-    }
-
-    private TypedObject typedGetFromMap(TypedObject value, String subKey) {
-        if (value.isNull()) {
-            return TypedObject.NULL;
-        }
-        if (!value.isMap()) {
-            throw new ClassCastException(value + " is not a map.");
         }
         Map<String, Serializable> map = (Map<String, Serializable>) value.getValue();
         Serializable fieldValue = map.get(subKey);
@@ -192,6 +191,16 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
         return typedGet(field, subKey, subSubKey, Type.UNKNOWN);
     }
 
+    /**
+     * Gets an object from a {@link Map} stored in the record with a hint as to the type of the base field.
+     *
+     * @param field The field name in the record that is a {@link Map}.
+     * @param subKey The subfield map in the {@link Map} that is desired.
+     * @param subSubKey The subfield in the subfield {@link Map} that is desired.
+     * @param hint The non-null type hint for the base field.
+     * @return The value of the subfield in the map {@link Map} as a {@link TypedObject} or {@link TypedObject#NULL} if the field does not exist.
+     * @throws ClassCastException if the field or subfield is not a {@link Map}.
+     */
     @SuppressWarnings("unchecked")
     public TypedObject typedGet(String field, String subKey, String subSubKey, Type hint) {
         TypedObject value = typedGet(field, hint);
@@ -224,6 +233,16 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
         return typedGet(field, index, Type.UNKNOWN);
     }
 
+    /**
+     * Gets an object from a {@link List} stored in the record with a hint as to the type of the base field.
+     *
+     * @param field The field name in the record that is a {@link List}.
+     * @param index The position in the {@link List} that is desired.
+     * @param hint The non-null type hint for the base field.
+     * @return The object at the index as a {@link TypedObject} or {@link TypedObject#NULL} if the field does not exist.
+     * @throws IndexOutOfBoundsException for invalid indices.
+     * @throws ClassCastException if the field is not a {@link List}.
+     */
     @SuppressWarnings("unchecked")
     public TypedObject typedGet(String field, int index, Type hint) {
         TypedObject value = typedGet(field, hint);
@@ -253,6 +272,17 @@ public abstract class BulletRecord<T extends Serializable> implements Iterable<M
         return typedGet(field, index, subKey, Type.UNKNOWN);
     }
 
+    /**
+     * Gets an object from a {@link List} stored in the record with a hint as to the type of the base field.
+     *
+     * @param field The field name in the record that is a {@link List}.
+     * @param index The position in the {@link List} that is desired.
+     * @param subKey The subfield of the {@link List} element that is desired.
+     * @param hint The non-null type hint for the base field.
+     * @return The object at the index as a {@link TypedObject} or {@link TypedObject#NULL} if the field does not exist.
+     * @throws IndexOutOfBoundsException for invalid indices.
+     * @throws ClassCastException if the field is not a {@link List} or the indexed element is not a {@link Map}.
+     */
     @SuppressWarnings("unchecked")
     public TypedObject typedGet(String field, int index, String subKey, Type hint) {
         TypedObject value = typedGet(field, hint);

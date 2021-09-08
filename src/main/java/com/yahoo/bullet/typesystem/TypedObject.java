@@ -73,7 +73,8 @@ public class TypedObject implements Serializable {
      * @param findUnknownTypes Whether to figure out types if the type is {@link Type#UNKNOWN}.
      */
     TypedObject(Type type, Serializable value, boolean findUnknownTypes) {
-        this.type = (type == null || findUnknownTypes && Type.isUnknown(type)) ? Type.getType(value) : type;
+        Objects.requireNonNull(type);
+        this.type = findUnknownTypes && Type.isUnknown(type) ? Type.getType(value) : type;
         this.value = value;
     }
 
