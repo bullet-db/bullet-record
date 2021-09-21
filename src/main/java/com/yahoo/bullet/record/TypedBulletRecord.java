@@ -37,11 +37,6 @@ public abstract class TypedBulletRecord extends BulletRecord<TypedObject> {
     }
 
     @Override
-    public TypedObject typedGet(String field) {
-        return get(field);
-    }
-
-    @Override
     protected Map<String, Serializable> getRawDataMap() {
         Map<String, Serializable> data = new HashMap<>();
         this.forEach(e -> data.put(e.getKey(), e.getValue().getValue()));

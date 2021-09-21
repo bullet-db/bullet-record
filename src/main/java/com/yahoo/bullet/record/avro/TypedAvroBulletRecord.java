@@ -78,6 +78,11 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
     }
 
     @Override
+    public TypedObject typedGet(String field, Type hint) {
+        return makeTypedObject(field, data.get(field), hint);
+    }
+
+    @Override
     public TypedAvroBulletRecord copy() {
         return new TypedAvroBulletRecord(new HashMap<>(types), data.copy());
     }
@@ -107,9 +112,13 @@ public class TypedAvroBulletRecord extends TypedBulletRecord {
     }
 
     private TypedObject makeTypedObject(String key, Serializable value) {
+        return makeTypedObject(key, value, Type.UNKNOWN);
+    }
+
+    private TypedObject makeTypedObject(String key, Serializable value, Type hint) {
         if (value == null) {
             return TypedObject.NULL;
         }
-        return new TypedObject(types.getOrDefault(key, Type.UNKNOWN), value);
+        return new TypedObject(types.getOrDefault(key, hint), value);
     }
 }

@@ -6,6 +6,7 @@
 package com.yahoo.bullet.record.simple;
 
 import com.yahoo.bullet.record.TypedBulletRecord;
+import com.yahoo.bullet.typesystem.Type;
 import com.yahoo.bullet.typesystem.TypedObject;
 import lombok.AccessLevel;
 import lombok.Setter;
@@ -54,6 +55,11 @@ public class TypedSimpleBulletRecord extends TypedBulletRecord {
     public TypedSimpleBulletRecord remove(String field) {
         data.remove(field);
         return this;
+    }
+
+    @Override
+    public TypedObject typedGet(String field, Type hint) {
+        return get(field);
     }
 
     @Override
